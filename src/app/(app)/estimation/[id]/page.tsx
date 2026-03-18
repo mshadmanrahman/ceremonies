@@ -11,6 +11,7 @@ import { CardDeck } from "@/components/estimation/card-deck";
 import { VoteCard } from "@/components/estimation/vote-card";
 import { PhaseBanner } from "@/components/estimation/phase-banner";
 import { FacilitatorControls } from "@/components/estimation/facilitator-controls";
+import { SessionHistory } from "@/components/estimation/session-history";
 import { useEstimationRoom } from "@/hooks/use-estimation-room";
 import { getVoteSpread, type CardValue } from "@/lib/state-machines/estimation";
 import { use } from "react";
@@ -308,6 +309,9 @@ function EstimationRoom({
           </div>
         </div>
       )}
+
+      {/* Session history strip */}
+      <SessionHistory history={state.history} />
     </div>
   );
 }

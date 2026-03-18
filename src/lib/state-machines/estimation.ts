@@ -40,6 +40,13 @@ export interface EstimationTicket {
   readonly url?: string;
 }
 
+export interface CompletedEstimate {
+  readonly ticket: EstimationTicket;
+  readonly finalEstimate: CardValue;
+  readonly participantCount: number;
+  readonly completedAt: number;
+}
+
 export interface EstimationState {
   readonly phase: EstimationPhase;
   readonly facilitatorId: string;
@@ -47,6 +54,7 @@ export interface EstimationState {
   readonly votes: ReadonlyArray<Vote>;
   readonly finalEstimate: CardValue | null;
   readonly participants: ReadonlyArray<Participant>;
+  readonly history: ReadonlyArray<CompletedEstimate>;
 }
 
 export interface Participant {
@@ -74,6 +82,7 @@ export function createInitialState(facilitatorId: string): EstimationState {
     votes: [],
     finalEstimate: null,
     participants: [],
+    history: [],
   };
 }
 
@@ -178,12 +187,26 @@ export function transition(
 
     case "NEXT_TICKET": {
       if (!isFacilitator(state, event.facilitatorId)) return state;
+      // Save completed estimate to history (if there was one)
+      const updatedHistory =
+        state.ticket && state.finalEstimate
+          ? [
+              ...state.history,
+              {
+                ticket: state.ticket,
+                finalEstimate: state.finalEstimate,
+                participantCount: state.participants.length,
+                completedAt: Date.now(),
+              },
+            ]
+          : state.history;
       return {
         ...state,
         phase: "waiting",
         ticket: null,
         votes: [],
         finalEstimate: null,
+        history: updatedHistory,
       };
     }
 
