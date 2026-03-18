@@ -49,13 +49,13 @@ export function VoteCard({ name, value, revealed, isYou }: VoteCardProps) {
           <span>{VALUE_DISPLAY[value]}</span>
         )}
       </div>
-      <div className="flex flex-col items-center">
+      <div className="flex h-8 flex-col items-center justify-start">
         <span className="max-w-16 truncate text-xs text-muted-foreground">
           {name}
         </span>
-        {isYou && (
-          <span className="text-[10px] text-primary">you</span>
-        )}
+        <span className={cn("text-[10px]", isYou ? "text-primary" : "invisible")}>
+          you
+        </span>
       </div>
     </div>
   );
