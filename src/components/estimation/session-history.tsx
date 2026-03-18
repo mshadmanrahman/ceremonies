@@ -22,8 +22,7 @@ export function SessionHistory({ history }: SessionHistoryProps) {
   if (history.length === 0) return null;
 
   return (
-    <div className="mt-auto pt-8">
-      <Separator />
+    <div>
       <div className="px-1 py-4">
         <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
           Today&apos;s session ({history.length} estimated)

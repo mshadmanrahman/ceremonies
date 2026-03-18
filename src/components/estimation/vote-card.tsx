@@ -19,9 +19,10 @@ interface VoteCardProps {
   readonly name: string;
   readonly value: CardValue | null;
   readonly revealed: boolean;
+  readonly isYou?: boolean;
 }
 
-export function VoteCard({ name, value, revealed }: VoteCardProps) {
+export function VoteCard({ name, value, revealed, isYou }: VoteCardProps) {
   const hasVoted = value !== null;
 
   return (
@@ -48,9 +49,14 @@ export function VoteCard({ name, value, revealed }: VoteCardProps) {
           <span>{VALUE_DISPLAY[value]}</span>
         )}
       </div>
-      <span className="max-w-14 truncate text-xs text-muted-foreground">
-        {name}
-      </span>
+      <div className="flex flex-col items-center">
+        <span className="max-w-16 truncate text-xs text-muted-foreground">
+          {name}
+        </span>
+        {isYou && (
+          <span className="text-[10px] text-primary">you</span>
+        )}
+      </div>
     </div>
   );
 }

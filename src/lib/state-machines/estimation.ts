@@ -188,13 +188,15 @@ export function transition(
     case "NEXT_TICKET": {
       if (!isFacilitator(state, event.facilitatorId)) return state;
       // Save completed estimate to history (if there was one)
+      // Use finalEstimate if agreed, otherwise use majority vote as fallback
+      const estimate = state.finalEstimate ?? getMajorityVote(state.votes);
       const updatedHistory =
-        state.ticket && state.finalEstimate
+        state.ticket && estimate
           ? [
               ...state.history,
               {
                 ticket: state.ticket,
-                finalEstimate: state.finalEstimate,
+                finalEstimate: estimate,
                 participantCount: state.participants.length,
                 completedAt: Date.now(),
               },
@@ -213,6 +215,23 @@ export function transition(
     default:
       return state;
   }
+}
+
+function getMajorityVote(votes: ReadonlyArray<Vote>): CardValue | null {
+  if (votes.length === 0) return null;
+  const counts = new Map<CardValue, number>();
+  for (const vote of votes) {
+    counts.set(vote.value, (counts.get(vote.value) ?? 0) + 1);
+  }
+  let maxCount = 0;
+  let maxValue: CardValue | null = null;
+  for (const [value, count] of counts) {
+    if (count > maxCount) {
+      maxCount = count;
+      maxValue = value;
+    }
+  }
+  return maxValue;
 }
 
 export function getVoteSpread(

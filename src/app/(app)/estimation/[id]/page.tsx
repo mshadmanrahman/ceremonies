@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -107,6 +107,16 @@ function EstimationRoom({
   const [selectedCard, setSelectedCard] = useState<CardValue | null>(null);
   const [ticketInput, setTicketInput] = useState("");
 
+  // Clear card selection when a new round starts
+  useEffect(() => {
+    if (state?.phase === "waiting" || state?.phase === "voting") {
+      const myVote = state.votes.find((v) => v.odiedId === myId);
+      if (!myVote) {
+        setSelectedCard(null);
+      }
+    }
+  }, [state?.phase, state?.votes, myId]);
+
   const handleVote = useCallback(
     (value: CardValue) => {
       setSelectedCard(value);
@@ -174,6 +184,9 @@ function EstimationRoom({
 
       <Separator className="my-6" />
 
+      {/* Session history strip (above ticket input for visibility) */}
+      <SessionHistory history={state.history} />
+
       {/* Ticket input (waiting phase, facilitator only) */}
       {state.phase === "waiting" && isFacilitator && (
         <Card className="p-6">
@@ -223,9 +236,10 @@ function EstimationRoom({
               return (
                 <VoteCard
                   key={p.id}
-                  name={p.id === myId ? `${p.name} (you)` : p.name}
+                  name={p.name}
                   value={pVote?.value ?? null}
                   revealed={isRevealed}
+                  isYou={p.id === myId}
                 />
               );
             })}
@@ -310,8 +324,6 @@ function EstimationRoom({
         </div>
       )}
 
-      {/* Session history strip */}
-      <SessionHistory history={state.history} />
     </div>
   );
 }
