@@ -179,16 +179,29 @@ export function transition(
   }
 }
 
-export function getVoteSpread(votes: ReadonlyArray<Vote>): {
+export function getVoteSpread(
+  votes: ReadonlyArray<Vote>,
+  participantCount: number
+): {
   min: string;
   max: string;
   hasConsensus: boolean;
+  allVoted: boolean;
+  voteCount: number;
 } {
   const numericVotes = votes.filter(
     (v) => v.value !== "coffee" && v.value !== "question"
   );
+  const allVoted = votes.length >= participantCount && participantCount > 0;
+
   if (numericVotes.length === 0) {
-    return { min: "-", max: "-", hasConsensus: true };
+    return {
+      min: "-",
+      max: "-",
+      hasConsensus: false,
+      allVoted,
+      voteCount: votes.length,
+    };
   }
   const values = numericVotes.map((v) => parseInt(v.value, 10));
   const min = Math.min(...values);
@@ -196,6 +209,8 @@ export function getVoteSpread(votes: ReadonlyArray<Vote>): {
   return {
     min: String(min),
     max: String(max),
-    hasConsensus: min === max,
+    hasConsensus: min === max && allVoted,
+    allVoted,
+    voteCount: votes.length,
   };
 }

@@ -29,13 +29,17 @@ export function VoteCard({ name, value, revealed }: VoteCardProps) {
       <div
         className={cn(
           "flex h-16 w-11 items-center justify-center rounded-md border-2 font-mono text-lg font-semibold transition-all sm:h-20 sm:w-14",
-          !hasVoted && "border-dashed border-border bg-transparent",
+          !hasVoted && !revealed && "border-dashed border-border bg-transparent",
+          !hasVoted && revealed && "border-dashed border-destructive/40 bg-destructive/5",
           hasVoted && !revealed && "border-primary/50 bg-primary/10",
           hasVoted && revealed && "border-primary bg-card shadow-sm"
         )}
       >
-        {!hasVoted && (
+        {!hasVoted && !revealed && (
           <span className="text-xs text-muted-foreground">...</span>
+        )}
+        {!hasVoted && revealed && (
+          <span className="text-xs text-destructive/60">—</span>
         )}
         {hasVoted && !revealed && (
           <span className="text-primary">✓</span>

@@ -140,7 +140,9 @@ function EstimationRoom({
     state.phase === "discussing" ||
     state.phase === "agreed";
 
-  const spread = isRevealed ? getVoteSpread(state.votes) : null;
+  const spread = isRevealed
+    ? getVoteSpread(state.votes, state.participants.length)
+    : null;
 
   return (
     <div className="mx-auto flex min-h-svh max-w-3xl flex-col px-4 py-8">
@@ -227,16 +229,21 @@ function EstimationRoom({
 
           {/* Spread indicator */}
           {spread && (
-            <div className="text-center">
+            <div className="text-center space-y-1">
+              {!spread.allVoted && (
+                <p className="text-xs text-destructive/70">
+                  {spread.voteCount}/{state.participants.length} voted
+                </p>
+              )}
               {spread.hasConsensus ? (
                 <p className="text-sm font-medium text-[var(--happy)]">
                   Consensus!
                 </p>
-              ) : (
+              ) : spread.min !== "-" ? (
                 <p className="text-sm text-muted-foreground">
                   Spread: {spread.min} — {spread.max}
                 </p>
-              )}
+              ) : null}
             </div>
           )}
 
