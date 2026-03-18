@@ -18,6 +18,7 @@ interface UseEstimationRoomResult {
   readonly myId: string | null;
   readonly isFacilitator: boolean;
   readonly connected: boolean;
+  readonly nudgeReceived: boolean;
   readonly vote: (value: CardValue) => void;
   readonly loadTicket: (ref: string, title: string) => void;
   readonly reveal: () => void;
@@ -25,6 +26,7 @@ interface UseEstimationRoomResult {
   readonly agree: (value: CardValue) => void;
   readonly nextTicket: () => void;
   readonly revote: () => void;
+  readonly nudge: () => void;
 }
 
 export function useEstimationRoom({
@@ -34,6 +36,7 @@ export function useEstimationRoom({
   const [state, setState] = useState<EstimationState | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
+  const [nudgeReceived, setNudgeReceived] = useState(false);
   const stateRef = useRef(state);
 
   useEffect(() => {
@@ -55,8 +58,15 @@ export function useEstimationRoom({
       if (data.type === "sync") {
         setState(data.state);
         setMyId(data.you);
+        setNudgeReceived(false);
       } else if (data.type === "update") {
         setState(data.state);
+        // Clear nudge when state changes (facilitator acted)
+        setNudgeReceived(false);
+      } else if (data.type === "nudge") {
+        setNudgeReceived(true);
+        // Auto-clear nudge after 3 seconds
+        setTimeout(() => setNudgeReceived(false), 3000);
       }
     },
   });
@@ -114,6 +124,10 @@ export function useEstimationRoom({
     send({ type: "REVOTE", facilitatorId: myId ?? "" });
   }, [send, myId]);
 
+  const nudge = useCallback(() => {
+    send({ type: "NUDGE" } as unknown as EstimationEvent);
+  }, [send]);
+
   const isFacilitator = Boolean(
     myId && state && state.facilitatorId === myId
   );
@@ -130,5 +144,7 @@ export function useEstimationRoom({
     agree,
     nextTicket,
     revote,
+    nudge,
+    nudgeReceived,
   };
 }

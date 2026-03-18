@@ -76,12 +76,26 @@ export default class EstimationServer implements Party.Server {
   async onMessage(message: string | ArrayBuffer, sender: Party.Connection) {
     if (typeof message !== "string") return;
 
-    let event: EstimationEvent;
+    let parsed: Record<string, unknown>;
     try {
-      event = JSON.parse(message) as EstimationEvent;
+      parsed = JSON.parse(message) as Record<string, unknown>;
     } catch {
       return;
     }
+
+    // Handle nudge separately (transient signal, not state machine event)
+    if (parsed.type === "NUDGE") {
+      const connState = sender.state as ConnectionState | undefined;
+      this.room.broadcast(
+        JSON.stringify({
+          type: "nudge",
+          from: connState?.participantName ?? "Someone",
+        })
+      );
+      return;
+    }
+
+    let event = parsed as EstimationEvent;
 
     // Inject sender's ID for vote events (prevent spoofing)
     const connState = sender.state as ConnectionState | undefined;

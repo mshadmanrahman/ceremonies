@@ -99,6 +99,8 @@ function EstimationRoom({
     agree,
     nextTicket,
     revote,
+    nudge,
+    nudgeReceived,
   } = useEstimationRoom({ roomId, playerName });
 
   const [selectedCard, setSelectedCard] = useState<CardValue | null>(null);
@@ -264,11 +266,28 @@ function EstimationRoom({
 
           {/* Card deck (voting phase) */}
           {state.phase === "voting" && (
-            <CardDeck
-              selected={selectedCard}
-              onSelect={handleVote}
-              disabled={false}
-            />
+            <>
+              <CardDeck
+                selected={selectedCard}
+                onSelect={handleVote}
+                disabled={false}
+              />
+              {/* Nudge button for participants when all voted */}
+              {!isFacilitator &&
+                selectedCard !== null &&
+                state.votes.length >= state.participants.length && (
+                  <div className="text-center">
+                    <Button
+                      onClick={nudge}
+                      size="sm"
+                      variant="ghost"
+                      className="text-muted-foreground"
+                    >
+                      All voted. Nudge facilitator to reveal
+                    </Button>
+                  </div>
+                )}
+            </>
           )}
 
           {/* Facilitator controls */}
@@ -276,6 +295,7 @@ function EstimationRoom({
             <FacilitatorControls
               state={state}
               isFacilitator={isFacilitator}
+              nudgeReceived={nudgeReceived}
               onReveal={reveal}
               onDiscuss={discuss}
               onAgree={(value) => agree(value as CardValue)}

@@ -23,6 +23,7 @@ const QUICK_VALUES: { value: CardValue; label: string }[] = [
 interface FacilitatorControlsProps {
   readonly state: EstimationState;
   readonly isFacilitator: boolean;
+  readonly nudgeReceived?: boolean;
   readonly onReveal: () => void;
   readonly onDiscuss: () => void;
   readonly onAgree: (value: string) => void;
@@ -33,6 +34,7 @@ interface FacilitatorControlsProps {
 export function FacilitatorControls({
   state,
   isFacilitator,
+  nudgeReceived,
   onReveal,
   onDiscuss,
   onAgree,
@@ -59,8 +61,15 @@ export function FacilitatorControls({
               onClick={onReveal}
               size="sm"
               variant={allVoted ? "default" : "outline"}
+              className={cn(
+                nudgeReceived && "animate-pulse ring-2 ring-primary ring-offset-2 ring-offset-background"
+              )}
             >
-              {allVoted ? "All votes in — Reveal" : "Reveal"}
+              {nudgeReceived
+                ? "Team wants to reveal!"
+                : allVoted
+                  ? "All votes in — Reveal"
+                  : "Reveal"}
             </Button>
           </>
         )}
