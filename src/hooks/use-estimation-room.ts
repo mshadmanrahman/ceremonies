@@ -24,6 +24,7 @@ interface UseEstimationRoomResult {
   readonly discuss: () => void;
   readonly agree: (value: CardValue) => void;
   readonly nextTicket: () => void;
+  readonly revote: () => void;
 }
 
 export function useEstimationRoom({
@@ -109,6 +110,10 @@ export function useEstimationRoom({
     send({ type: "NEXT_TICKET", facilitatorId: myId ?? "" });
   }, [send, myId]);
 
+  const revote = useCallback(() => {
+    send({ type: "REVOTE", facilitatorId: myId ?? "" });
+  }, [send, myId]);
+
   const isFacilitator = Boolean(
     myId && state && state.facilitatorId === myId
   );
@@ -124,5 +129,6 @@ export function useEstimationRoom({
     discuss,
     agree,
     nextTicket,
+    revote,
   };
 }

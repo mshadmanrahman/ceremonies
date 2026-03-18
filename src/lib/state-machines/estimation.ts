@@ -62,6 +62,7 @@ export type EstimationEvent =
   | { type: "START_DISCUSSION"; facilitatorId: string }
   | { type: "AGREE"; facilitatorId: string; finalEstimate: CardValue }
   | { type: "NEXT_TICKET"; facilitatorId: string }
+  | { type: "REVOTE"; facilitatorId: string }
   | { type: "PARTICIPANT_JOIN"; participant: Participant }
   | { type: "PARTICIPANT_LEAVE"; participantId: string };
 
@@ -160,6 +161,18 @@ export function transition(
         ...state,
         phase: "agreed",
         finalEstimate: event.finalEstimate,
+      };
+    }
+
+    case "REVOTE": {
+      if (state.phase !== "revealed" && state.phase !== "discussing")
+        return state;
+      if (!isFacilitator(state, event.facilitatorId)) return state;
+      return {
+        ...state,
+        phase: "voting",
+        votes: [],
+        finalEstimate: null,
       };
     }
 

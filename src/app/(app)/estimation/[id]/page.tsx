@@ -98,6 +98,7 @@ function EstimationRoom({
     discuss,
     agree,
     nextTicket,
+    revote,
   } = useEstimationRoom({ roomId, playerName });
 
   const [selectedCard, setSelectedCard] = useState<CardValue | null>(null);
@@ -279,6 +280,10 @@ function EstimationRoom({
               onDiscuss={discuss}
               onAgree={(value) => agree(value as CardValue)}
               onNextTicket={handleNextTicket}
+              onRevote={() => {
+                revote();
+                setSelectedCard(null);
+              }}
             />
           </div>
         </div>
