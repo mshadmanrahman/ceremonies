@@ -1,65 +1,90 @@
-import Image from "next/image";
+import Link from "next/link";
+import { LinkButton } from "@/components/shared/link-button";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex min-h-svh flex-col">
+      <header className="flex items-center justify-between px-6 py-4 md:px-12">
+        <span className="text-lg font-medium tracking-tight">ceremonies</span>
+        <nav className="flex items-center gap-4">
+          <Link
+            href="https://github.com/mshadmanrahman/ceremonies"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            GitHub
+          </Link>
+          <LinkButton href="/estimation/demo" variant="outline" size="sm">
+            Try it
+          </LinkButton>
+        </nav>
+      </header>
+
+      <main className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+        <div className="max-w-lg space-y-6">
+          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+            Agile ceremonies,
+            <br />
+            done right.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-lg leading-relaxed text-muted-foreground">
+            Estimation and retros in one place. Opinionated phases, true
+            anonymity, and action items that actually get done. Open source.
           </p>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <LinkButton href="/estimation/demo" size="lg">
+              Start estimating
+            </LinkButton>
+            <LinkButton href="/estimation/demo" variant="outline" size="lg">
+              Run a retro
+            </LinkButton>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="mt-24 grid w-full max-w-2xl gap-px rounded-lg border bg-border sm:grid-cols-3">
+          <Feature
+            title="Estimation"
+            description="Modified Fibonacci with coffee cup. Votes visible after reveal. Push to Jira."
+          />
+          <Feature
+            title="Retros"
+            description="Happy, Sad, Confused. True anonymous writing. Enforced phases with timers."
+          />
+          <Feature
+            title="The Haunting"
+            description="Last retro's action items open the next one. No more forgotten commitments."
+          />
         </div>
       </main>
+
+      <footer className="px-6 py-8 text-center text-sm text-muted-foreground md:px-12">
+        <p>
+          Built by{" "}
+          <Link
+            href="https://github.com/mshadmanrahman"
+            className="underline underline-offset-4 hover:text-foreground"
+          >
+            Shadman Rahman
+          </Link>
+          . Open source under MIT.
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+function Feature({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="bg-card p-6">
+      <h3 className="text-sm font-medium">{title}</h3>
+      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+        {description}
+      </p>
     </div>
   );
 }
