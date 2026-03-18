@@ -112,8 +112,8 @@ function EstimationRoom({
   );
 
   const handleLoadTicket = useCallback(() => {
-    if (!ticketInput.trim()) return;
-    loadTicket(ticketInput.trim(), ticketInput.trim());
+    const ref = ticketInput.trim() || "Quick vote";
+    loadTicket(ref, ref);
     setTicketInput("");
     setSelectedCard(null);
   }, [ticketInput, loadTicket]);
@@ -172,17 +172,17 @@ function EstimationRoom({
       {state.phase === "waiting" && isFacilitator && (
         <Card className="p-6">
           <p className="mb-4 text-sm text-muted-foreground">
-            Enter a ticket reference to start estimating.
+            What are we estimating? Enter a ticket ref or just start voting.
           </p>
           <div className="flex gap-2">
             <Input
               value={ticketInput}
               onChange={(e) => setTicketInput(e.target.value)}
-              placeholder="e.g. INS-1234 or a description"
+              placeholder="e.g. INS-1234 (optional)"
               onKeyDown={(e) => e.key === "Enter" && handleLoadTicket()}
             />
-            <Button onClick={handleLoadTicket} disabled={!ticketInput.trim()}>
-              Start
+            <Button onClick={handleLoadTicket}>
+              {ticketInput.trim() ? "Start" : "Quick vote"}
             </Button>
           </div>
         </Card>
@@ -192,7 +192,7 @@ function EstimationRoom({
       {state.phase === "waiting" && !isFacilitator && (
         <Card className="p-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Waiting for the facilitator to load a ticket...
+            Waiting for the facilitator to start...
           </p>
         </Card>
       )}

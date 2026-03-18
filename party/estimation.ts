@@ -41,7 +41,10 @@ export default class EstimationServer implements Party.Server {
     const name = url.searchParams.get("name") ?? "Anonymous";
     const participantId = conn.id;
 
-    conn.setState({ participantId, participantName: name } satisfies ConnectionState);
+    conn.setState({
+      participantId,
+      participantName: name,
+    } satisfies ConnectionState);
 
     // Add participant to state
     this.state = transition(this.state, {
@@ -49,8 +52,9 @@ export default class EstimationServer implements Party.Server {
       participant: { id: participantId, name, joinedAt: Date.now() },
     });
 
-    // If no facilitator yet, first person becomes facilitator
-    if (!this.state.facilitatorId) {
+    // If no facilitator or old facilitator is gone, assign to this person
+    const facilitatorStillHere = this.isFacilitatorConnected();
+    if (!this.state.facilitatorId || !facilitatorStillHere) {
       this.state = { ...this.state, facilitatorId: participantId };
     }
 
@@ -65,7 +69,7 @@ export default class EstimationServer implements Party.Server {
       })
     );
 
-    // Broadcast updated participant list to everyone else
+    // Broadcast updated state to everyone
     this.broadcast();
   }
 
@@ -90,10 +94,7 @@ export default class EstimationServer implements Party.Server {
     }
 
     // Inject facilitator ID for facilitator actions (prevent spoofing)
-    if (
-      "facilitatorId" in event &&
-      connState
-    ) {
+    if ("facilitatorId" in event && connState) {
       event = { ...event, facilitatorId: connState.participantId };
     }
 
@@ -114,19 +115,61 @@ export default class EstimationServer implements Party.Server {
         type: "PARTICIPANT_LEAVE",
         participantId: connState.participantId,
       });
+
+      // If the facilitator left, reassign to first remaining connection
+      if (this.state.facilitatorId === connState.participantId) {
+        const nextFacilitator = this.getFirstConnectedParticipantId(
+          connState.participantId
+        );
+        if (nextFacilitator) {
+          this.state = { ...this.state, facilitatorId: nextFacilitator };
+        }
+      }
+
       await this.persist();
       this.broadcast();
     }
   }
 
   async onRequest(req: Party.Request): Promise<Response> {
-    // GET /parties/main/:roomId — return current state (for SSR or debugging)
     if (req.method === "GET") {
       return new Response(JSON.stringify(this.state), {
         headers: { "Content-Type": "application/json" },
       });
     }
+    // POST /parties/main/:roomId — reset room
+    if (req.method === "POST") {
+      const body = (await req.json()) as { action?: string };
+      if (body.action === "reset") {
+        this.state = createInitialState("");
+        await this.persist();
+        this.broadcast();
+        return new Response("OK");
+      }
+    }
     return new Response("Not found", { status: 404 });
+  }
+
+  private isFacilitatorConnected(): boolean {
+    for (const conn of this.room.getConnections()) {
+      const cs = conn.state as ConnectionState | undefined;
+      if (cs?.participantId === this.state.facilitatorId) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private getFirstConnectedParticipantId(
+    excludeId?: string
+  ): string | null {
+    for (const conn of this.room.getConnections()) {
+      const cs = conn.state as ConnectionState | undefined;
+      if (cs && cs.participantId !== excludeId) {
+        return cs.participantId;
+      }
+    }
+    return null;
   }
 
   private broadcast() {
