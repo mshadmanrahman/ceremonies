@@ -1,15 +1,16 @@
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { HourglassIcon, CardsIcon, EyesIcon, ChatIcon, CheckCircleIcon } from "@/components/shared/icons";
 import type { EstimationPhase } from "@/lib/state-machines/estimation";
 
 const PHASE_CONFIG: Record<
   EstimationPhase,
-  { label: string; variant: "default" | "secondary" | "outline" }
+  { label: string; icon: React.ReactNode; accent: boolean }
 > = {
-  waiting: { label: "Waiting for ticket", variant: "outline" },
-  voting: { label: "Vote now", variant: "default" },
-  revealed: { label: "Votes revealed", variant: "secondary" },
-  discussing: { label: "Discussing", variant: "secondary" },
-  agreed: { label: "Agreed", variant: "default" },
+  waiting: { label: "WAITING", icon: <HourglassIcon size={16} />, accent: false },
+  voting: { label: "VOTE NOW", icon: <CardsIcon size={16} />, accent: true },
+  revealed: { label: "REVEALED", icon: <EyesIcon size={16} />, accent: false },
+  discussing: { label: "DISCUSS", icon: <ChatIcon size={16} />, accent: false },
+  agreed: { label: "AGREED", icon: <CheckCircleIcon size={16} />, accent: true },
 };
 
 interface PhaseBannerProps {
@@ -17,17 +18,24 @@ interface PhaseBannerProps {
   readonly ticketRef?: string;
 }
 
-export function PhaseBanner({ phase, ticketRef }: PhaseBannerProps) {
+export function PhaseBanner({ phase }: PhaseBannerProps) {
   const config = PHASE_CONFIG[phase];
 
   return (
-    <div className="flex items-center gap-3">
-      <Badge variant={config.variant}>{config.label}</Badge>
-      {ticketRef && (
-        <span className="font-mono text-sm text-muted-foreground">
-          {ticketRef}
-        </span>
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-lg border-2 px-4 py-1.5",
+        "text-xs font-bold uppercase tracking-wider",
+        "shadow-hard-sm",
+        "transition-[border-color,background-color,color]",
+        config.accent
+          ? "border-primary bg-primary/15 text-primary"
+          : "border-border bg-card text-muted-foreground"
       )}
+      style={{ transitionDuration: "var(--duration-normal)", transitionTimingFunction: "var(--ease-ceremony)" }}
+    >
+      {config.icon}
+      <span>{config.label}</span>
     </div>
   );
 }

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  CARD_VALUES,
   type CardValue,
   type EstimationState,
 } from "@/lib/state-machines/estimation";
@@ -50,26 +49,32 @@ export function FacilitatorControls({
   const allVoted = participantCount > 0 && voteCount >= participantCount;
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col items-center gap-4">
+      {/* Main controls bar */}
+      <div
+        className={cn(
+          "flex items-center gap-3 rounded-md border-2 border-border bg-card px-5 py-3 shadow-hard",
+          nudgeReceived && "nudge-shake border-primary"
+        )}
+      >
         {state.phase === "voting" && (
           <>
-            <span className="mr-2 font-mono text-sm text-muted-foreground">
+            <span className="font-mono text-sm font-bold tabular-nums text-muted-foreground">
               {voteCount}/{participantCount}
             </span>
             <Button
               onClick={onReveal}
               size="sm"
-              variant={allVoted ? "default" : "outline"}
               className={cn(
-                nudgeReceived && "animate-pulse ring-2 ring-primary ring-offset-2 ring-offset-background"
+                allVoted && "bg-primary text-primary-foreground"
               )}
+              variant={allVoted ? "default" : "outline"}
             >
               {nudgeReceived
-                ? "Team wants to reveal!"
+                ? "Team says REVEAL!"
                 : allVoted
-                  ? "All votes in — Reveal"
-                  : "Reveal"}
+                  ? "Reveal cards"
+                  : "Reveal early"}
             </Button>
           </>
         )}
@@ -111,21 +116,21 @@ export function FacilitatorControls({
           </Button>
         )}
 
-        {/* New round escape hatch */}
+        {/* Escape hatch */}
         {state.phase !== "waiting" && state.phase !== "voting" && (
-          <Button onClick={onNextTicket} size="sm" variant="ghost">
+          <Button onClick={onNextTicket} size="sm" variant="ghost" className="text-xs text-muted-foreground">
             New round
           </Button>
         )}
       </div>
 
-      {/* Estimate picker (facilitator selects final value) */}
+      {/* Estimate picker */}
       {showPicker && (
-        <div className="flex flex-col items-center gap-2 rounded-lg border bg-card p-3">
-          <p className="text-xs text-muted-foreground">
+        <div className="stagger-in flex flex-col items-center gap-3 rounded-md border-2 border-primary/40 bg-card p-4 shadow-hard">
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             Pick the final estimate
           </p>
-          <div className="flex flex-wrap justify-center gap-1.5">
+          <div className="flex flex-wrap justify-center gap-2">
             {QUICK_VALUES.map(({ value, label }) => (
               <button
                 key={value}
@@ -134,9 +139,16 @@ export function FacilitatorControls({
                   setShowPicker(false);
                 }}
                 className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-md border text-sm font-semibold transition-colors",
-                  "hover:border-primary hover:bg-primary/5"
+                  "flex h-12 w-12 items-center justify-center",
+                  "rounded-lg border-2 border-border bg-card",
+                  "font-mono text-lg font-bold",
+                  "shadow-hard-sm",
+                  "transition-[transform,box-shadow,border-color,background-color]",
+                  "hover:translate-y-[1px] hover:border-primary hover:bg-primary/10",
+                  "hover:shadow-[0_2px_0_0_var(--shadow-color)]",
+                  "active:translate-y-[3px] active:shadow-none"
                 )}
+                style={{ transitionDuration: "var(--duration-micro)", transitionTimingFunction: "var(--ease-ceremony)" }}
               >
                 {label}
               </button>

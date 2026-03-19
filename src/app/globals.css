@@ -7,7 +7,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Space Grotesk", "Space Grotesk Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Newsreader", "Georgia", serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -38,6 +39,10 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -51,99 +56,130 @@
   --color-sad: var(--sad);
   --color-confused: var(--confused);
   --color-coffee: var(--coffee);
+  --color-estimation: var(--estimation);
+  --color-estimation-foreground: var(--estimation-foreground);
 }
 
 /*
- * Scandinavian Minimalist — Light Mode
- * Warm neutrals, generous whitespace, singular accent
+ * Ceremonies — Warm neobrutalism
+ * Iconoir vertical press shadows, thick borders, amber/orange primary
+ * Newsreader + Space Grotesk typography
  */
 :root {
-  --background: oklch(0.985 0.002 80);
-  --foreground: oklch(0.18 0.01 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.01 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.01 260);
-  --primary: oklch(0.35 0.04 260);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.96 0.003 80);
-  --secondary-foreground: oklch(0.25 0.01 260);
-  --muted: oklch(0.96 0.003 80);
-  --muted-foreground: oklch(0.50 0.01 260);
-  --accent: oklch(0.96 0.003 80);
-  --accent-foreground: oklch(0.25 0.01 260);
-  --destructive: oklch(0.55 0.2 25);
-  --border: oklch(0.92 0.003 80);
-  --input: oklch(0.92 0.003 80);
-  --ring: oklch(0.35 0.04 260);
-  --radius: 0.5rem;
+  --background: oklch(0.15 0.015 70);
+  --foreground: oklch(0.95 0.01 80);
+  --card: oklch(0.19 0.015 70);
+  --card-foreground: oklch(0.95 0.01 80);
+  --popover: oklch(0.19 0.015 70);
+  --popover-foreground: oklch(0.95 0.01 80);
+  --primary: oklch(0.78 0.17 55);
+  --primary-foreground: oklch(0.15 0.04 55);
+  --secondary: oklch(0.24 0.015 70);
+  --secondary-foreground: oklch(0.90 0.01 80);
+  --muted: oklch(0.24 0.015 70);
+  --muted-foreground: oklch(0.60 0.02 80);
+  --accent: oklch(0.62 0.14 275);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.62 0.22 25);
+  --border: oklch(0.38 0.02 70);
+  --input: oklch(0.28 0.015 70);
+  --ring: oklch(0.78 0.17 55);
+  --radius: 0.25rem;
 
-  /* Ceremony colors */
-  --happy: oklch(0.72 0.14 155);
-  --sad: oklch(0.62 0.12 260);
-  --confused: oklch(0.72 0.14 65);
-  --coffee: oklch(0.55 0.08 55);
+  /* Semantic */
+  --warning: oklch(0.75 0.15 50);
+  --warning-foreground: oklch(0.15 0.04 50);
+  --success: oklch(0.72 0.18 155);
+  --success-foreground: oklch(0.15 0.04 155);
+
+  /* Ceremony room accents */
+  --estimation: oklch(0.78 0.17 55);
+  --estimation-foreground: oklch(0.15 0.04 55);
+  --happy: oklch(0.72 0.18 155);
+  --sad: oklch(0.62 0.14 275);
+  --confused: oklch(0.78 0.14 50);
+  --coffee: oklch(0.65 0.10 55);
 
   /* Chart */
-  --chart-1: oklch(0.35 0.04 260);
-  --chart-2: oklch(0.72 0.14 155);
-  --chart-3: oklch(0.62 0.12 260);
-  --chart-4: oklch(0.72 0.14 65);
-  --chart-5: oklch(0.50 0.01 260);
+  --chart-1: oklch(0.78 0.17 55);
+  --chart-2: oklch(0.72 0.18 155);
+  --chart-3: oklch(0.62 0.14 275);
+  --chart-4: oklch(0.75 0.15 50);
+  --chart-5: oklch(0.58 0.02 80);
 
-  --sidebar: oklch(0.975 0.002 80);
-  --sidebar-foreground: oklch(0.18 0.01 260);
-  --sidebar-primary: oklch(0.35 0.04 260);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.96 0.003 80);
-  --sidebar-accent-foreground: oklch(0.25 0.01 260);
-  --sidebar-border: oklch(0.92 0.003 80);
-  --sidebar-ring: oklch(0.35 0.04 260);
+  --sidebar: oklch(0.17 0.015 70);
+  --sidebar-foreground: oklch(0.95 0.01 80);
+  --sidebar-primary: oklch(0.78 0.17 55);
+  --sidebar-primary-foreground: oklch(0.15 0.04 55);
+  --sidebar-accent: oklch(0.24 0.015 70);
+  --sidebar-accent-foreground: oklch(0.95 0.01 80);
+  --sidebar-border: oklch(0.38 0.02 70);
+  --sidebar-ring: oklch(0.78 0.17 55);
+
+  /* Hard shadow system (Iconoir-inspired vertical press) */
+  --shadow-color: oklch(0.06 0.01 55);
+  --shadow-offset: 5px;
+
+  /* Motion */
+  --ease-ceremony: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-micro: 120ms;
+  --duration-normal: 200ms;
+  --duration-reveal: 350ms;
 }
 
 /*
- * Dark Mode — warm evening, not a cave
+ * Light Mode — warm cream, dark borders, amber pops
  */
-.dark {
-  --background: oklch(0.14 0.008 260);
-  --foreground: oklch(0.93 0.005 80);
-  --card: oklch(0.18 0.008 260);
-  --card-foreground: oklch(0.93 0.005 80);
-  --popover: oklch(0.18 0.008 260);
-  --popover-foreground: oklch(0.93 0.005 80);
-  --primary: oklch(0.80 0.06 260);
-  --primary-foreground: oklch(0.14 0.008 260);
-  --secondary: oklch(0.22 0.008 260);
-  --secondary-foreground: oklch(0.93 0.005 80);
-  --muted: oklch(0.22 0.008 260);
-  --muted-foreground: oklch(0.60 0.01 260);
-  --accent: oklch(0.22 0.008 260);
-  --accent-foreground: oklch(0.93 0.005 80);
-  --destructive: oklch(0.65 0.2 25);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.80 0.06 260);
+.light {
+  --background: oklch(0.96 0.012 80);
+  --foreground: oklch(0.15 0.03 70);
+  --card: oklch(0.99 0.006 80);
+  --card-foreground: oklch(0.15 0.03 70);
+  --popover: oklch(0.99 0.006 80);
+  --popover-foreground: oklch(0.15 0.03 70);
+  --primary: oklch(0.72 0.18 55);
+  --primary-foreground: oklch(0.15 0.04 55);
+  --secondary: oklch(0.93 0.012 80);
+  --secondary-foreground: oklch(0.20 0.03 70);
+  --muted: oklch(0.93 0.012 80);
+  --muted-foreground: oklch(0.42 0.02 70);
+  --accent: oklch(0.52 0.18 275);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.52 0.22 25);
+  --border: oklch(0.72 0.02 70);
+  --input: oklch(0.82 0.01 80);
+  --ring: oklch(0.72 0.18 55);
 
-  /* Ceremony colors — slightly brighter for dark bg */
-  --happy: oklch(0.78 0.16 155);
-  --sad: oklch(0.68 0.14 260);
-  --confused: oklch(0.78 0.16 65);
-  --coffee: oklch(0.65 0.10 55);
+  --warning: oklch(0.70 0.15 50);
+  --warning-foreground: oklch(0.15 0.04 50);
+  --success: oklch(0.55 0.18 155);
+  --success-foreground: oklch(0.98 0 0);
 
-  --chart-1: oklch(0.80 0.06 260);
-  --chart-2: oklch(0.78 0.16 155);
-  --chart-3: oklch(0.68 0.14 260);
-  --chart-4: oklch(0.78 0.16 65);
-  --chart-5: oklch(0.60 0.01 260);
+  --estimation: oklch(0.72 0.18 55);
+  --estimation-foreground: oklch(0.15 0.04 55);
+  --happy: oklch(0.55 0.18 155);
+  --sad: oklch(0.48 0.18 275);
+  --confused: oklch(0.65 0.14 50);
+  --coffee: oklch(0.48 0.10 55);
 
-  --sidebar: oklch(0.16 0.008 260);
-  --sidebar-foreground: oklch(0.93 0.005 80);
-  --sidebar-primary: oklch(0.80 0.06 260);
-  --sidebar-primary-foreground: oklch(0.14 0.008 260);
-  --sidebar-accent: oklch(0.22 0.008 260);
-  --sidebar-accent-foreground: oklch(0.93 0.005 80);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.80 0.06 260);
+  --chart-1: oklch(0.72 0.18 55);
+  --chart-2: oklch(0.55 0.18 155);
+  --chart-3: oklch(0.48 0.18 275);
+  --chart-4: oklch(0.65 0.14 50);
+  --chart-5: oklch(0.42 0.02 70);
+
+  --sidebar: oklch(0.95 0.012 80);
+  --sidebar-foreground: oklch(0.15 0.03 70);
+  --sidebar-primary: oklch(0.72 0.18 55);
+  --sidebar-primary-foreground: oklch(0.15 0.04 55);
+  --sidebar-accent: oklch(0.93 0.012 80);
+  --sidebar-accent-foreground: oklch(0.20 0.03 70);
+  --sidebar-border: oklch(0.72 0.02 70);
+  --sidebar-ring: oklch(0.72 0.18 55);
+
+  --shadow-color: oklch(0.25 0.03 55);
+  --shadow-offset: 5px;
 }
 
 @layer base {
@@ -155,5 +191,163 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* ── PostHog-style Hard Shadow Utilities ── */
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .tracking-ceremony {
+    letter-spacing: -0.02em;
+  }
+
+  /* Iconoir-style vertical hard shadow */
+  .shadow-hard {
+    box-shadow: 0 var(--shadow-offset) 0 0 var(--shadow-color);
+  }
+
+  .shadow-hard-sm {
+    box-shadow: 0 3px 0 0 var(--shadow-color);
+  }
+
+  .shadow-hard-lg {
+    box-shadow: 0 8px 0 0 var(--shadow-color);
+  }
+
+  .shadow-hard-primary {
+    box-shadow: 0 var(--shadow-offset) 0 0 var(--primary);
+  }
+
+  /* Hover: press DOWN into shadow (iconoir donate button) */
+  .hover-lift {
+    transition: transform var(--duration-micro) var(--ease-ceremony),
+                box-shadow var(--duration-micro) var(--ease-ceremony);
+  }
+  .hover-lift:hover {
+    transform: translateY(calc(var(--shadow-offset) - 2px));
+    box-shadow: 0 2px 0 0 var(--shadow-color);
+  }
+  .hover-lift:active {
+    transform: translateY(var(--shadow-offset));
+    box-shadow: 0 0 0 0 var(--shadow-color);
+  }
+
+  /* Border: thick, visible, intentional */
+  .border-hard {
+    border-width: 2px;
+    border-style: solid;
+    border-color: var(--border);
+  }
+}
+
+/* ── Card Flip Animation ── */
+
+.card-flip-inner {
+  transition: transform var(--duration-reveal) var(--ease-ceremony);
+  transform-style: preserve-3d;
+}
+
+.card-flip-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  backface-visibility: hidden;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-face-back {
+  transform: rotateY(180deg);
+}
+
+/* ── Pulse waiting animation ── */
+
+@keyframes card-waiting-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+.card-waiting {
+  animation: card-waiting-pulse 2s var(--ease-ceremony) infinite;
+}
+
+/* ── Consensus celebration ── */
+
+@keyframes consensus-pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.consensus-enter {
+  animation: consensus-pop var(--duration-reveal) var(--ease-ceremony) forwards;
+}
+
+/* ── Stagger entrance ── */
+
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-in {
+  animation: stagger-in var(--duration-normal) var(--ease-ceremony) backwards;
+}
+
+/* ── Nudge shake ── */
+
+@keyframes nudge-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+  20%, 40%, 60%, 80% { transform: translateX(3px); }
+}
+
+.nudge-shake {
+  animation: nudge-shake 0.5s var(--ease-ceremony);
+}
+
+/* ── Reduced motion ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .card-flip-inner {
+    transition: opacity var(--duration-micro) ease;
+    transform: none !important;
+  }
+  .card-flip-inner.flipped {
+    transform: none !important;
+  }
+  .card-waiting {
+    animation: none;
+  }
+  .consensus-enter {
+    animation: none;
+    opacity: 1;
+  }
+  .stagger-in {
+    animation: none;
+    opacity: 1;
+  }
+  .nudge-shake {
+    animation: none;
   }
 }
