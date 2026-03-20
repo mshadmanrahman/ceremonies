@@ -30,8 +30,8 @@ export default function Home() {
           >
             GitHub
           </Link>
-          <LinkButton href="/estimation/demo" variant="outline" size="sm">
-            Try it
+          <LinkButton href="/dashboard" variant="outline" size="sm">
+            Dashboard
           </LinkButton>
           <Show when="signed-out">
             <SignInButton>
@@ -123,23 +123,29 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Feature cards */}
+        {/* Feature cards (clickable) */}
         <div className="relative mt-24 grid w-full max-w-3xl gap-5 sm:grid-cols-3">
-          <FeatureCard
-            icon={<CardsIcon size={36} />}
-            title="Estimation"
-            description="Modified Fibonacci with coffee cup. Votes visible after the big reveal. Push to Jira."
-          />
-          <FeatureCard
-            icon={<CrystalBallIcon width={36} height={36} />}
-            title="Retros"
-            description="Happy, Sad, Confused. True anonymous writing. Enforced phases with timers."
-          />
-          <FeatureCard
-            icon={<GhostIcon size={36} />}
-            title="The Haunting"
-            description="Last retro's action items open the next one. No more forgotten commitments."
-          />
+          <Link href="/estimation/demo">
+            <FeatureCard
+              icon={<CardsIcon size={36} />}
+              title="Estimation"
+              description="Modified Fibonacci with coffee cup. Votes visible after the big reveal. Push to Jira."
+            />
+          </Link>
+          <Link href="/retro/demo">
+            <FeatureCard
+              icon={<CrystalBallIcon width={36} height={36} />}
+              title="Retros"
+              description="Happy, Sad, Confused. True anonymous writing. Enforced phases with timers."
+            />
+          </Link>
+          <Link href="/retro/demo">
+            <FeatureCard
+              icon={<GhostIcon size={36} />}
+              title="The Haunting"
+              description="Last retro's action items open the next one. No more forgotten commitments."
+            />
+          </Link>
         </div>
       </main>
 
