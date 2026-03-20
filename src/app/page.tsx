@@ -61,19 +61,19 @@ export default function Home() {
         </div>
 
         <div className="relative max-w-2xl space-y-6">
-          {/* Mascot row */}
-          <div className="!mb-0 flex items-center justify-center gap-8">
+          {/* Mascot row: slightly tilted, ~20% smaller */}
+          <div className="!mb-0 flex items-center justify-center gap-6">
             <div
-              className="text-primary transition-transform hover:scale-110 hover:-rotate-6"
+              className="-rotate-6 text-primary transition-transform hover:scale-110 hover:-rotate-12"
               style={{ transitionDuration: "var(--duration-normal)", transitionTimingFunction: "var(--ease-bounce)" }}
             >
-              <OwlIcon size={88} />
+              <OwlIcon size={68} />
             </div>
             <div
-              className="text-coffee transition-transform hover:scale-110 hover:rotate-6"
+              className="rotate-6 text-coffee transition-transform hover:scale-110 hover:rotate-12"
               style={{ transitionDuration: "var(--duration-normal)", transitionTimingFunction: "var(--ease-bounce)" }}
             >
-              <GhostIcon size={88} />
+              <GhostIcon size={68} />
             </div>
           </div>
 

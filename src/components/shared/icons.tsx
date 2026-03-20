@@ -16,16 +16,19 @@ export {
   HalfMoon as MoonIcon,
 } from "iconoir-react";
 
-// Card icon: iconoir doesn't have a playing card, so we keep a clean custom one
+/** Estimation icon: three fanned cards (like a poker hand reveal) */
 export function CardsIcon({ size = 24, className }: { size?: number; className?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      {/* Back card */}
-      <rect x="2" y="4" width="13" height="17" rx="2" />
-      {/* Front card */}
-      <rect x="9" y="3" width="13" height="17" rx="2" />
-      {/* Diamond suit on front card */}
-      <path d="M15.5 8.5 L17 11 L15.5 13.5 L14 11Z" fill="currentColor" stroke="none" />
+      {/* Left card (tilted left) */}
+      <rect x="2.5" y="5.5" width="9" height="13" rx="1.5" transform="rotate(-15 7 12)" />
+      {/* Center card */}
+      <rect x="7.5" y="4" width="9" height="13" rx="1.5" />
+      {/* Right card (tilted right) */}
+      <rect x="12.5" y="5.5" width="9" height="13" rx="1.5" transform="rotate(15 17 12)" />
+      {/* Question mark on center card (the "reveal") */}
+      <path d="M10.5 9 Q10.5 7.5 12 7.5 Q13.5 7.5 13.5 9 Q13.5 10 12 10.5 L12 11.5" />
+      <circle cx="12" cy="13.5" r="0.5" fill="currentColor" stroke="none" />
     </svg>
   );
 }
