@@ -30,6 +30,78 @@ export function CardsIcon({ size = 24, className }: { size?: number; className?:
   );
 }
 
+// ── Retro Category Icons (custom, iconoir stroke style) ──
+
+interface CategoryIconProps {
+  readonly size?: number;
+  readonly className?: string;
+}
+
+/** Happy: sunburst face with wide grin */
+export function HappyIcon({ size = 24, className }: CategoryIconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      {/* Sun rays */}
+      <line x1="16" y1="2" x2="16" y2="5" />
+      <line x1="16" y1="27" x2="16" y2="30" />
+      <line x1="2" y1="16" x2="5" y2="16" />
+      <line x1="27" y1="16" x2="30" y2="16" />
+      <line x1="6.1" y1="6.1" x2="8.2" y2="8.2" />
+      <line x1="23.8" y1="23.8" x2="25.9" y2="25.9" />
+      <line x1="6.1" y1="25.9" x2="8.2" y2="23.8" />
+      <line x1="23.8" y1="8.2" x2="25.9" y2="6.1" />
+      {/* Face circle */}
+      <circle cx="16" cy="16" r="9" />
+      {/* Eyes (happy crescents) */}
+      <path d="M12 14 Q13 12 14 14" />
+      <path d="M18 14 Q19 12 20 14" />
+      {/* Big smile */}
+      <path d="M11.5 18 Q16 23 20.5 18" />
+    </svg>
+  );
+}
+
+/** Sad: rain cloud with downturned face */
+export function SadIcon({ size = 24, className }: CategoryIconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      {/* Cloud shape */}
+      <path d="M8 20 Q4 20 4 16.5 Q4 13 8 13 Q8 8 13 8 Q16 6 19 8 Q22 6 24 9 Q28 9 28 13 Q30 14 28 17 Q28 20 24 20 Z" />
+      {/* Eyes (dots) */}
+      <circle cx="13" cy="15" r="1" fill="currentColor" stroke="none" />
+      <circle cx="19" cy="15" r="1" fill="currentColor" stroke="none" />
+      {/* Frown */}
+      <path d="M12.5 18.5 Q16 16 19.5 18.5" />
+      {/* Rain drops */}
+      <line x1="11" y1="23" x2="10" y2="26" />
+      <line x1="16" y1="24" x2="15" y2="27" />
+      <line x1="21" y1="23" x2="20" y2="26" />
+    </svg>
+  );
+}
+
+/** Confused: spiral/question mark face */
+export function ConfusedIcon({ size = 24, className }: CategoryIconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      {/* Head circle */}
+      <circle cx="16" cy="16" r="11" />
+      {/* Raised eyebrow left */}
+      <path d="M10 11 Q12 9 14 11" />
+      {/* Normal eyebrow right */}
+      <line x1="18" y1="11" x2="22" y2="11" />
+      {/* Left eye */}
+      <circle cx="12" cy="14.5" r="1.2" fill="currentColor" stroke="none" />
+      {/* Right eye */}
+      <circle cx="20" cy="14.5" r="1.2" fill="currentColor" stroke="none" />
+      {/* Squiggle mouth */}
+      <path d="M11 20 Q13 22 16 19 Q19 17 21 20" />
+      {/* Spiral above head */}
+      <path d="M20 4 Q23 4 22 6 Q21 8 19 7" />
+    </svg>
+  );
+}
+
 // ── Ceremony Mascots (custom, no library equivalent) ──
 
 interface MascotProps {

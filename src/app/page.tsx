@@ -103,7 +103,7 @@ export default function Home() {
               Start estimating
             </LinkButton>
             <LinkButton
-              href="/estimation/demo"
+              href="/retro/demo"
               variant="outline"
               size="xl"
             >

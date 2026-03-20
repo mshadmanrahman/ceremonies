@@ -348,6 +348,30 @@
   animation: nudge-shake 0.5s var(--ease-ceremony);
 }
 
+/* ── Ghost float (haunting phase) ── */
+
+@keyframes ghost-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-6px) rotate(-3deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+  75% { transform: translateY(-4px) rotate(-1deg); }
+}
+
+.ghost-float {
+  animation: ghost-float 3s var(--ease-ceremony) infinite;
+}
+
+/* ── Timer pulse ── */
+
+@keyframes timer-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--primary); }
+  50% { box-shadow: 0 0 0 8px transparent; }
+}
+
+.timer-pulse {
+  animation: timer-pulse 2s var(--ease-ceremony) infinite;
+}
+
 /* ── Reduced motion ── */
 
 @media (prefers-reduced-motion: reduce) {
@@ -370,6 +394,12 @@
     opacity: 1;
   }
   .nudge-shake {
+    animation: none;
+  }
+  .ghost-float {
+    animation: none;
+  }
+  .timer-pulse {
     animation: none;
   }
   [class*="animate-[drift"] {
