@@ -1,6 +1,6 @@
 {
   "$schema": "https://www.partykit.io/schema.json",
-  "name": "ceremonies",
+  "name": "ceremonies-live",
   "main": "party/estimation.ts",
   "parties": {
     "retro": "party/retro.ts"
