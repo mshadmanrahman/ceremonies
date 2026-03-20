@@ -81,7 +81,7 @@
   --accent: oklch(0.62 0.14 275);
   --accent-foreground: oklch(0.98 0 0);
   --destructive: oklch(0.62 0.22 25);
-  --border: oklch(0.38 0.02 70);
+  --border: #2D1E14;
   --input: oklch(0.28 0.015 70);
   --ring: oklch(0.78 0.17 55);
   --radius: 0.25rem;
@@ -113,11 +113,11 @@
   --sidebar-primary-foreground: oklch(0.15 0.04 55);
   --sidebar-accent: oklch(0.24 0.015 70);
   --sidebar-accent-foreground: oklch(0.95 0.01 80);
-  --sidebar-border: oklch(0.38 0.02 70);
+  --sidebar-border: #2D1E14;
   --sidebar-ring: oklch(0.78 0.17 55);
 
   /* Hard shadow system (Iconoir-inspired vertical press) */
-  --shadow-color: oklch(0.06 0.01 55);
+  --shadow-color: #2D1E14;
   --shadow-offset: 5px;
 
   /* Motion */
@@ -147,7 +147,7 @@
   --accent: oklch(0.52 0.18 275);
   --accent-foreground: oklch(0.98 0 0);
   --destructive: oklch(0.52 0.22 25);
-  --border: oklch(0.72 0.02 70);
+  --border: #2D1E14;
   --input: oklch(0.82 0.01 80);
   --ring: oklch(0.72 0.18 55);
 
@@ -175,10 +175,10 @@
   --sidebar-primary-foreground: oklch(0.15 0.04 55);
   --sidebar-accent: oklch(0.93 0.012 80);
   --sidebar-accent-foreground: oklch(0.20 0.03 70);
-  --sidebar-border: oklch(0.72 0.02 70);
+  --sidebar-border: #2D1E14;
   --sidebar-ring: oklch(0.72 0.18 55);
 
-  --shadow-color: oklch(0.25 0.03 55);
+  --shadow-color: #2D1E14;
   --shadow-offset: 5px;
 }
 
@@ -270,6 +270,28 @@
 
 /* ── Pulse waiting animation ── */
 
+/* ── Floating shape drift animations ── */
+
+@keyframes drift-a {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(6px, -8px) rotate(8deg); }
+  50% { transform: translate(-4px, -14px) rotate(-4deg); }
+  75% { transform: translate(8px, -6px) rotate(12deg); }
+}
+
+@keyframes drift-b {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(-8px, 6px) rotate(-10deg); }
+  66% { transform: translate(6px, 10px) rotate(6deg); }
+}
+
+@keyframes drift-c {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(10px, 4px) rotate(15deg); }
+  50% { transform: translate(-6px, 12px) rotate(-8deg); }
+  80% { transform: translate(4px, -6px) rotate(10deg); }
+}
+
 @keyframes card-waiting-pulse {
   0%, 100% {
     opacity: 0.6;
@@ -349,5 +371,8 @@
   }
   .nudge-shake {
     animation: none;
+  }
+  [class*="animate-[drift"] {
+    animation: none !important;
   }
 }

@@ -6,11 +6,11 @@ const PHASE_CONFIG: Record<
   EstimationPhase,
   { label: string; icon: React.ReactNode; accent: boolean }
 > = {
-  waiting: { label: "WAITING", icon: <HourglassIcon size={16} />, accent: false },
+  waiting: { label: "WAITING", icon: <HourglassIcon width={16} height={16} />, accent: false },
   voting: { label: "VOTE NOW", icon: <CardsIcon size={16} />, accent: true },
-  revealed: { label: "REVEALED", icon: <EyesIcon size={16} />, accent: false },
-  discussing: { label: "DISCUSS", icon: <ChatIcon size={16} />, accent: false },
-  agreed: { label: "AGREED", icon: <CheckCircleIcon size={16} />, accent: true },
+  revealed: { label: "REVEALED", icon: <EyesIcon width={16} height={16} />, accent: false },
+  discussing: { label: "DISCUSS", icon: <ChatIcon width={16} height={16} />, accent: false },
+  agreed: { label: "AGREED", icon: <CheckCircleIcon width={16} height={16} />, accent: true },
 };
 
 interface PhaseBannerProps {
@@ -24,13 +24,12 @@ export function PhaseBanner({ phase }: PhaseBannerProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-lg border-2 px-4 py-1.5",
-        "text-xs font-bold uppercase tracking-wider",
-        "shadow-hard-sm",
-        "transition-[border-color,background-color,color]",
+        "flex items-center gap-2 rounded-md px-3 py-1.5",
+        "text-[10px] font-bold uppercase tracking-[0.12em]",
+        "transition-[background-color,color]",
         config.accent
-          ? "border-primary bg-primary/15 text-primary"
-          : "border-border bg-card text-muted-foreground"
+          ? "bg-primary/15 text-primary"
+          : "bg-muted text-muted-foreground"
       )}
       style={{ transitionDuration: "var(--duration-normal)", transitionTimingFunction: "var(--ease-ceremony)" }}
     >

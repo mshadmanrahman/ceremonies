@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Plus } from "iconoir-react";
 import {
   type CardValue,
   type EstimationState,
@@ -50,11 +51,11 @@ export function FacilitatorControls({
 
   return (
     <div className="flex flex-col items-center gap-4">
-      {/* Main controls bar */}
+      {/* Main controls — no border wrapper, just buttons */}
       <div
         className={cn(
-          "flex items-center gap-3 rounded-md border-2 border-border bg-card px-5 py-3 shadow-hard",
-          nudgeReceived && "nudge-shake border-primary"
+          "flex items-center gap-3",
+          nudgeReceived && "nudge-shake"
         )}
       >
         {state.phase === "voting" && (
@@ -116,11 +117,15 @@ export function FacilitatorControls({
           </Button>
         )}
 
-        {/* Escape hatch */}
+        {/* Escape hatch — styled as a visible link, not hidden text */}
         {state.phase !== "waiting" && state.phase !== "voting" && (
-          <Button onClick={onNextTicket} size="sm" variant="ghost" className="text-xs text-muted-foreground">
+          <button
+            onClick={onNextTicket}
+            className="inline-flex items-center gap-1 text-sm font-bold text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+          >
+            <Plus width={14} height={14} />
             New round
-          </Button>
+          </button>
         )}
       </div>
 

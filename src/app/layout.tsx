@@ -28,6 +28,11 @@ export const metadata: Metadata = {
   title: "Ceremonies",
   description:
     "Open-source agile ceremony toolkit. Retros, estimation, and team analytics.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

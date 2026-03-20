@@ -12,9 +12,11 @@ import { SessionHistory } from "@/components/estimation/session-history";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useEstimationRoom } from "@/hooks/use-estimation-room";
 import { useConfetti } from "@/hooks/use-confetti";
-import { getVoteSpread, type CardValue } from "@/lib/state-machines/estimation";
+import { getVoteSpread, type CardValue, type CompletedEstimate } from "@/lib/state-machines/estimation";
 import { cn } from "@/lib/utils";
 import { OwlIcon } from "@/components/shared/icons";
+import Link from "next/link";
+import { NavArrowLeft, LogOut, Copy, Check } from "iconoir-react";
 
 export default function EstimationRoomPage({
   params,
@@ -24,6 +26,24 @@ export default function EstimationRoomPage({
   const { id: roomId } = use(params);
   const [playerName, setPlayerName] = useState("");
   const [joined, setJoined] = useState(false);
+  const [sessionSummary, setSessionSummary] = useState<{
+    history: ReadonlyArray<CompletedEstimate>;
+    participants: number;
+    playerName: string;
+  } | null>(null);
+
+  if (sessionSummary) {
+    return (
+      <SessionSummaryScreen
+        summary={sessionSummary}
+        onDone={() => {
+          setSessionSummary(null);
+          setJoined(false);
+          setPlayerName("");
+        }}
+      />
+    );
+  }
 
   if (!joined) {
     return (
@@ -35,7 +55,19 @@ export default function EstimationRoomPage({
     );
   }
 
-  return <EstimationRoom roomId={roomId} playerName={playerName} />;
+  return (
+    <EstimationRoom
+      roomId={roomId}
+      playerName={playerName}
+      onLeave={() => {
+        setJoined(false);
+        setPlayerName("");
+      }}
+      onEndSession={(history, participants) => {
+        setSessionSummary({ history, participants, playerName });
+      }}
+    />
+  );
 }
 
 function JoinScreen({
@@ -48,8 +80,19 @@ function JoinScreen({
   onJoin: () => void;
 }) {
   return (
-    <div className="flex min-h-svh items-center justify-center px-4">
-      <div className="stagger-in w-full max-w-sm space-y-8 text-center">
+    <div className="flex min-h-svh flex-col px-4">
+      {/* Back link */}
+      <div className="px-2 py-5 sm:px-8">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm font-bold text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+        >
+          <NavArrowLeft width={16} height={16} />
+          Back
+        </Link>
+      </div>
+
+      <div className="stagger-in mx-auto flex flex-1 w-full max-w-sm flex-col items-center justify-center space-y-8 text-center">
         {/* Owl mascot */}
         <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-md border-2 border-primary/40 bg-primary/10 text-primary shadow-hard">
           <OwlIcon size={52} />
@@ -90,9 +133,13 @@ function JoinScreen({
 function EstimationRoom({
   roomId,
   playerName,
+  onLeave,
+  onEndSession,
 }: {
   roomId: string;
   playerName: string;
+  onLeave: () => void;
+  onEndSession: (history: ReadonlyArray<CompletedEstimate>, participants: number) => void;
 }) {
   const {
     state,
@@ -166,6 +213,11 @@ function EstimationRoom({
     setSelectedCard(null);
   }, [nextTicket]);
 
+  const handleEndSession = useCallback(() => {
+    if (!state) return;
+    onEndSession(state.history, state.participants.length);
+  }, [state, onEndSession]);
+
   // Loading state
   if (!state) {
     return (
@@ -195,9 +247,18 @@ function EstimationRoom({
       {/* Header */}
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-3xl tracking-ceremony sm:text-4xl">
-            Estimation
-          </h1>
+          <div className="flex items-baseline gap-3">
+            <Link
+              href="/"
+              className="relative top-[2px] flex h-8 w-8 shrink-0 items-center justify-center rounded-md border-2 border-border bg-card text-muted-foreground shadow-hard-sm transition-colors hover:border-foreground/40 hover:text-foreground"
+              aria-label="Back to home"
+            >
+              <NavArrowLeft width={16} height={16} />
+            </Link>
+            <h1 className="font-display text-3xl tracking-ceremony sm:text-4xl">
+              Estimation
+            </h1>
+          </div>
           <div className="mt-1 flex items-center gap-2">
             <span className="text-xs font-bold text-muted-foreground">
               {state.participants.length} player{state.participants.length !== 1 ? "s" : ""}
@@ -209,7 +270,7 @@ function EstimationRoom({
               )}
             />
             {isFacilitator && (
-              <span className="rounded-md border-2 border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary">
+              <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary">
                 Facilitator
               </span>
             )}
@@ -217,6 +278,24 @@ function EstimationRoom({
         </div>
         <div className="flex items-center gap-3">
           <PhaseBanner phase={state.phase} ticketRef={state.ticket?.ref} />
+          {/* Leave / End session */}
+          {isFacilitator ? (
+            <button
+              onClick={handleEndSession}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground underline underline-offset-4 transition-colors hover:text-destructive"
+            >
+              <LogOut width={14} height={14} />
+              End
+            </button>
+          ) : (
+            <button
+              onClick={onLeave}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+            >
+              <LogOut width={14} height={14} />
+              Leave
+            </button>
+          )}
           <ThemeToggle />
         </div>
       </header>
@@ -266,7 +345,7 @@ function EstimationRoom({
         <div className="space-y-8">
           {/* Current ticket */}
           <div className="text-center">
-            <span className="rounded-md border-2 border-border bg-card px-3 py-1 font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground shadow-hard-sm">
+            <span className="rounded-md bg-muted px-3 py-1 font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
               {state.ticket.ref}
             </span>
             {state.ticket.title !== state.ticket.ref && (
@@ -308,7 +387,7 @@ function EstimationRoom({
                   </p>
                 </div>
               ) : spread.min !== "-" ? (
-                <p className="rounded-lg border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold text-muted-foreground shadow-hard-sm inline-block">
+                <p className="rounded-md bg-muted px-4 py-2 font-mono text-sm font-bold text-muted-foreground inline-block">
                   Spread: {spread.min} — {spread.max}
                 </p>
               ) : null}
@@ -375,6 +454,141 @@ function EstimationRoom({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Session Summary Screen (Level 2) ──
+
+const VALUE_DISPLAY: Record<CardValue, string> = {
+  coffee: "☕", "1": "1", "2": "2", "3": "3", "4": "4",
+  "5": "5", "8": "8", "13": "13", question: "❓",
+};
+
+function SessionSummaryScreen({
+  summary,
+  onDone,
+}: {
+  summary: {
+    history: ReadonlyArray<CompletedEstimate>;
+    participants: number;
+    playerName: string;
+  };
+  onDone: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const totalEstimated = summary.history.length;
+  const estimates = summary.history.map((h) => h.finalEstimate);
+  const numericEstimates = estimates
+    .filter((e): e is CardValue => e !== "coffee" && e !== "question")
+    .map(Number);
+  const totalPoints = numericEstimates.reduce((sum, n) => sum + n, 0);
+
+  const summaryText = [
+    `Estimation Session Summary`,
+    `${"─".repeat(30)}`,
+    `Tickets estimated: ${totalEstimated}`,
+    `Participants: ${summary.participants}`,
+    `Total points: ${totalPoints}`,
+    ``,
+    ...summary.history.map(
+      (h, i) =>
+        `${i + 1}. ${h.ticket.ref === "Quick vote" ? `Quick vote #${i + 1}` : h.ticket.ref} → ${VALUE_DISPLAY[h.finalEstimate]}`
+    ),
+  ].join("\n");
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(summaryText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [summaryText]);
+
+  return (
+    <div className="flex min-h-svh items-center justify-center px-4">
+      <div className="stagger-in w-full max-w-md space-y-6 text-center">
+        <OwlIcon size={64} className="mx-auto text-primary" />
+
+        <div>
+          <h1 className="font-display text-3xl tracking-ceremony sm:text-4xl">
+            Session complete
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Nice work, {summary.playerName}.
+          </p>
+        </div>
+
+        {/* Stats row */}
+        <div className="flex justify-center gap-4">
+          <div className="rounded-md bg-muted px-4 py-3 text-center">
+            <p className="font-mono text-2xl font-bold">{totalEstimated}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              tickets
+            </p>
+          </div>
+          <div className="rounded-md bg-muted px-4 py-3 text-center">
+            <p className="font-mono text-2xl font-bold">{summary.participants}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              players
+            </p>
+          </div>
+          <div className="rounded-md bg-muted px-4 py-3 text-center">
+            <p className="font-mono text-2xl font-bold">{totalPoints}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              points
+            </p>
+          </div>
+        </div>
+
+        {/* Estimate list */}
+        {totalEstimated > 0 && (
+          <div className="space-y-2 text-left">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              Results
+            </p>
+            <div className="space-y-1.5">
+              {summary.history.map((item, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between rounded-md bg-muted px-3 py-2"
+                >
+                  <span className="text-sm font-medium truncate mr-3">
+                    {item.ticket.ref === "Quick vote"
+                      ? `Quick vote #${i + 1}`
+                      : item.ticket.ref}
+                  </span>
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/15 font-mono text-xs font-bold text-primary">
+                    {VALUE_DISPLAY[item.finalEstimate]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex flex-col gap-3 pt-2">
+          {totalEstimated > 0 && (
+            <Button onClick={handleCopy} variant="outline" className="w-full">
+              {copied ? (
+                <>
+                  <Check width={16} height={16} />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy width={16} height={16} />
+                  Copy summary
+                </>
+              )}
+            </Button>
+          )}
+          <Button onClick={onDone} className="w-full">
+            Done
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
