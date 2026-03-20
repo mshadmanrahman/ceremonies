@@ -23,7 +23,7 @@ interface UseRetroRoomResult {
   readonly connected: boolean;
 
   // Lobby
-  readonly startRetro: (previousActions?: ReadonlyArray<PreviousAction>) => void;
+  readonly startRetro: (options?: { teamId?: string; createdBy?: string; previousActions?: ReadonlyArray<PreviousAction> }) => void;
 
   // Haunting
   readonly markAction: (actionId: string, done: boolean) => void;
@@ -127,8 +127,14 @@ export function useRetroRoom({
   // ── Lobby ──
 
   const startRetro = useCallback(
-    (previousActions?: ReadonlyArray<PreviousAction>) => {
-      send({ type: "START_RETRO", facilitatorId: myId, previousActions });
+    (options?: { teamId?: string; createdBy?: string; previousActions?: ReadonlyArray<PreviousAction> }) => {
+      send({
+        type: "START_RETRO",
+        facilitatorId: myId,
+        teamId: options?.teamId,
+        createdBy: options?.createdBy,
+        previousActions: options?.previousActions,
+      });
     },
     [send, myId]
   );

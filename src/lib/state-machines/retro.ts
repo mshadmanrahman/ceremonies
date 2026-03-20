@@ -88,6 +88,8 @@ export interface DiscussionState {
 export interface RetroState {
   readonly phase: RetroPhase;
   readonly facilitatorId: string;
+  readonly teamId: string | null; // set when retro starts (from authenticated user)
+  readonly createdBy: string | null; // Clerk user ID of facilitator
   readonly participants: ReadonlyArray<Participant>;
   readonly previousActions: ReadonlyArray<PreviousAction>;
   readonly cards: ReadonlyArray<RetroCard>;
@@ -105,7 +107,7 @@ export interface RetroState {
 export type RetroEvent =
   | { type: "PARTICIPANT_JOIN"; participant: Participant }
   | { type: "PARTICIPANT_LEAVE"; participantId: string }
-  | { type: "START_RETRO"; facilitatorId: string; previousActions?: ReadonlyArray<PreviousAction> }
+  | { type: "START_RETRO"; facilitatorId: string; teamId?: string; createdBy?: string; previousActions?: ReadonlyArray<PreviousAction> }
   | { type: "MARK_ACTION"; facilitatorId: string; actionId: string; done: boolean }
   | { type: "ADVANCE_PHASE"; facilitatorId: string }
   | { type: "ADD_CARD"; card: RetroCard }
@@ -133,6 +135,8 @@ export function createInitialState(facilitatorId: string): RetroState {
   return {
     phase: "lobby",
     facilitatorId,
+    teamId: null,
+    createdBy: null,
     participants: [],
     previousActions: [],
     cards: [],
@@ -225,6 +229,8 @@ export function transition(state: RetroState, event: RetroEvent): RetroState {
       return {
         ...state,
         phase: hasActions ? "haunting" : "writing",
+        teamId: event.teamId ?? state.teamId,
+        createdBy: event.createdBy ?? state.createdBy,
         previousActions: (event.previousActions ?? []).map((a) => ({
           ...a,
           done: null,

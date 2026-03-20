@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useMemo, use } from "react";
+import { useState, useCallback, useMemo, useEffect, use } from "react";
+import { useUser } from "@clerk/nextjs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -245,7 +246,7 @@ function RetroRoom({
             isFacilitator={isFacilitator}
             participantCount={state.participants.length}
             participants={state.participants}
-            onStart={() => startRetro()}
+            onStart={startRetro}
           />
         )}
 
@@ -337,8 +338,47 @@ function LobbyPhase({
   isFacilitator: boolean;
   participantCount: number;
   participants: ReadonlyArray<{ id: string; name: string }>;
-  onStart: () => void;
+  onStart: (options?: { teamId?: string; createdBy?: string; previousActions?: ReadonlyArray<import("@/lib/state-machines/retro").PreviousAction> }) => void;
 }) {
+  const { user } = useUser();
+  const [previousActions, setPreviousActions] = useState<ReadonlyArray<import("@/lib/state-machines/retro").PreviousAction>>([]);
+  const [loadingActions, setLoadingActions] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  // Fetch previous action items when facilitator joins
+  useEffect(() => {
+    if (!isFacilitator || !user || loaded) return;
+    setLoadingActions(true);
+    // Use a default team ID based on user ID (simplified for now)
+    fetch(`/api/retros/previous-actions?teamId=${user.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.actions?.length > 0) {
+          setPreviousActions(
+            data.actions.map((a: { id: string; text: string; assignees: string[]; done: boolean }) => ({
+              id: a.id,
+              text: a.text,
+              assignees: a.assignees ?? [],
+              done: a.done,
+            }))
+          );
+        }
+      })
+      .catch(() => {}) // DB might not be set up yet, that's OK
+      .finally(() => {
+        setLoadingActions(false);
+        setLoaded(true);
+      });
+  }, [isFacilitator, user, loaded]);
+
+  const handleStart = () => {
+    onStart({
+      teamId: user?.id, // Using user ID as team ID for now (simplified)
+      createdBy: user?.id,
+      previousActions: previousActions.length > 0 ? previousActions : undefined,
+    });
+  };
+
   return (
     <div className="stagger-in mx-auto max-w-md space-y-6 text-center">
       <div className="flex justify-center text-coffee">
@@ -366,9 +406,34 @@ function LobbyPhase({
         ))}
       </div>
 
+      {/* Previous actions preview */}
+      {previousActions.length > 0 && (
+        <div className="rounded-md border-2 border-coffee/30 bg-coffee/5 p-3 text-left">
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-coffee mb-2">
+            <GhostIcon size={12} className="inline mr-1" />
+            {previousActions.length} action item{previousActions.length !== 1 ? "s" : ""} from last retro
+          </p>
+          {previousActions.slice(0, 3).map((a) => (
+            <p key={a.id} className="text-xs text-muted-foreground truncate">
+              {a.done ? "Done" : "Pending"}: {a.text}
+            </p>
+          ))}
+          {previousActions.length > 3 && (
+            <p className="text-xs text-muted-foreground">
+              +{previousActions.length - 3} more...
+            </p>
+          )}
+        </div>
+      )}
+
       {isFacilitator ? (
-        <Button onClick={onStart} className="h-12" size="lg">
-          Start retro
+        <Button
+          onClick={handleStart}
+          disabled={loadingActions}
+          className="h-12"
+          size="lg"
+        >
+          {loadingActions ? "Loading previous actions..." : "Start retro"}
         </Button>
       ) : (
         <p className="text-xs font-bold text-muted-foreground">

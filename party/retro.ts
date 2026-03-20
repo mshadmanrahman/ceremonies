@@ -175,6 +175,13 @@ export default class RetroServer implements Party.Server {
       this.state = nextState;
       await this.persist();
       this.broadcast();
+
+      // Save to DB when retro closes
+      if (nextState.phase === "closed" && this.state.teamId) {
+        this.saveToDatabase().catch((err) =>
+          console.error("[retro] Failed to save to DB:", err)
+        );
+      }
     }
   }
 
@@ -250,6 +257,29 @@ export default class RetroServer implements Party.Server {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
+  }
+
+  // ── DB Persistence ──
+
+  private async saveToDatabase() {
+    // Call the Next.js API route to persist the retro
+    const apiHost = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3456";
+    const res = await fetch(`${apiHost}/api/retros/save`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        roomCode: this.room.id,
+        teamId: this.state.teamId,
+        createdBy: this.state.createdBy,
+        state: this.state,
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Save failed (${res.status}): ${text}`);
+    }
+    const data = await res.json();
+    console.log(`[retro] Saved retro ${data.retroId} for room ${this.room.id}`);
   }
 
   // ── Helpers ──
