@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import { LinkButton } from "@/components/shared/link-button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { OwlIcon, GhostIcon, CardsIcon, CrystalBallIcon } from "@/components/shared/icons";
@@ -32,6 +33,16 @@ export default function Home() {
           <LinkButton href="/estimation/demo" variant="outline" size="sm">
             Try it
           </LinkButton>
+          <Show when="signed-out">
+            <SignInButton>
+              <button className="rounded-md border-2 border-border bg-card px-3 py-1.5 text-sm font-bold shadow-hard-sm transition-colors hover:border-primary hover:text-primary hover-lift">
+                Sign in
+              </button>
+            </SignInButton>
+          </Show>
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
           <ThemeToggle />
         </nav>
       </header>
