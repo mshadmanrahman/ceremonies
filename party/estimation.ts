@@ -83,6 +83,17 @@ export default class EstimationServer implements Party.Server {
       return;
     }
 
+    // Handle save session (facilitator ends session, persist to DB)
+    if (parsed.type === "SAVE_SESSION") {
+      const connState = sender.state as ConnectionState | undefined;
+      if (connState && this.state.facilitatorId === connState.participantId) {
+        this.saveToDatabase(parsed as Record<string, unknown>).catch((err) =>
+          console.error("[estimation] Failed to save to DB:", err)
+        );
+      }
+      return;
+    }
+
     // Handle nudge separately (transient signal, not state machine event)
     if (parsed.type === "NUDGE") {
       const connState = sender.state as ConnectionState | undefined;
@@ -162,6 +173,27 @@ export default class EstimationServer implements Party.Server {
       }
     }
     return new Response("Not found", { status: 404 });
+  }
+
+  private async saveToDatabase(data: Record<string, unknown>) {
+    const apiHost = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3456";
+    const res = await fetch(`${apiHost}/api/estimation/save`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        roomCode: this.room.id,
+        teamId: data.teamId ?? "",
+        createdBy: data.createdBy ?? "",
+        participantCount: this.state.participants.length,
+        history: this.state.history,
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Save failed (${res.status}): ${text}`);
+    }
+    const result = await res.json();
+    console.log(`[estimation] Saved session ${result.sessionId} for room ${this.room.id}`);
   }
 
   private isFacilitatorConnected(): boolean {
