@@ -1,20 +1,20 @@
-// Design tokens matching the ceremonies app
+// Design tokens matching the ceremonies app — LIGHT MODE
 export const colors = {
-  bg: "#1a120b",
-  bgCard: "#251a10",
-  bgSurface: "#2D1E14",
-  primary: "#d4943a", // warm amber
-  primaryBright: "#f0a848",
-  coffee: "#a67c52",
-  accent: "#6186ff", // cornflower
-  text: "#f5f0eb",
-  textMuted: "rgba(245, 240, 235, 0.5)",
-  textDim: "rgba(245, 240, 235, 0.3)",
-  border: "#2D1E14",
-  happy: "#4ade80",
-  sad: "#f87171",
-  confused: "#facc15",
-  destructive: "#ef4444",
+  bg: "#f8f4ef", // warm cream
+  bgCard: "#ffffff",
+  bgSurface: "#f0ebe4",
+  primary: "#c07d2a", // warm amber (slightly darker for light bg contrast)
+  primaryBright: "#d4943a",
+  coffee: "#8b6340",
+  accent: "#4a6ee0", // cornflower (slightly deeper for light bg)
+  text: "#1a120b", // dark warm brown
+  textMuted: "rgba(26, 18, 11, 0.55)",
+  textDim: "rgba(26, 18, 11, 0.3)",
+  border: "#d4c8b8", // warm light border
+  happy: "#16a34a", // deeper green for light bg
+  sad: "#dc2626", // deeper red for light bg
+  confused: "#ca8a04", // deeper yellow for light bg
+  destructive: "#dc2626",
 } as const;
 
 export const fonts = {

@@ -39,7 +39,7 @@ export const Scene2HeroReveal: React.FC = () => {
           position: "absolute",
           inset: 0,
           opacity: 0.04,
-          backgroundImage: "radial-gradient(circle, #f5f0eb 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(circle, #1a120b 1px, transparent 1px)",
           backgroundSize: "24px 24px",
         }}
       />

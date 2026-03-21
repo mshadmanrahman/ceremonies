@@ -235,7 +235,7 @@ const CanvasGrouping: React.FC = () => {
           top: cursor1Y + 14,
           fontFamily: fonts.body,
           fontSize: 11,
-          color: "#fff",
+          color: "#ffffff",
           background: colors.accent,
           padding: "2px 6px",
           borderRadius: 3,
