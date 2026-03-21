@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Show, SignInButton, UserButton } from "@clerk/nextjs";
+import { Show, UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { LinkButton } from "@/components/shared/link-button";
-import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -47,11 +46,14 @@ export function MobileNav() {
               Dashboard
             </LinkButton>
             <Show when="signed-out">
-              <SignInButton>
-                <Button variant="outline" size="sm">
-                  Sign in
-                </Button>
-              </SignInButton>
+              <LinkButton
+                href="/sign-in"
+                variant="outline"
+                size="sm"
+                onClick={() => setOpen(false)}
+              >
+                Sign in
+              </LinkButton>
             </Show>
             <Show when="signed-in">
               <UserButton />

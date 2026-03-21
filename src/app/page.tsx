@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Show, SignInButton, UserButton } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
+import { Show, UserButton } from "@clerk/nextjs";
 import { LinkButton } from "@/components/shared/link-button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { MobileNav } from "@/components/shared/mobile-nav";
@@ -37,11 +36,9 @@ export default function Home() {
             Dashboard
           </LinkButton>
           <Show when="signed-out">
-            <SignInButton>
-              <Button variant="outline" size="sm">
-                Sign in
-              </Button>
-            </SignInButton>
+            <LinkButton href="/sign-in" variant="outline" size="sm">
+              Sign in
+            </LinkButton>
           </Show>
           <Show when="signed-in">
             <UserButton />

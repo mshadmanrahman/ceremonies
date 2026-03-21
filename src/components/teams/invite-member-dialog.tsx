@@ -55,11 +55,9 @@ export function InviteMemberDialog({ teamId, onInvited }: InviteMemberDialogProp
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button variant="outline" size="sm">
-          <UserPlus width={14} height={14} />
-          Invite member
-        </Button>
+      <DialogTrigger className="inline-flex shrink-0 items-center justify-center gap-1 rounded-md border-2 border-border bg-card px-2.5 text-[0.8rem] font-bold shadow-hard-sm transition-all hover:border-primary hover:text-primary h-7">
+        <UserPlus width={14} height={14} />
+        Invite member
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -112,10 +110,8 @@ export function InviteMemberDialog({ teamId, onInvited }: InviteMemberDialogProp
             <p className="text-sm font-bold text-destructive">{error}</p>
           )}
           <div className="flex gap-3">
-            <DialogClose>
-              <Button variant="ghost" className="flex-1">
-                Cancel
-              </Button>
+            <DialogClose className="flex-1 inline-flex items-center justify-center rounded-md border-2 border-transparent px-3 h-8 text-sm font-bold transition-all hover:bg-muted hover:text-foreground">
+              Cancel
             </DialogClose>
             <Button
               onClick={handleInvite}
