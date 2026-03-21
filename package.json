@@ -15,7 +15,8 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "promo:studio": "npx remotion studio promo/src/index.ts",
-    "promo:render": "npx remotion render promo/src/index.ts CeremomiesPromo out/ceremonies-promo.mp4",
+    "promo:render": "npx remotion render promo/src/index.ts CeremoniesPromo out/ceremonies-promo.mp4",
+    "promo:render-reels": "npx remotion render promo/src/index.ts CeremoniesReels out/ceremonies-reels.mp4",
     "promo:render-scene": "npx remotion render promo/src/index.ts"
   },
   "dependencies": {

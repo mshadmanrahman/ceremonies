@@ -101,7 +101,7 @@ export const Scene6Closer: React.FC = () => {
           border: `2px solid ${colors.primary}`,
           borderRadius: 4,
           background: colors.primary,
-          boxShadow: `0 4px 0 0 #a67020`,
+          boxShadow: `0 4px 0 0 #c06200`,
           opacity: interpolate(frame, [85, 95], [0, 1], { extrapolateRight: "clamp" }),
           transform: `scale(${spring({
             frame: frame - 85,

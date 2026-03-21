@@ -33,7 +33,7 @@ const CardComponent: React.FC<{
         color: isHighlighted ? colors.bg : colors.text,
         transform: `scale(${enterSpring}) ${isHighlighted ? "translateY(-8px)" : ""}`,
         opacity: enterSpring,
-        boxShadow: `0 4px 0 0 ${isHighlighted ? "#a67020" : colors.border}`,
+        boxShadow: `0 4px 0 0 ${isHighlighted ? "#c06200" : colors.border}`,
         transition: "all 0.2s",
       }}
     >

@@ -562,16 +562,16 @@ const DiscussAct: React.FC = () => {
 export const Scene4Retro: React.FC = () => {
   return (
     <AbsoluteFill>
-      <Sequence from={0} durationInFrames={90}>
+      <Sequence from={0} durationInFrames={80}>
         <SilentWrite />
       </Sequence>
-      <Sequence from={90} durationInFrames={90}>
+      <Sequence from={80} durationInFrames={80}>
         <CanvasGrouping />
       </Sequence>
-      <Sequence from={180} durationInFrames={90}>
+      <Sequence from={160} durationInFrames={80}>
         <VotingReveal />
       </Sequence>
-      <Sequence from={270} durationInFrames={90}>
+      <Sequence from={240} durationInFrames={80}>
         <DiscussAct />
       </Sequence>
     </AbsoluteFill>
