@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, use } from "react";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,7 +17,8 @@ import { getVoteSpread, type CardValue, type CompletedEstimate } from "@/lib/sta
 import { cn } from "@/lib/utils";
 import { OwlIcon } from "@/components/shared/icons";
 import Link from "next/link";
-import { NavArrowLeft, LogOut, Copy, Check } from "iconoir-react";
+import { useAuth } from "@clerk/nextjs";
+import { NavArrowLeft, LogOut, Copy, Check, FloppyDisk } from "iconoir-react";
 
 export default function EstimationRoomPage({
   params,
@@ -24,6 +26,8 @@ export default function EstimationRoomPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: roomId } = use(params);
+  const searchParams = useSearchParams();
+  const teamId = searchParams.get("team") ?? undefined;
   const [playerName, setPlayerName] = useState("");
   const [joined, setJoined] = useState(false);
   const [sessionSummary, setSessionSummary] = useState<{
@@ -35,6 +39,8 @@ export default function EstimationRoomPage({
   if (sessionSummary) {
     return (
       <SessionSummaryScreen
+        roomId={roomId}
+        teamId={teamId}
         summary={sessionSummary}
         onDone={() => {
           setSessionSummary(null);
@@ -465,10 +471,16 @@ const VALUE_DISPLAY: Record<CardValue, string> = {
   "5": "5", "8": "8", "13": "13", question: "❓",
 };
 
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
 function SessionSummaryScreen({
+  roomId,
+  teamId,
   summary,
   onDone,
 }: {
+  roomId: string;
+  teamId?: string;
   summary: {
     history: ReadonlyArray<CompletedEstimate>;
     participants: number;
@@ -476,7 +488,9 @@ function SessionSummaryScreen({
   };
   onDone: () => void;
 }) {
+  const { isSignedIn } = useAuth();
   const [copied, setCopied] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
 
   const totalEstimated = summary.history.length;
   const estimates = summary.history.map((h) => h.finalEstimate);
@@ -504,6 +518,34 @@ function SessionSummaryScreen({
       setTimeout(() => setCopied(false), 2000);
     });
   }, [summaryText]);
+
+  const handleSave = useCallback(async () => {
+    if (saveStatus === "saving" || saveStatus === "saved") return;
+    setSaveStatus("saving");
+
+    try {
+      const res = await fetch("/api/estimation/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomCode: roomId,
+          teamId,
+          participantCount: summary.participants,
+          history: summary.history.map((h) => ({
+            ticket: { ref: h.ticket.ref, title: h.ticket.title },
+            finalEstimate: h.finalEstimate,
+            participantCount: h.participantCount,
+            completedAt: h.completedAt,
+          })),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Save failed");
+      setSaveStatus("saved");
+    } catch {
+      setSaveStatus("error");
+    }
+  }, [roomId, summary, saveStatus]);
 
   return (
     <div className="flex min-h-svh items-center justify-center px-4">
@@ -564,6 +606,64 @@ function SessionSummaryScreen({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Save prompt */}
+        {totalEstimated > 0 && (
+          <div className="rounded-md border-2 border-dashed border-primary/30 bg-primary/5 p-4">
+            {isSignedIn ? (
+              <>
+                {saveStatus === "idle" && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-bold text-primary/80">
+                      Save this session?
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Saved sessions unlock The Haunting: past action items follow you into your next retro.
+                    </p>
+                    <Button onClick={handleSave} variant="outline" className="mt-2 w-full border-primary/40 text-primary hover:bg-primary/10">
+                      <FloppyDisk width={16} height={16} />
+                      Save session
+                    </Button>
+                  </div>
+                )}
+                {saveStatus === "saving" && (
+                  <p className="text-sm font-bold text-primary/80 animate-pulse">
+                    Saving...
+                  </p>
+                )}
+                {saveStatus === "saved" && (
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-primary">
+                      Saved!
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      This session is now part of your history. The Haunting remembers.
+                    </p>
+                  </div>
+                )}
+                {saveStatus === "error" && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-bold text-destructive">
+                      Failed to save
+                    </p>
+                    <Button onClick={handleSave} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
+                      Try again
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-muted-foreground">
+                  Sign in to save sessions
+                </p>
+                <p className="text-xs text-muted-foreground/70">
+                  Without saving, your estimates vanish. No haunting. No accountability.
+                </p>
+              </div>
+            )}
           </div>
         )}
 

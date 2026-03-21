@@ -64,61 +64,75 @@
  * Ceremonies — Warm neobrutalism
  * Iconoir vertical press shadows, thick borders, amber/orange primary
  * Newsreader + Space Grotesk typography
+ *
+ * Dark mode: Purposeful layered surfaces (Vercel-inspired).
+ * 3 surface levels: bg (0.10) → card (0.15) → elevated (0.19)
+ * Neutral-warm undertone, not muddy brown.
+ * Borders: subtle elevation lines, not high-contrast chocolate.
+ * Shadows: border-based depth in dark, hard press in light.
  */
 :root {
-  --background: oklch(0.15 0.015 70);
-  --foreground: oklch(0.95 0.01 80);
-  --card: oklch(0.19 0.015 70);
-  --card-foreground: oklch(0.95 0.01 80);
-  --popover: oklch(0.19 0.015 70);
-  --popover-foreground: oklch(0.95 0.01 80);
-  --primary: oklch(0.78 0.17 55);
-  --primary-foreground: oklch(0.15 0.04 55);
-  --secondary: oklch(0.24 0.015 70);
-  --secondary-foreground: oklch(0.90 0.01 80);
-  --muted: oklch(0.24 0.015 70);
-  --muted-foreground: oklch(0.60 0.02 80);
-  --accent: oklch(0.62 0.14 275);
-  --accent-foreground: oklch(0.98 0 0);
-  --destructive: oklch(0.62 0.22 25);
-  --border: #2D1E14;
-  --input: oklch(0.28 0.015 70);
-  --ring: oklch(0.78 0.17 55);
+  /* Surface layers: deep → mid → elevated */
+  --background: oklch(0.10 0.008 60);
+  --foreground: oklch(0.93 0.008 80);
+  --card: oklch(0.15 0.008 60);
+  --card-foreground: oklch(0.93 0.008 80);
+  --popover: oklch(0.17 0.008 60);
+  --popover-foreground: oklch(0.93 0.008 80);
+
+  /* Primary: warm amber, slightly less saturated for dark to avoid neon */
+  --primary: oklch(0.76 0.155 55);
+  --primary-foreground: oklch(0.12 0.03 55);
+
+  /* Secondary/muted: clearly separated from card */
+  --secondary: oklch(0.20 0.008 60);
+  --secondary-foreground: oklch(0.88 0.008 80);
+  --muted: oklch(0.20 0.008 60);
+  --muted-foreground: oklch(0.65 0.015 70);
+
+  --accent: oklch(0.60 0.12 275);
+  --accent-foreground: oklch(0.96 0 0);
+  --destructive: oklch(0.60 0.20 25);
+
+  /* Borders: subtle warm gray, not chocolate brown */
+  --border: oklch(0.24 0.010 60);
+  --input: oklch(0.20 0.008 60);
+  --ring: oklch(0.76 0.155 55);
   --radius: 0.25rem;
 
   /* Semantic */
   --warning: oklch(0.75 0.15 50);
-  --warning-foreground: oklch(0.15 0.04 50);
-  --success: oklch(0.72 0.18 155);
-  --success-foreground: oklch(0.15 0.04 155);
+  --warning-foreground: oklch(0.12 0.04 50);
+  --success: oklch(0.70 0.16 155);
+  --success-foreground: oklch(0.12 0.04 155);
 
-  /* Ceremony room accents */
-  --estimation: oklch(0.78 0.17 55);
-  --estimation-foreground: oklch(0.15 0.04 55);
-  --happy: oklch(0.72 0.18 155);
-  --sad: oklch(0.62 0.14 275);
-  --confused: oklch(0.78 0.14 50);
-  --coffee: oklch(0.65 0.10 55);
+  /* Ceremony room accents (slightly toned down for dark) */
+  --estimation: oklch(0.76 0.155 55);
+  --estimation-foreground: oklch(0.12 0.03 55);
+  --happy: oklch(0.70 0.16 155);
+  --sad: oklch(0.60 0.12 275);
+  --confused: oklch(0.76 0.12 50);
+  --coffee: oklch(0.62 0.09 55);
 
   /* Chart */
-  --chart-1: oklch(0.78 0.17 55);
-  --chart-2: oklch(0.72 0.18 155);
-  --chart-3: oklch(0.62 0.14 275);
+  --chart-1: oklch(0.76 0.155 55);
+  --chart-2: oklch(0.70 0.16 155);
+  --chart-3: oklch(0.60 0.12 275);
   --chart-4: oklch(0.75 0.15 50);
-  --chart-5: oklch(0.58 0.02 80);
+  --chart-5: oklch(0.55 0.02 70);
 
-  --sidebar: oklch(0.17 0.015 70);
-  --sidebar-foreground: oklch(0.95 0.01 80);
-  --sidebar-primary: oklch(0.78 0.17 55);
-  --sidebar-primary-foreground: oklch(0.15 0.04 55);
-  --sidebar-accent: oklch(0.24 0.015 70);
-  --sidebar-accent-foreground: oklch(0.95 0.01 80);
-  --sidebar-border: #2D1E14;
-  --sidebar-ring: oklch(0.78 0.17 55);
+  --sidebar: oklch(0.12 0.008 60);
+  --sidebar-foreground: oklch(0.93 0.008 80);
+  --sidebar-primary: oklch(0.76 0.155 55);
+  --sidebar-primary-foreground: oklch(0.12 0.03 55);
+  --sidebar-accent: oklch(0.20 0.008 60);
+  --sidebar-accent-foreground: oklch(0.93 0.008 80);
+  --sidebar-border: oklch(0.24 0.010 60);
+  --sidebar-ring: oklch(0.76 0.155 55);
 
-  /* Hard shadow system (Iconoir-inspired vertical press) */
-  --shadow-color: #2D1E14;
-  --shadow-offset: 5px;
+  /* Shadow system: dark mode uses border-elevation, light mode uses hard press */
+  --shadow-color: oklch(0.05 0.005 60);
+  --shadow-offset: 3px;
 
   /* Motion */
   --ease-ceremony: cubic-bezier(0.25, 1, 0.5, 1);
@@ -178,6 +192,7 @@
   --sidebar-border: #2D1E14;
   --sidebar-ring: oklch(0.72 0.18 55);
 
+  /* Light mode: full neobrutalist hard press shadows */
   --shadow-color: #2D1E14;
   --shadow-offset: 5px;
 }

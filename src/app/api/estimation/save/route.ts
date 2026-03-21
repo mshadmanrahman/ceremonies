@@ -1,18 +1,27 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { estimationSessions, estimationResults } from "@/lib/db/schema";
 
 /**
  * POST /api/estimation/save
  *
- * Called by the estimation PartyKit server when a session ends.
- * Persists session results to Neon Postgres.
+ * Persists an estimation session to Neon Postgres.
+ * Requires Clerk auth (userId becomes createdBy).
+ * teamId is optional until Team CRUD is built.
  */
 export async function POST(req: Request) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json(
+      { error: "Sign in to save sessions" },
+      { status: 401 }
+    );
+  }
+
   const body = (await req.json()) as {
     roomCode: string;
-    teamId: string;
-    createdBy: string;
+    teamId?: string;
     participantCount: number;
     history: ReadonlyArray<{
       ticket: { ref: string; title: string };
@@ -27,9 +36,9 @@ export async function POST(req: Request) {
   const [session] = await db
     .insert(estimationSessions)
     .values({
-      teamId: body.teamId,
+      teamId: body.teamId ?? null,
       roomCode: body.roomCode,
-      createdBy: body.createdBy,
+      createdBy: userId,
       closedAt: new Date(),
       participantCount: body.participantCount,
     })

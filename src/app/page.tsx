@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Show, SignInButton, UserButton } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/shared/link-button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { MobileNav } from "@/components/shared/mobile-nav";
 import { OwlIcon, GhostIcon, CardsIcon, CrystalBallIcon } from "@/components/shared/icons";
 
 export default function Home() {
@@ -23,7 +25,8 @@ export default function Home() {
             ceremonies
           </span>
         </Link>
-        <nav className="flex items-center gap-4">
+        {/* Desktop nav */}
+        <nav className="hidden items-center gap-4 md:flex">
           <Link
             href="https://github.com/mshadmanrahman/ceremonies"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -35,9 +38,9 @@ export default function Home() {
           </LinkButton>
           <Show when="signed-out">
             <SignInButton>
-              <button className="rounded-md border-2 border-border bg-card px-3 py-1.5 text-sm font-bold shadow-hard-sm transition-colors hover:border-primary hover:text-primary hover-lift">
+              <Button variant="outline" size="sm">
                 Sign in
-              </button>
+              </Button>
             </SignInButton>
           </Show>
           <Show when="signed-in">
@@ -45,6 +48,8 @@ export default function Home() {
           </Show>
           <ThemeToggle />
         </nav>
+        {/* Mobile nav */}
+        <MobileNav />
       </header>
 
       <main className="relative flex flex-1 flex-col items-center justify-center px-6 text-center">
@@ -125,21 +130,21 @@ export default function Home() {
 
         {/* Feature cards (clickable) */}
         <div className="relative mt-24 grid w-full max-w-3xl gap-5 sm:grid-cols-3">
-          <Link href="/estimation/demo">
+          <Link href="/estimation/demo" className="h-full">
             <FeatureCard
               icon={<CardsIcon size={36} />}
               title="Estimation"
               description="Modified Fibonacci with coffee cup. Votes visible after the big reveal. Push to Jira."
             />
           </Link>
-          <Link href="/retro/demo">
+          <Link href="/retro/demo" className="h-full">
             <FeatureCard
               icon={<CrystalBallIcon width={36} height={36} />}
               title="Retros"
               description="Happy, Sad, Confused. True anonymous writing. Enforced phases with timers."
             />
           </Link>
-          <Link href="/retro/demo">
+          <Link href="/retro/demo" className="h-full">
             <FeatureCard
               icon={<GhostIcon size={36} />}
               title="The Haunting"
@@ -188,7 +193,7 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="group rounded-md border-2 border-border bg-card p-6 shadow-hard hover-lift">
+    <div className="group h-full rounded-md border-2 border-border bg-card p-6 shadow-hard hover-lift">
       <div
         className="text-primary transition-transform group-hover:scale-110"
         style={{ transitionDuration: "var(--duration-normal)", transitionTimingFunction: "var(--ease-bounce)" }}

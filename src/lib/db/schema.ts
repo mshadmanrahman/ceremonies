@@ -17,6 +17,20 @@ export const teams = pgTable("teams", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ── Team Members ──
+
+export const teamMembers = pgTable("team_members", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  teamId: uuid("team_id")
+    .notNull()
+    .references(() => teams.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(), // Clerk user ID
+  role: text("role", { enum: ["owner", "facilitator", "member"] })
+    .notNull()
+    .default("member"),
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
+});
+
 // ── Retros ──
 
 export const retros = pgTable("retros", {
@@ -81,11 +95,9 @@ export const actionItems = pgTable("action_items", {
 
 export const estimationSessions = pgTable("estimation_sessions", {
   id: uuid("id").defaultRandom().primaryKey(),
-  teamId: uuid("team_id")
-    .notNull()
-    .references(() => teams.id),
+  teamId: uuid("team_id").references(() => teams.id), // nullable until Team CRUD lands
   roomCode: text("room_code").notNull(),
-  createdBy: text("created_by").notNull(),
+  createdBy: text("created_by").notNull(), // Clerk user ID
   createdAt: timestamp("created_at").defaultNow().notNull(),
   closedAt: timestamp("closed_at"),
   participantCount: integer("participant_count").default(0),

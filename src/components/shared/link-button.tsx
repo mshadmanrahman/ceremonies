@@ -9,6 +9,7 @@ interface LinkButtonProps extends VariantProps<typeof buttonVariants> {
   readonly href: string;
   readonly children: React.ReactNode;
   readonly className?: string;
+  readonly onClick?: () => void;
 }
 
 export function LinkButton({
@@ -17,11 +18,13 @@ export function LinkButton({
   variant,
   size,
   className,
+  onClick,
 }: LinkButtonProps) {
   return (
     <Link
       href={href}
       className={cn(buttonVariants({ variant, size }), className)}
+      onClick={onClick}
     >
       {children}
     </Link>
