@@ -26,14 +26,43 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ceremonies",
+  title: {
+    default: "Ceremonies",
+    template: "%s | Ceremonies",
+  },
   description:
-    "Open-source agile ceremony toolkit. Retros, estimation, and team analytics.",
+    "Open-source agile ceremony toolkit. Estimation and retros in one place. Opinionated phases, true anonymity, and action items that haunt you.",
+  metadataBase: new URL("https://ceremonies.dev"),
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
-    apple: "/favicon.svg",
+    apple: "/owl-favicon-64.png",
   },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://ceremonies.dev",
+    siteName: "Ceremonies",
+    title: "Ceremonies - Agile ceremonies, done right.",
+    description:
+      "Open-source estimation and retros in one place. Opinionated phases, true anonymity, and action items that haunt you.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ceremonies - Agile ceremonies, done right.",
+    description:
+      "Open-source estimation and retros in one place. Opinionated phases, true anonymity, and action items that haunt you.",
+  },
+  keywords: [
+    "agile",
+    "retro",
+    "retrospective",
+    "estimation",
+    "planning poker",
+    "scrum",
+    "sprint",
+    "open source",
+  ],
 };
 
 export default function RootLayout({
