@@ -23,8 +23,8 @@ interface Member {
 interface TeamData {
   readonly id: string;
   readonly name: string;
-  readonly plan: "free" | "pro";
-  readonly stripeCustomerId: string | null;
+  readonly plan?: "free" | "pro" | null;
+  readonly stripeCustomerId?: string | null;
   readonly members: ReadonlyArray<Member>;
   readonly myRole: string;
 }
@@ -178,7 +178,7 @@ export default function TeamSettingsPage({
           <h1 className="font-display text-2xl tracking-ceremony sm:text-3xl">
             Team Settings
           </h1>
-          {team && <PlanBadge plan={team.plan} />}
+          {team && <PlanBadge plan={team.plan ?? "free"} />}
         </div>
         <div className="flex items-center gap-3">
           <UserButton />
@@ -241,7 +241,7 @@ export default function TeamSettingsPage({
             <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
               Billing
             </p>
-            {team.plan === "pro" ? (
+            {(team.plan ?? "free") === "pro" ? (
               <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-4">
                 <div className="flex items-center justify-between">
                   <div>
