@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Show, UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
-import { LinkButton } from "@/components/shared/link-button";
+import { OwlIcon } from "@/components/shared/icons";
 import {
   Sheet,
   SheetContent,
@@ -25,43 +25,58 @@ export function MobileNav() {
         >
           <Menu width={18} height={18} />
         </SheetTrigger>
-        <SheetContent side="right" className="w-64 bg-card">
-          <SheetTitle className="font-display text-lg tracking-ceremony">
-            Menu
-          </SheetTitle>
-          <nav className="mt-6 flex flex-col gap-4">
+        <SheetContent side="right" className="w-72 border-l-2 border-border bg-card p-6">
+          {/* Header */}
+          <div className="flex items-center gap-2">
+            <OwlIcon size={24} className="text-primary" />
+            <SheetTitle className="font-display text-lg tracking-ceremony">
+              ceremonies
+            </SheetTitle>
+          </div>
+
+          {/* Divider */}
+          <div className="my-4 h-0.5 bg-border" />
+
+          {/* Nav links */}
+          <nav className="flex flex-col gap-3">
             <Link
               href="https://github.com/mshadmanrahman/ceremonies"
-              className="text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
+              className="rounded-md px-3 py-2.5 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               onClick={() => setOpen(false)}
             >
               GitHub
             </Link>
-            <LinkButton
+            <Link
               href="/dashboard"
-              variant="outline"
-              size="sm"
+              className="rounded-md px-3 py-2.5 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               onClick={() => setOpen(false)}
             >
               Dashboard
-            </LinkButton>
+            </Link>
             <Show when="signed-out">
-              <LinkButton
+              <Link
                 href="/sign-in"
-                variant="outline"
-                size="sm"
+                className="rounded-md border-2 border-primary bg-primary/10 px-3 py-2.5 text-center text-sm font-bold text-primary transition-colors hover:bg-primary/20"
                 onClick={() => setOpen(false)}
               >
                 Sign in
-              </LinkButton>
+              </Link>
             </Show>
             <Show when="signed-in">
-              <UserButton />
+              <div className="flex items-center gap-3 rounded-md px-3 py-2.5">
+                <UserButton />
+                <span className="text-sm font-bold text-muted-foreground">Account</span>
+              </div>
             </Show>
-            <div className="pt-2">
+          </nav>
+
+          {/* Footer */}
+          <div className="mt-auto pt-6">
+            <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2.5">
+              <span className="text-xs font-bold text-muted-foreground">Theme</span>
               <ThemeToggle />
             </div>
-          </nav>
+          </div>
         </SheetContent>
       </Sheet>
     </div>
