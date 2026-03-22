@@ -42,6 +42,7 @@ export default function TeamSettingsPage({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   const fetchTeam = useCallback(async () => {
     try {
@@ -126,10 +127,6 @@ export default function TeamSettingsPage({
     );
   }
 
-  if (!team) return null;
-
-  const [billingLoading, setBillingLoading] = useState(false);
-
   const handleUpgrade = useCallback(async () => {
     setBillingLoading(true);
     try {
@@ -159,6 +156,8 @@ export default function TeamSettingsPage({
       setBillingLoading(false);
     }
   }, [teamId]);
+
+  if (!team) return null;
 
   const isOwner = team.myRole === "owner";
   const canInvite = team.myRole === "owner" || team.myRole === "facilitator";
