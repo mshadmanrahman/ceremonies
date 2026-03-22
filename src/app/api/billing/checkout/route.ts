@@ -74,8 +74,8 @@ export async function POST(req: Request) {
     params.append("mode", "subscription");
     params.append("line_items[0][price]", priceId);
     params.append("line_items[0][quantity]", String(memberCount.length));
-    params.append("success_url", `${appUrl}/dashboard?team=${teamId}&upgraded=true`);
-    params.append("cancel_url", `${appUrl}/dashboard?team=${teamId}`);
+    params.append("success_url", `${appUrl}/dashboard`);
+    params.append("cancel_url", `${appUrl}/dashboard`);
     params.append("metadata[teamId]", teamId);
     params.append("metadata[userId]", userId);
     params.append("subscription_data[metadata][teamId]", teamId);
