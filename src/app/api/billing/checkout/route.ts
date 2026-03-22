@@ -58,7 +58,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const stripe = getStripe();
+    const stripeKey = process.env.STRIPE_SECRET_KEY!;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://ceremonies.dev";
 
     // Count current members for per-seat billing
@@ -69,26 +69,32 @@ export async function POST(req: Request) {
 
     console.log(`[billing] Creating checkout for team ${teamId}, ${memberCount.length} seats, price ${priceId}`);
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      line_items: [
-        {
-          price: priceId,
-          quantity: memberCount.length,
-        },
-      ],
-      success_url: `${appUrl}/dashboard?team=${teamId}&upgraded=true`,
-      cancel_url: `${appUrl}/dashboard?team=${teamId}`,
-      metadata: {
-        teamId,
-        userId,
+    // Use fetch directly to avoid Stripe SDK HTTP client issues in serverless
+    const params = new URLSearchParams();
+    params.append("mode", "subscription");
+    params.append("line_items[0][price]", priceId);
+    params.append("line_items[0][quantity]", String(memberCount.length));
+    params.append("success_url", `${appUrl}/dashboard?team=${teamId}&upgraded=true`);
+    params.append("cancel_url", `${appUrl}/dashboard?team=${teamId}`);
+    params.append("metadata[teamId]", teamId);
+    params.append("metadata[userId]", userId);
+    params.append("subscription_data[metadata][teamId]", teamId);
+
+    const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${stripeKey}`,
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      subscription_data: {
-        metadata: {
-          teamId,
-        },
-      },
+      body: params.toString(),
     });
+
+    const session = await res.json();
+
+    if (!res.ok) {
+      console.error(`[billing] Stripe API error:`, session);
+      return NextResponse.json({ error: session.error?.message ?? "Stripe error" }, { status: 500 });
+    }
 
     return NextResponse.json({ url: session.url });
   } catch (err) {
