@@ -1,9 +1,10 @@
 import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
 import { colors, fonts } from "../styles";
+import { OwlIcon, GhostIcon } from "../../../src/components/shared/icons";
 
 const closingLines = [
   "Open source. Self-hostable.",
-  "Google + GitHub sign-in.",
+  "Built for teams who care about their craft.",
   "ceremonies.dev",
 ];
 
@@ -48,7 +49,7 @@ export const Scene6Closer: React.FC = () => {
             opacity: owlSpring,
           }}
         >
-          🦉
+          <div style={{ color: colors.primary }}><OwlIcon size={64} /></div>
         </div>
         <div
           style={{
@@ -57,7 +58,7 @@ export const Scene6Closer: React.FC = () => {
             opacity: ghostSpring,
           }}
         >
-          👻
+          <div style={{ color: colors.coffee }}><GhostIcon size={64} /></div>
         </div>
       </div>
 
@@ -102,9 +103,9 @@ export const Scene6Closer: React.FC = () => {
           borderRadius: 4,
           background: colors.primary,
           boxShadow: `0 4px 0 0 #c06200`,
-          opacity: interpolate(frame, [85, 95], [0, 1], { extrapolateRight: "clamp" }),
+          opacity: interpolate(frame, [75, 85], [0, 1], { extrapolateRight: "clamp" }),
           transform: `scale(${spring({
-            frame: frame - 85,
+            frame: frame - 75,
             fps,
             config: { damping: 12, stiffness: 100 },
           })})`,
@@ -118,19 +119,10 @@ export const Scene6Closer: React.FC = () => {
             color: colors.bg,
           }}
         >
-          Start for free
+          Try it now — it's free
         </div>
       </div>
 
-      {/* Fade out at the very end */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: colors.bg,
-          opacity: interpolate(frame, [110, 120], [0, 1], { extrapolateRight: "clamp" }),
-        }}
-      />
     </AbsoluteFill>
   );
 };

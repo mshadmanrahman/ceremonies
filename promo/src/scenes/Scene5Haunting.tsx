@@ -1,5 +1,6 @@
 import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
 import { colors, fonts } from "../styles";
+import { GhostIcon } from "../../../src/components/shared/icons";
 
 const actionItems = [
   { text: "Reduce standups to 3x/week", assignee: "Shadman", done: true },
@@ -26,7 +27,7 @@ export const Scene5Haunting: React.FC = () => {
           marginBottom: 24,
         }}
       >
-        👻
+        <div style={{ color: colors.coffee }}><GhostIcon size={72} /></div>
       </div>
 
       {/* Title */}

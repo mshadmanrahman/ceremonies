@@ -1,5 +1,6 @@
 import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
 import { colors, fonts } from "../styles";
+import { OwlIcon, GhostIcon } from "../../../src/components/shared/icons";
 
 export const Scene2HeroReveal: React.FC = () => {
   const frame = useCurrentFrame();
@@ -66,7 +67,7 @@ export const Scene2HeroReveal: React.FC = () => {
             opacity: owlSpring,
           }}
         >
-          🦉
+          <div style={{ color: colors.primary }}><OwlIcon size={80} /></div>
         </div>
         {/* Ghost */}
         <div
@@ -76,7 +77,7 @@ export const Scene2HeroReveal: React.FC = () => {
             opacity: ghostSpring,
           }}
         >
-          👻
+          <div style={{ color: colors.coffee }}><GhostIcon size={80} /></div>
         </div>
       </div>
 

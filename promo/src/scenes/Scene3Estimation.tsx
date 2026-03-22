@@ -13,7 +13,7 @@ const CardComponent: React.FC<{
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const enterSpring = spring({ frame: frame - delay, fps, config: { damping: 14, stiffness: 120 } });
+  const enterSpring = spring({ frame: frame - delay, fps, config: { damping: 18, stiffness: 80 } });
   const isHighlighted = selected && frame > delay + 20;
 
   return (
@@ -34,7 +34,6 @@ const CardComponent: React.FC<{
         transform: `scale(${enterSpring}) ${isHighlighted ? "translateY(-8px)" : ""}`,
         opacity: enterSpring,
         boxShadow: `0 4px 0 0 ${isHighlighted ? "#c06200" : colors.border}`,
-        transition: "all 0.2s",
       }}
     >
       {revealed !== undefined ? (revealed ? label : "?") : label}
@@ -49,7 +48,7 @@ const CardDeck: React.FC = () => {
   return (
     <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", maxWidth: 850 }}>
       {CARDS.map((card, i) => (
-        <CardComponent key={card} label={card} index={i} delay={i * 3} selected={card === "5"} />
+        <CardComponent key={card} label={card} index={i} delay={i * 2} selected={card === "5"} />
       ))}
     </div>
   );

@@ -2,10 +2,10 @@ import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig } fr
 import { colors, fonts } from "../styles";
 
 const lines = [
-  "> Your retro tool is broken.",
-  "> Anonymity? Fake. (typing dots show who's writing)",
-  "> Action items? Forgotten by Monday.",
-  "> Estimation? A separate app. Again.",
+  { text: "You just finished a retro.", highlight: false },
+  { text: "...nobody remembers what you agreed on.", highlight: false },
+  { text: "Your estimation tool is a separate app.", highlight: false },
+  { text: "There has to be a better way.", highlight: true },
 ];
 
 export const Scene1Problem: React.FC = () => {
@@ -21,53 +21,50 @@ export const Scene1Problem: React.FC = () => {
         padding: 80,
       }}
     >
+      {/* Dot grid */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: 0.03,
+          backgroundImage: "radial-gradient(circle, #1a120b 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+        }}
+      />
+
       <div
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: 28,
+          gap: 32,
           maxWidth: 900,
+          alignItems: "center",
+          textAlign: "center",
         }}
       >
         {lines.map((line, i) => {
-          const delay = i * 12; // stagger by 12 frames (~0.4s at 30fps)
-          const opacity = interpolate(frame, [delay, delay + 8], [0, 1], {
-            extrapolateRight: "clamp",
+          const delay = i * 18;
+          const lineSpring = spring({
+            frame: frame - delay,
+            fps,
+            config: { damping: 20, stiffness: 60 },
           });
-          const translateY = interpolate(frame, [delay, delay + 8], [20, 0], {
-            extrapolateRight: "clamp",
-          });
-
-          // Typewriter: reveal characters over time
-          const charDelay = delay + 4;
-          const charsVisible = Math.floor(
-            interpolate(frame, [charDelay, charDelay + 20], [0, line.length], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            })
-          );
-
-          // Cursor blink (only on current typing line)
-          const isTyping = frame >= charDelay && charsVisible < line.length;
-          const cursorOpacity = isTyping ? (Math.floor(frame / 4) % 2 === 0 ? 1 : 0) : 0;
 
           return (
             <div
               key={i}
               style={{
-                opacity,
-                transform: `translateY(${translateY}px)`,
-                fontFamily: fonts.mono,
-                fontSize: 32,
-                color: i === lines.length - 1 ? colors.primary : colors.text,
+                opacity: lineSpring,
+                transform: `translateY(${(1 - lineSpring) * 25}px)`,
+                fontFamily: line.highlight ? fonts.display : fonts.body,
+                fontSize: line.highlight ? 52 : 38,
+                fontWeight: line.highlight ? 700 : 400,
+                color: line.highlight ? colors.primary : colors.text,
                 letterSpacing: "-0.01em",
-                lineHeight: 1.5,
+                lineHeight: 1.4,
               }}
             >
-              {line.slice(0, charsVisible)}
-              <span style={{ opacity: cursorOpacity, color: colors.primary }}>
-                _
-              </span>
+              {line.text}
             </div>
           );
         })}

@@ -1,5 +1,6 @@
 import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig, Sequence } from "remotion";
 import { colors, fonts } from "../styles";
+import { HappyIcon, SadIcon, ConfusedIcon } from "../../../src/components/shared/icons";
 
 // 4a: Silent Write Phase
 const SilentWrite: React.FC = () => {
@@ -8,19 +9,19 @@ const SilentWrite: React.FC = () => {
 
   const columns = [
     {
-      emoji: "😊",
+      icon: <HappyIcon size={28} />,
       label: "Happy",
       color: colors.happy,
       cards: ["Great sprint velocity!", "Team collaboration improved", "CI/CD pipeline is fast now"],
     },
     {
-      emoji: "😢",
+      icon: <SadIcon size={28} />,
       label: "Sad",
       color: colors.sad,
       cards: ["Too many meetings", "Flaky tests blocking deploys"],
     },
     {
-      emoji: "😕",
+      icon: <ConfusedIcon size={28} />,
       label: "Confused",
       color: colors.confused,
       cards: ["Who owns the auth module?", "New deployment process unclear"],
@@ -52,7 +53,10 @@ const SilentWrite: React.FC = () => {
                 opacity: spring({ frame: frame - ci * 5, fps, config: { damping: 15 } }),
               }}
             >
-              {col.label}
+              <div style={{ color: col.color, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                {col.icon}
+                {col.label}
+              </div>
             </div>
 
             {/* Cards */}

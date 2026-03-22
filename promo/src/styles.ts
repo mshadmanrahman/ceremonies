@@ -19,7 +19,16 @@ export const colors = {
 } as const;
 
 export const fonts = {
-  display: "Georgia, 'Times New Roman', serif", // fallback for Newsreader
-  body: "system-ui, -apple-system, sans-serif", // fallback for Space Grotesk
-  mono: "'Courier New', monospace", // fallback for Geist Mono
+  display: "'Newsreader', Georgia, 'Times New Roman', serif",
+  body: "'Space Grotesk', system-ui, -apple-system, sans-serif",
+  mono: "'Geist Mono', 'Courier New', monospace",
 } as const;
+
+/**
+ * Google Fonts CSS import URLs.
+ * Inject these in Remotion compositions to load the actual website fonts.
+ */
+export const fontImports = [
+  "https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,700&display=swap",
+  "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap",
+] as const;
