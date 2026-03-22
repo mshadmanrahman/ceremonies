@@ -91,6 +91,24 @@ export const actionItems = pgTable("action_items", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ── Team Invites ──
+
+export const teamInvites = pgTable("team_invites", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  teamId: uuid("team_id")
+    .notNull()
+    .references(() => teams.id, { onDelete: "cascade" }),
+  code: text("code").notNull().unique(),
+  createdBy: text("created_by").notNull(), // Clerk user ID
+  role: text("role", { enum: ["facilitator", "member"] })
+    .notNull()
+    .default("member"),
+  maxUses: integer("max_uses"), // null = unlimited
+  useCount: integer("use_count").notNull().default(0),
+  expiresAt: timestamp("expires_at"), // null = never
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ── Estimation Sessions ──
 
 export const estimationSessions = pgTable("estimation_sessions", {
