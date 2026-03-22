@@ -7,6 +7,7 @@ import {
   actionItems,
 } from "@/lib/db/schema";
 import type { RetroState } from "@/lib/state-machines/retro";
+import { canSaveSession } from "@/lib/plan-limits";
 
 /**
  * POST /api/retros/save
@@ -24,6 +25,15 @@ export async function POST(req: Request) {
   };
 
   const { roomCode, teamId, createdBy, state } = body;
+
+  // Check plan limits
+  const sessionLimit = await canSaveSession(teamId ?? null, createdBy);
+  if (!sessionLimit.allowed) {
+    return NextResponse.json(
+      { error: "Session limit reached", limit: sessionLimit.max, current: sessionLimit.current, upgrade: true },
+      { status: 403 }
+    );
+  }
 
   // Create the retro record
   const db = getDb();

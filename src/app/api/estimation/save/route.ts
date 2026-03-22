@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { estimationSessions, estimationResults } from "@/lib/db/schema";
+import { canSaveSession } from "@/lib/plan-limits";
 
 /**
  * POST /api/estimation/save
@@ -30,6 +31,15 @@ export async function POST(req: Request) {
       completedAt: number;
     }>;
   };
+
+  // Check plan limits
+  const sessionLimit = await canSaveSession(body.teamId ?? null, userId);
+  if (!sessionLimit.allowed) {
+    return NextResponse.json(
+      { error: "Session limit reached", limit: sessionLimit.max, current: sessionLimit.current, plan: sessionLimit.plan, upgrade: true },
+      { status: 403 }
+    );
+  }
 
   const db = getDb();
 

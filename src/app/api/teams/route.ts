@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { teams, teamMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { canCreateTeam } from "@/lib/plan-limits";
 
 /**
  * GET /api/teams
@@ -42,6 +43,15 @@ export async function POST(req: Request) {
   const { name } = (await req.json()) as { name: string };
   if (!name?.trim()) {
     return NextResponse.json({ error: "Team name is required" }, { status: 400 });
+  }
+
+  // Check plan limits
+  const teamLimit = await canCreateTeam(userId);
+  if (!teamLimit.allowed) {
+    return NextResponse.json(
+      { error: "Team limit reached", limit: teamLimit.max, current: teamLimit.current, upgrade: true },
+      { status: 403 }
+    );
   }
 
   const db = getDb();

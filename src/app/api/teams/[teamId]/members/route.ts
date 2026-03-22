@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { teamMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { canAddMember } from "@/lib/plan-limits";
 
 async function getMembership(userId: string, teamId: string) {
   const db = getDb();
@@ -40,6 +41,15 @@ export async function POST(
 
   if (!newUserId?.trim()) {
     return NextResponse.json({ error: "userId is required" }, { status: 400 });
+  }
+
+  // Check plan limits
+  const memberLimit = await canAddMember(teamId);
+  if (!memberLimit.allowed) {
+    return NextResponse.json(
+      { error: "Member limit reached", limit: memberLimit.max, current: memberLimit.current, plan: memberLimit.plan, upgrade: true },
+      { status: 403 }
+    );
   }
 
   // Check if already a member

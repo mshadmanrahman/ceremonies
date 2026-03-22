@@ -14,6 +14,9 @@ export const teams = pgTable("teams", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   createdBy: text("created_by").notNull(), // Clerk user ID
+  plan: text("plan", { enum: ["free", "pro"] }).notNull().default("free"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

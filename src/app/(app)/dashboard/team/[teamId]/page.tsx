@@ -10,7 +10,8 @@ import { InviteMemberDialog } from "@/components/teams/invite-member-dialog";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { OwlIcon } from "@/components/shared/icons";
 import { UserButton } from "@clerk/nextjs";
-import { NavArrowLeft, Check } from "iconoir-react";
+import { NavArrowLeft, Check, Sparks } from "iconoir-react";
+import { PlanBadge } from "@/components/billing/upgrade-prompt";
 
 interface Member {
   readonly id: string;
@@ -22,6 +23,8 @@ interface Member {
 interface TeamData {
   readonly id: string;
   readonly name: string;
+  readonly plan: "free" | "pro";
+  readonly stripeCustomerId: string | null;
   readonly members: ReadonlyArray<Member>;
   readonly myRole: string;
 }
@@ -125,6 +128,38 @@ export default function TeamSettingsPage({
 
   if (!team) return null;
 
+  const [billingLoading, setBillingLoading] = useState(false);
+
+  const handleUpgrade = useCallback(async () => {
+    setBillingLoading(true);
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } finally {
+      setBillingLoading(false);
+    }
+  }, [teamId]);
+
+  const handleManageBilling = useCallback(async () => {
+    setBillingLoading(true);
+    try {
+      const res = await fetch("/api/billing/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } finally {
+      setBillingLoading(false);
+    }
+  }, [teamId]);
+
   const isOwner = team.myRole === "owner";
   const canInvite = team.myRole === "owner" || team.myRole === "facilitator";
 
@@ -143,6 +178,7 @@ export default function TeamSettingsPage({
           <h1 className="font-display text-2xl tracking-ceremony sm:text-3xl">
             Team Settings
           </h1>
+          {team && <PlanBadge plan={team.plan} />}
         </div>
         <div className="flex items-center gap-3">
           <UserButton />
@@ -198,6 +234,54 @@ export default function TeamSettingsPage({
             onRoleChanged={handleRoleChanged}
           />
         </div>
+
+        {/* Billing */}
+        {isOwner && (
+          <div className="space-y-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              Billing
+            </p>
+            {team.plan === "pro" ? (
+              <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-primary">Pro plan</p>
+                    <p className="text-xs text-muted-foreground">
+                      Unlimited members, sessions, and teams.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleManageBilling}
+                    disabled={billingLoading}
+                  >
+                    {billingLoading ? "Loading..." : "Manage billing"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-md border-2 border-dashed border-border p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold">Free plan</p>
+                    <p className="text-xs text-muted-foreground">
+                      5 members, 10 saved sessions.
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={handleUpgrade}
+                    disabled={billingLoading}
+                  >
+                    <Sparks width={14} height={14} />
+                    {billingLoading ? "Loading..." : "Upgrade to Pro"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Danger zone */}
         {isOwner && (
