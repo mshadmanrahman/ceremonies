@@ -116,17 +116,6 @@ export default function TeamSettingsPage({
     );
   }, []);
 
-  if (loading) {
-    return (
-      <div className="mx-auto min-h-svh max-w-2xl px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-48 rounded bg-muted" />
-          <div className="h-4 w-32 rounded bg-muted" />
-        </div>
-      </div>
-    );
-  }
-
   const handleUpgrade = useCallback(async () => {
     setBillingLoading(true);
     try {
@@ -156,6 +145,18 @@ export default function TeamSettingsPage({
       setBillingLoading(false);
     }
   }, [teamId]);
+
+  // Early returns AFTER all hooks
+  if (loading) {
+    return (
+      <div className="mx-auto min-h-svh max-w-2xl px-4 py-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 w-48 rounded bg-muted" />
+          <div className="h-4 w-32 rounded bg-muted" />
+        </div>
+      </div>
+    );
+  }
 
   if (!team) return null;
 
