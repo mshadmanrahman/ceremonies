@@ -59,7 +59,6 @@ export async function POST(req: Request) {
 
   try {
     const stripeKey = process.env.STRIPE_SECRET_KEY!;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://ceremonies.dev";
 
     // Count current members for per-seat billing
     const memberCount = await db
@@ -67,18 +66,19 @@ export async function POST(req: Request) {
       .from(teamMembers)
       .where(eq(teamMembers.teamId, teamId));
 
-    console.log(`[billing] Creating checkout for team ${teamId}, ${memberCount.length} seats, price ${priceId}`);
+    // Build form body as a plain string (not URLSearchParams to avoid encoding issues)
+    const body = [
+      "mode=subscription",
+      `line_items[0][price]=${priceId}`,
+      `line_items[0][quantity]=${memberCount.length}`,
+      `success_url=https://ceremonies.dev/dashboard`,
+      `cancel_url=https://ceremonies.dev/dashboard`,
+      `metadata[teamId]=${teamId}`,
+      `metadata[userId]=${userId}`,
+      `subscription_data[metadata][teamId]=${teamId}`,
+    ].join("&");
 
-    // Use fetch directly to avoid Stripe SDK HTTP client issues in serverless
-    const params = new URLSearchParams();
-    params.append("mode", "subscription");
-    params.append("line_items[0][price]", priceId);
-    params.append("line_items[0][quantity]", String(memberCount.length));
-    params.append("success_url", `${appUrl}/dashboard`);
-    params.append("cancel_url", `${appUrl}/dashboard`);
-    params.append("metadata[teamId]", teamId);
-    params.append("metadata[userId]", userId);
-    params.append("subscription_data[metadata][teamId]", teamId);
+    console.log(`[billing] Checkout request body: ${body}`);
 
     const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
@@ -86,14 +86,16 @@ export async function POST(req: Request) {
         "Authorization": `Bearer ${stripeKey}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: params.toString(),
+      body,
     });
 
-    const session = await res.json();
+    const responseText = await res.text();
+    console.log(`[billing] Stripe response (${res.status}): ${responseText.slice(0, 500)}`);
+
+    const session = JSON.parse(responseText);
 
     if (!res.ok) {
-      console.error(`[billing] Stripe API error:`, session);
-      return NextResponse.json({ error: session.error?.message ?? "Stripe error" }, { status: 500 });
+      return NextResponse.json({ error: session.error?.message ?? "Stripe error", debug: session.error }, { status: 500 });
     }
 
     return NextResponse.json({ url: session.url });
