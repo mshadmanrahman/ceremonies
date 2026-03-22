@@ -54,35 +54,43 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Billing not configured" }, { status: 500 });
   }
 
-  const stripe = getStripe();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://ceremonies.dev";
+  try {
+    const stripe = getStripe();
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://ceremonies.dev";
 
-  // Count current members for per-seat billing
-  const memberCount = await db
-    .select()
-    .from(teamMembers)
-    .where(eq(teamMembers.teamId, teamId));
+    // Count current members for per-seat billing
+    const memberCount = await db
+      .select()
+      .from(teamMembers)
+      .where(eq(teamMembers.teamId, teamId));
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "subscription",
-    line_items: [
-      {
-        price: priceId,
-        quantity: memberCount.length,
-      },
-    ],
-    success_url: `${appUrl}/dashboard?team=${teamId}&upgraded=true`,
-    cancel_url: `${appUrl}/dashboard?team=${teamId}`,
-    metadata: {
-      teamId,
-      userId,
-    },
-    subscription_data: {
+    console.log(`[billing] Creating checkout for team ${teamId}, ${memberCount.length} seats, price ${priceId}`);
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      line_items: [
+        {
+          price: priceId,
+          quantity: memberCount.length,
+        },
+      ],
+      success_url: `${appUrl}/dashboard?team=${teamId}&upgraded=true`,
+      cancel_url: `${appUrl}/dashboard?team=${teamId}`,
       metadata: {
         teamId,
+        userId,
       },
-    },
-  });
+      subscription_data: {
+        metadata: {
+          teamId,
+        },
+      },
+    });
 
-  return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error(`[billing] Checkout failed:`, message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

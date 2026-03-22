@@ -124,9 +124,17 @@ export default function TeamSettingsPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ teamId }),
       });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } finally {
+      const data = await res.json().catch(() => ({}));
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error("[billing] Checkout error:", data.error ?? "No URL returned");
+        alert(data.error ?? "Failed to start checkout. Please try again.");
+        setBillingLoading(false);
+      }
+    } catch (err) {
+      console.error("[billing] Checkout failed:", err);
+      alert("Failed to connect to billing. Please try again.");
       setBillingLoading(false);
     }
   }, [teamId]);
