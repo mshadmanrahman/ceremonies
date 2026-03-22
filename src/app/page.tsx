@@ -5,7 +5,13 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { MobileNav } from "@/components/shared/mobile-nav";
 import { OwlIcon, GhostIcon, CardsIcon, CrystalBallIcon } from "@/components/shared/icons";
 
+function roomCode() {
+  return Math.random().toString(36).slice(2, 8);
+}
+
 export default function Home() {
+  const estRoom = roomCode();
+  const retroRoom = roomCode();
   return (
     <div className="relative flex min-h-svh flex-col overflow-hidden">
       {/* Dot grid background */}
@@ -110,13 +116,13 @@ export default function Home() {
 
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <LinkButton
-              href="/estimation/demo"
+              href={`/estimation/${estRoom}`}
               size="xl"
             >
               Start estimating
             </LinkButton>
             <LinkButton
-              href="/retro/demo"
+              href={`/retro/${retroRoom}`}
               variant="outline"
               size="xl"
             >
@@ -127,21 +133,21 @@ export default function Home() {
 
         {/* Feature cards (clickable) */}
         <div className="relative mt-24 grid w-full max-w-3xl gap-5 sm:grid-cols-3">
-          <Link href="/estimation/demo" className="h-full">
+          <Link href={`/estimation/${estRoom}`} className="h-full">
             <FeatureCard
               icon={<CardsIcon size={36} />}
               title="Estimation"
               description="Modified Fibonacci with coffee cup. Votes visible after the big reveal. Push to Jira."
             />
           </Link>
-          <Link href="/retro/demo" className="h-full">
+          <Link href={`/retro/${retroRoom}`} className="h-full">
             <FeatureCard
               icon={<CrystalBallIcon width={36} height={36} />}
               title="Retros"
               description="Happy, Sad, Confused. True anonymous writing. Enforced phases with timers."
             />
           </Link>
-          <Link href="/retro/demo" className="h-full">
+          <Link href={`/retro/${retroRoom}`} className="h-full">
             <FeatureCard
               icon={<GhostIcon size={36} />}
               title="The Haunting"
