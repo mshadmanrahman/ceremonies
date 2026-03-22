@@ -10,6 +10,9 @@ export function getStripe(): Stripe {
     }
     stripeInstance = new Stripe(key, {
       typescript: true,
+      maxNetworkRetries: 1,
+      timeout: 10000, // 10s timeout for serverless
+      httpAgent: undefined, // ensure no proxy interference
     });
   }
   return stripeInstance;

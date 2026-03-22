@@ -5,6 +5,9 @@ import { teams, teamMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getStripe } from "@/lib/stripe";
 
+// Allow up to 30s for Stripe API calls
+export const maxDuration = 30;
+
 /**
  * POST /api/billing/checkout
  * Creates a Stripe Checkout Session for upgrading a team to Pro.
