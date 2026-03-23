@@ -44,15 +44,15 @@ export default function Home() {
           >
             GitHub
           </Link>
-          <LinkButton href="/dashboard" variant="outline" size="sm">
-            Dashboard
-          </LinkButton>
           <Show when="signed-out">
             <LinkButton href="/sign-in" variant="outline" size="sm">
               Sign in
             </LinkButton>
           </Show>
           <Show when="signed-in">
+            <LinkButton href="/dashboard" variant="outline" size="sm">
+              Dashboard
+            </LinkButton>
             <UserButton />
           </Show>
           <ThemeToggle />
@@ -164,7 +164,7 @@ export default function Home() {
       </main>
 
       {/* How it works */}
-      <section className="relative border-t-2 border-border/50 px-6 py-20 md:px-12">
+      <section className="relative px-6 py-20 md:px-12">
         <div className="mx-auto max-w-3xl">
           <h2 className="text-center font-display text-3xl tracking-ceremony sm:text-4xl">
             How it works
@@ -193,7 +193,7 @@ export default function Home() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="relative border-t-2 border-border/50 px-6 py-20 md:px-12">
+      <section id="pricing" className="relative px-6 py-20 md:px-12">
         <div className="mx-auto max-w-3xl">
           <h2 className="text-center font-display text-3xl tracking-ceremony sm:text-4xl">
             Simple pricing
@@ -297,6 +297,16 @@ export default function Home() {
             </Link>
             <Link href="/sign-in" className="transition-colors hover:text-foreground">
               Sign in
+            </Link>
+            <span className="text-border">|</span>
+            <Link href="/terms" className="transition-colors hover:text-foreground">
+              Terms
+            </Link>
+            <Link href="/privacy" className="transition-colors hover:text-foreground">
+              Privacy
+            </Link>
+            <Link href="https://github.com/mshadmanrahman/ceremonies/issues/new/choose" className="transition-colors hover:text-foreground">
+              Feedback
             </Link>
           </nav>
           <p className="text-xs text-muted-foreground/60">

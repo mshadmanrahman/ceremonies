@@ -46,13 +46,6 @@ export function MobileNav() {
             >
               GitHub
             </Link>
-            <Link
-              href="/dashboard"
-              className="rounded-md px-3 py-2.5 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              onClick={() => setOpen(false)}
-            >
-              Dashboard
-            </Link>
             <Show when="signed-out">
               <Link
                 href="/sign-in"
@@ -63,6 +56,13 @@ export function MobileNav() {
               </Link>
             </Show>
             <Show when="signed-in">
+              <Link
+                href="/dashboard"
+                className="rounded-md px-3 py-2.5 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                onClick={() => setOpen(false)}
+              >
+                Dashboard
+              </Link>
               <div className="flex items-center gap-3 rounded-md px-3 py-2.5">
                 <UserButton />
                 <span className="text-sm font-bold text-muted-foreground">Account</span>
