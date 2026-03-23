@@ -148,7 +148,15 @@ export default function TeamSettingsPage({
         body: JSON.stringify({ teamId }),
       });
       const data = await res.json();
-      if (data.url) window.location.href = data.url;
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error("[billing] Portal error:", data.error);
+        alert(data.error ?? "Failed to open billing portal");
+      }
+    } catch (err) {
+      console.error("[billing] Portal fetch failed:", err);
+      alert("Failed to connect to billing. Please try again.");
     } finally {
       setBillingLoading(false);
     }
@@ -335,7 +343,7 @@ export default function TeamSettingsPage({
 
         {/* Danger zone */}
         {isOwner && (
-          <div className="space-y-3 rounded-md border-2 border-destructive/30 p-4">
+          <div className="space-y-3 rounded-md border-2 border-destructive/30 bg-destructive/5 p-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-destructive">
               Danger zone
             </p>

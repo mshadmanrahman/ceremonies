@@ -3,7 +3,8 @@ import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { teams, teamMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getStripe } from "@/lib/stripe";
+
+export const maxDuration = 30;
 
 /**
  * POST /api/billing/portal
@@ -45,13 +46,35 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No billing account found" }, { status: 400 });
   }
 
-  const stripe = getStripe();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://ceremonies.dev";
+  const stripeKey = process.env.STRIPE_SECRET_KEY!;
+  const returnUrl = `https://ceremonies.dev/dashboard/team/${teamId}`;
 
-  const session = await stripe.billingPortal.sessions.create({
-    customer: team.stripeCustomerId,
-    return_url: `${appUrl}/dashboard/team/${teamId}`,
-  });
+  try {
+    const body = [
+      `customer=${team.stripeCustomerId}`,
+      `return_url=${returnUrl}`,
+    ].join("&");
 
-  return NextResponse.json({ url: session.url });
+    const res = await fetch("https://api.stripe.com/v1/billing_portal/sessions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${stripeKey}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body,
+    });
+
+    const session = await res.json();
+
+    if (!res.ok) {
+      console.error("[billing] Portal error:", session.error);
+      return NextResponse.json({ error: session.error?.message ?? "Stripe error" }, { status: 500 });
+    }
+
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("[billing] Portal failed:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
