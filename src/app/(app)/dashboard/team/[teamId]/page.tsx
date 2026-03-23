@@ -10,7 +10,7 @@ import { InviteMemberDialog } from "@/components/teams/invite-member-dialog";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { OwlIcon } from "@/components/shared/icons";
 import { UserButton } from "@clerk/nextjs";
-import { NavArrowLeft, Check, Sparks } from "iconoir-react";
+import { NavArrowLeft, Check as CheckMark, Sparks } from "iconoir-react";
 import { PlanBadge } from "@/components/billing/upgrade-prompt";
 
 interface Member {
@@ -213,7 +213,7 @@ export default function TeamSettingsPage({
             {isOwner && teamName !== team.name && (
               <Button onClick={handleRename} disabled={saving}>
                 {saved ? (
-                  <Check width={16} height={16} />
+                  <CheckMark width={16} height={16} />
                 ) : saving ? (
                   "Saving..."
                 ) : (
@@ -250,12 +250,12 @@ export default function TeamSettingsPage({
               Billing
             </p>
             {(team.plan ?? "free") === "pro" ? (
-              <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-4">
+              <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-bold text-primary">Pro plan</p>
                     <p className="text-xs text-muted-foreground">
-                      Unlimited members, sessions, and teams.
+                      $5/user/month
                     </p>
                   </div>
                   <Button
@@ -267,14 +267,33 @@ export default function TeamSettingsPage({
                     {billingLoading ? "Loading..." : "Manage billing"}
                   </Button>
                 </div>
+                <ul className="space-y-1.5 text-xs text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <CheckIcon className="text-primary" /> Unlimited teams
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon className="text-primary" /> Unlimited members
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon className="text-primary" /> Unlimited saved sessions
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon className="text-muted-foreground/50" />
+                    <span className="text-muted-foreground/60">Jira integration (coming soon)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon className="text-muted-foreground/50" />
+                    <span className="text-muted-foreground/60">Team analytics (coming soon)</span>
+                  </li>
+                </ul>
               </div>
             ) : (
-              <div className="rounded-md border-2 border-dashed border-border p-4">
+              <div className="rounded-md border-2 border-dashed border-border p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-bold">Free plan</p>
                     <p className="text-xs text-muted-foreground">
-                      5 members, 10 saved sessions.
+                      Great for trying it out
                     </p>
                   </div>
                   <Button
@@ -285,6 +304,29 @@ export default function TeamSettingsPage({
                     <Sparks width={14} height={14} />
                     {billingLoading ? "Loading..." : "Upgrade to Pro"}
                   </Button>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
+                      Free includes
+                    </p>
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      <li>1 team</li>
+                      <li>5 members</li>
+                      <li>10 saved sessions</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-primary mb-1.5">
+                      Pro unlocks
+                    </p>
+                    <ul className="space-y-1 text-xs">
+                      <li className="font-bold">Unlimited teams</li>
+                      <li className="font-bold">Unlimited members</li>
+                      <li className="font-bold">Unlimited sessions</li>
+                      <li className="text-muted-foreground">+ Jira integration</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             )}
@@ -312,5 +354,13 @@ export default function TeamSettingsPage({
         )}
       </div>
     </div>
+  );
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M5 12l5 5L20 7" />
+    </svg>
   );
 }
