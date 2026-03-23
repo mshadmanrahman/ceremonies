@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/owl-logo.svg" height="80" alt="Ceremonies owl logo" />
+  <img src="public/ceremonies_favicon.svg" height="80" alt="Ceremonies owl logo" />
 </p>
 
 <h1 align="center">Ceremonies</h1>
