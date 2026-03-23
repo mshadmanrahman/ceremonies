@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { GhostIcon, OwlIcon } from "@/components/shared/icons";
+import { ConnectionStatus } from "@/components/shared/connection-status";
 import { PhaseIndicator } from "@/components/retro/phase-indicator";
 import { HauntingPhase } from "@/components/retro/haunting-phase";
 import { WritingPhase } from "@/components/retro/writing-phase";
@@ -167,18 +168,24 @@ function RetroRoom({
   if (!state) {
     return (
       <div className="mx-auto flex min-h-svh max-w-3xl flex-col px-4 py-8">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="mt-4 h-4 w-32" />
-        <div className="mt-12 space-y-4">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-        </div>
+        <ConnectionStatus connected={connected} hasState={false} />
+        {connected && (
+          <>
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="mt-4 h-4 w-32" />
+            <div className="mt-12 space-y-4">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          </>
+        )}
       </div>
     );
   }
 
   return (
     <div className="mx-auto flex min-h-svh max-w-4xl flex-col px-4 py-6 sm:py-8">
+      <ConnectionStatus connected={connected} hasState={!!state} />
       {/* Header */}
       <header className="flex items-center justify-between">
         <div>

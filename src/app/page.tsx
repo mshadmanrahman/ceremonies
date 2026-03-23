@@ -33,6 +33,12 @@ export default function Home() {
         {/* Desktop nav */}
         <nav className="hidden items-center gap-4 md:flex">
           <Link
+            href="#pricing"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Pricing
+          </Link>
+          <Link
             href="https://github.com/mshadmanrahman/ceremonies"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
@@ -158,7 +164,7 @@ export default function Home() {
       </main>
 
       {/* How it works */}
-      <section className="relative px-6 py-20 md:px-12">
+      <section className="relative border-t-2 border-border/50 px-6 py-20 md:px-12">
         <div className="mx-auto max-w-3xl">
           <h2 className="text-center font-display text-3xl tracking-ceremony sm:text-4xl">
             How it works
@@ -187,7 +193,7 @@ export default function Home() {
       </section>
 
       {/* Pricing */}
-      <section className="relative px-6 py-20 md:px-12">
+      <section id="pricing" className="relative border-t-2 border-border/50 px-6 py-20 md:px-12">
         <div className="mx-auto max-w-3xl">
           <h2 className="text-center font-display text-3xl tracking-ceremony sm:text-4xl">
             Simple pricing
@@ -280,6 +286,9 @@ export default function Home() {
             </span>
           </div>
           <nav className="flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground">
+            <Link href="#pricing" className="transition-colors hover:text-foreground">
+              Pricing
+            </Link>
             <Link href="https://github.com/mshadmanrahman/ceremonies" className="transition-colors hover:text-foreground">
               GitHub
             </Link>

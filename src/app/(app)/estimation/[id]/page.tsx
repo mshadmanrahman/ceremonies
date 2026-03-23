@@ -16,6 +16,7 @@ import { useConfetti } from "@/hooks/use-confetti";
 import { getVoteSpread, type CardValue, type CompletedEstimate } from "@/lib/state-machines/estimation";
 import { cn } from "@/lib/utils";
 import { OwlIcon } from "@/components/shared/icons";
+import { ConnectionStatus } from "@/components/shared/connection-status";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { NavArrowLeft, LogOut, Copy, Check, FloppyDisk } from "iconoir-react";
@@ -228,13 +229,18 @@ function EstimationRoom({
   if (!state) {
     return (
       <div className="mx-auto flex min-h-svh max-w-3xl flex-col px-4 py-8">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="mt-4 h-4 w-32" />
-        <div className="mt-12 flex justify-center gap-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-16 rounded-md" />
-          ))}
-        </div>
+        <ConnectionStatus connected={connected} hasState={false} />
+        {connected && (
+          <>
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="mt-4 h-4 w-32" />
+            <div className="mt-12 flex justify-center gap-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 w-16 rounded-md" />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     );
   }
@@ -250,6 +256,7 @@ function EstimationRoom({
 
   return (
     <div className="mx-auto flex min-h-svh max-w-3xl flex-col px-4 py-6 sm:py-8">
+      <ConnectionStatus connected={connected} hasState={!!state} />
       {/* Header */}
       <header className="flex items-center justify-between">
         <div>
