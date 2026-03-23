@@ -87,10 +87,10 @@ export default async function DashboardPage({
         </div>
 
         {/* Quick actions */}
-        <div className="flex gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <Link
             href={`/retro/${generateRoomCode()}${currentTeamId ? `?team=${currentTeamId}` : ""}`}
-            className="flex-1 rounded-md border-2 border-border bg-card p-4 shadow-hard-sm transition-all hover:border-coffee hover:shadow-hard"
+            className="rounded-md border-2 border-border bg-card p-4 shadow-hard hover-lift"
           >
             <GhostIcon size={28} className="text-coffee" />
             <p className="mt-2 text-sm font-bold">New retro</p>
@@ -98,7 +98,7 @@ export default async function DashboardPage({
           </Link>
           <Link
             href={`/estimation/${generateRoomCode()}${currentTeamId ? `?team=${currentTeamId}` : ""}`}
-            className="flex-1 rounded-md border-2 border-border bg-card p-4 shadow-hard-sm transition-all hover:border-primary hover:shadow-hard"
+            className="rounded-md border-2 border-border bg-card p-4 shadow-hard hover-lift"
           >
             <OwlIcon size={28} className="text-primary" />
             <p className="mt-2 text-sm font-bold">New estimation</p>
