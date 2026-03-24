@@ -19,7 +19,8 @@ import { OwlIcon } from "@/components/shared/icons";
 import { ConnectionStatus } from "@/components/shared/connection-status";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
-import { NavArrowLeft, LogOut, Copy, Check, FloppyDisk } from "iconoir-react";
+import { NavArrowLeft, LogOut, Copy, Check, FloppyDisk, Download } from "iconoir-react";
+import { generateCSV, downloadCSV } from "@/lib/csv";
 
 export default function EstimationRoomPage({
   params,
@@ -526,6 +527,20 @@ function SessionSummaryScreen({
     });
   }, [summaryText]);
 
+  const handleDownloadCSV = useCallback(() => {
+    const csv = generateCSV(
+      ["#", "Ticket", "Estimate", "Participants", "Completed At"],
+      summary.history.map((h, i) => [
+        String(i + 1),
+        h.ticket.ref === "Quick vote" ? `Quick vote #${i + 1}` : h.ticket.ref,
+        VALUE_DISPLAY[h.finalEstimate],
+        String(h.participantCount),
+        new Date(h.completedAt).toISOString(),
+      ])
+    );
+    downloadCSV(csv, `estimation-${roomId}.csv`);
+  }, [summary.history, roomId]);
+
   const handleSave = useCallback(async () => {
     if (saveStatus === "saving" || saveStatus === "saved") return;
     setSaveStatus("saving");
@@ -677,19 +692,27 @@ function SessionSummaryScreen({
         {/* Actions */}
         <div className="flex flex-col gap-3 pt-2">
           {totalEstimated > 0 && (
-            <Button onClick={handleCopy} variant="outline" className="w-full">
-              {copied ? (
-                <>
-                  <Check width={16} height={16} />
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <Copy width={16} height={16} />
-                  Copy summary
-                </>
-              )}
-            </Button>
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <Button onClick={handleCopy} variant="outline">
+                  {copied ? (
+                    <>
+                      <Check width={16} height={16} />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy width={16} height={16} />
+                      Copy summary
+                    </>
+                  )}
+                </Button>
+                <Button onClick={handleDownloadCSV} variant="outline">
+                  <Download width={16} height={16} />
+                  Download CSV
+                </Button>
+              </div>
+            </>
           )}
           <Button onClick={onDone} className="w-full">
             Done

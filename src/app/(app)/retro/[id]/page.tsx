@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, use } from "react";
+import { useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,8 @@ import { useRetroRoom } from "@/hooks/use-retro-room";
 import { getRetroStats, type RetroState, type CardGroup } from "@/lib/state-machines/retro";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { NavArrowLeft, LogOut, Copy, Check } from "iconoir-react";
+import { NavArrowLeft, LogOut, Copy, Check, Download } from "iconoir-react";
+import { generateCSV, downloadCSV } from "@/lib/csv";
 
 export default function RetroRoomPage({
   params,
@@ -26,6 +28,8 @@ export default function RetroRoomPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: roomId } = use(params);
+  const searchParams = useSearchParams();
+  const teamId = searchParams.get("team") ?? undefined;
   const [playerName, setPlayerName] = useState("");
   const [joined, setJoined] = useState(false);
 
@@ -42,6 +46,7 @@ export default function RetroRoomPage({
   return (
     <RetroRoom
       roomId={roomId}
+      teamId={teamId}
       playerName={playerName}
       onLeave={() => {
         setJoined(false);
@@ -115,10 +120,12 @@ function JoinScreen({
 
 function RetroRoom({
   roomId,
+  teamId,
   playerName,
   onLeave,
 }: {
   roomId: string;
+  teamId?: string;
   playerName: string;
   onLeave: () => void;
 }) {
@@ -250,6 +257,7 @@ function RetroRoom({
       <div className="flex-1">
         {state.phase === "lobby" && (
           <LobbyPhase
+            teamId={teamId}
             isFacilitator={isFacilitator}
             participantCount={state.participants.length}
             participants={state.participants}
@@ -337,11 +345,13 @@ function RetroRoom({
 // ── Lobby Phase ──
 
 function LobbyPhase({
+  teamId,
   isFacilitator,
   participantCount,
   participants,
   onStart,
 }: {
+  teamId?: string;
   isFacilitator: boolean;
   participantCount: number;
   participants: ReadonlyArray<{ id: string; name: string }>;
@@ -352,12 +362,11 @@ function LobbyPhase({
   const [loadingActions, setLoadingActions] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
-  // Fetch previous action items when facilitator joins
+  // Fetch previous action items when facilitator joins (requires a real team ID)
   useEffect(() => {
-    if (!isFacilitator || !user || loaded) return;
+    if (!isFacilitator || !teamId || loaded) return;
     setLoadingActions(true);
-    // Use a default team ID based on user ID (simplified for now)
-    fetch(`/api/retros/previous-actions?teamId=${user.id}`)
+    fetch(`/api/retros/previous-actions?teamId=${teamId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.actions?.length > 0) {
@@ -376,11 +385,11 @@ function LobbyPhase({
         setLoadingActions(false);
         setLoaded(true);
       });
-  }, [isFacilitator, user, loaded]);
+  }, [isFacilitator, teamId, loaded]);
 
   const handleStart = () => {
     onStart({
-      teamId: user?.id, // Using user ID as team ID for now (simplified)
+      teamId,
       createdBy: user?.id,
       previousActions: previousActions.length > 0 ? previousActions : undefined,
     });
@@ -502,6 +511,22 @@ function ClosedPhase({
     });
   }, [summaryText]);
 
+  const handleDownloadCSV = useCallback(() => {
+    const csv = generateCSV(
+      ["Action Item", "Assignees", "Topic", "Votes"],
+      state.actionItems.map((item) => {
+        const group = state.groups.find((g) => g.id === item.groupId);
+        return [
+          item.text,
+          item.assignees.join("; "),
+          group?.label ?? "General",
+          String(group?.voteCount ?? 0),
+        ];
+      })
+    );
+    downloadCSV(csv, `retro-actions-${new Date().toISOString().slice(0, 10)}.csv`);
+  }, [state]);
+
   return (
     <div className="stagger-in mx-auto max-w-2xl space-y-6">
       {/* Header */}
@@ -582,13 +607,21 @@ function ClosedPhase({
 
       {/* Actions */}
       <div className="flex flex-col gap-3 pt-2">
-        <Button onClick={handleCopy} variant="outline" className="w-full">
-          {copied ? (
-            <><Check width={16} height={16} /> Copied!</>
-          ) : (
-            <><Copy width={16} height={16} /> Copy summary</>
+        <div className="grid grid-cols-2 gap-3">
+          <Button onClick={handleCopy} variant="outline">
+            {copied ? (
+              <><Check width={16} height={16} /> Copied!</>
+            ) : (
+              <><Copy width={16} height={16} /> Copy summary</>
+            )}
+          </Button>
+          {state.actionItems.length > 0 && (
+            <Button onClick={handleDownloadCSV} variant="outline">
+              <Download width={16} height={16} />
+              Export actions
+            </Button>
           )}
-        </Button>
+        </div>
         <Button onClick={onDone} className="w-full">
           Done
         </Button>
