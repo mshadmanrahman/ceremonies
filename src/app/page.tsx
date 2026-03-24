@@ -247,7 +247,7 @@ export default function Home() {
               </ul>
               <div className="mt-6">
                 <LinkButton href="/sign-in" className="w-full">
-                  Start free trial
+                  Get started
                 </LinkButton>
               </div>
             </div>
