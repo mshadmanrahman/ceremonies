@@ -223,7 +223,21 @@ function EstimationRoom({
 
   const handleEndSession = useCallback(() => {
     if (!state) return;
-    onEndSession(state.history, state.participants.length);
+    // Include the current ticket in history if it has an estimate
+    // (mirrors NEXT_TICKET logic in the state machine)
+    let history = state.history;
+    if (state.ticket && state.finalEstimate) {
+      history = [
+        ...history,
+        {
+          ticket: state.ticket,
+          finalEstimate: state.finalEstimate,
+          participantCount: state.participants.length,
+          completedAt: Date.now(),
+        },
+      ];
+    }
+    onEndSession(history, state.participants.length);
   }, [state, onEndSession]);
 
   // Loading state
