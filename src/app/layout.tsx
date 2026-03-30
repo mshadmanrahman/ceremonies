@@ -53,6 +53,14 @@ export const metadata: Metadata = {
     description:
       "Open-source estimation and retros in one place. Opinionated phases, true anonymity, and action items that haunt you.",
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
   keywords: [
     "agile",
     "retro",
