@@ -2,187 +2,117 @@
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-03-20 |
+| **Date** | 2026-03-24 |
 | **App URL** | https://ceremonies.dev |
-| **Session** | ceremonies-dev |
-| **Scope** | Full app: landing page, auth, estimation room, retro room, dashboard |
+| **Session** | ceremonies-dogfood |
+| **Scope** | Full app: landing page, estimation room, retro room, auth, dashboard, billing, mobile |
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | Critical | 1 |
-| High | 0 |
-| Medium | 2 |
-| Low | 4 |
-| **Total** | **7** |
+| High | 1 |
+| Medium | 0 |
+| Low | 1 |
+| **Total** | **3** |
 
 ## Issues
 
-### ISSUE-001: Estimation and Retro rooms stuck on loading skeleton (PartyKit WebSocket not connecting)
+### ISSUE-001: Estimation session summary shows 0 tickets/points when ending after agree without "Next"
+
+| Field | Value |
+|-------|-------|
+| **Severity** | high |
+| **Category** | functional |
+| **URL** | https://ceremonies.dev/estimation/* |
+| **Repro Video** | N/A |
+
+**Description**
+
+When the facilitator agrees on an estimate and then clicks "End" (instead of "Next" then "End"), the session summary shows 0 tickets, 0 points, and no results list. The "Copy summary", "Download CSV", and "Save session" buttons are all hidden because the history is empty. The root cause: the current ticket is only pushed to `history` on the NEXT_TICKET event; clicking End directly skips that step.
+
+**Repro Steps**
+
+1. Join estimation room, load ticket "TEST-42"
+2. Vote "5", reveal, set estimate to 5
+3. Click "End" (instead of clicking "Next" first)
+4. **Observe:** Summary shows 0 tickets, 0 points. No results, no export buttons.
+   ![Result](screenshots/13-estimation-summary.png)
+
+---
+
+### ISSUE-002: Sign-in page is completely blank (Clerk JS fails to load)
 
 | Field | Value |
 |-------|-------|
 | **Severity** | critical |
 | **Category** | functional |
-| **URL** | https://ceremonies.dev/estimation/demo |
-| **Repro Video** | N/A |
-
-**Description**
-
-After joining the estimation room (or retro room), the page shows a loading skeleton indefinitely. The PartyKit production server at `ceremonies.mshadmanrahman.partykit.dev` is unreachable (SSL handshake fails). The `NEXT_PUBLIC_PARTYKIT_HOST` env var was set on Vercel production, but the PartyKit domain may still be provisioning or the deploy hasn't picked up the new env var yet.
-
-**Repro Steps**
-
-1. Navigate to https://ceremonies.dev, click "Start estimating"
-   ![Step 1](screenshots/04-estimation-join.png)
-
-2. Enter name "Dogfood Tester", click "Join room"
-
-3. **Observe:** Page shows loading skeleton (gray placeholder bars) indefinitely. No room state loads.
-   ![Result](screenshots/05-estimation-room.png)
-
-**Root cause:** `ceremonies.mshadmanrahman.partykit.dev` returns HTTP 000 (SSL fail). Either domain still provisioning or PartyKit deploy incomplete.
-
-**Fix:** Redeploy PartyKit (`npx partykit deploy`) and verify domain resolves. Then trigger a Vercel redeploy to pick up the env var.
-
----
-
-### ISSUE-002: Sign-in page shows "clerk-citron-jacket" instead of app name "Ceremonies"
-
-| Field | Value |
-|-------|-------|
-| **Severity** | medium |
-| **Category** | content |
-| **URL** | https://engaging-monkfish-58.accounts.dev/sign-in |
-| **Repro Video** | N/A |
-
-**Description**
-
-The Clerk sign-in page title reads "Sign in to clerk-citron-jacket" instead of "Sign in to Ceremonies". This is the default Clerk instance name from Vercel Marketplace provisioning. Needs to be renamed in the Clerk dashboard under Application > Settings.
-
-**Repro Steps**
-
-1. Navigate to https://ceremonies.dev/dashboard (unauthenticated)
-2. **Observe:** Redirected to Clerk sign-in page. Title says "Sign in to clerk-citron-jacket"
-   ![Result](screenshots/08-dashboard-unauth.png)
-
-**Fix:** Clerk Dashboard > Application Settings > rename from "clerk-citron-jacket" to "Ceremonies"
-
----
-
-### ISSUE-003: GitHub SSO not appearing on sign-in page (only Google shown)
-
-| Field | Value |
-|-------|-------|
-| **Severity** | medium |
-| **Category** | functional |
-| **URL** | https://engaging-monkfish-58.accounts.dev/sign-in |
-| **Repro Video** | N/A |
-
-**Description**
-
-Only "Continue with Google" is shown on the sign-in page. GitHub SSO was enabled in the Clerk dashboard but doesn't appear. This may be because the Clerk dashboard shows GitHub as enabled but the production deployment hasn't picked up the configuration yet, or because the Vercel-provisioned Clerk instance has different settings than the dashboard view.
-
-**Repro Steps**
-
-1. Navigate to sign-in page
-2. **Observe:** Only Google SSO button visible. No GitHub.
-   ![Result](screenshots/08-dashboard-unauth.png)
-
-**Fix:** Verify GitHub is enabled in Clerk Dashboard > Configure > SSO Connections. May need to re-publish changes.
-
----
-
-### ISSUE-004: Clerk sign-in card ignores neobrutalist appearance styling
-
-| Field | Value |
-|-------|-------|
-| **Severity** | low |
-| **Category** | visual |
 | **URL** | https://ceremonies.dev/sign-in |
 | **Repro Video** | N/A |
 
 **Description**
 
-The Clerk `<SignIn>` component was configured with `appearance.elements.card: "border-2 border-border shadow-hard bg-card"` but the card renders with Clerk's default styling (gray gradient background, no hard shadow). The Tailwind classes may not be passed through correctly to Clerk's shadow DOM.
+The sign-in page renders as a completely blank black screen. Clerk's JavaScript bundle (`clerk.browser.js`) fails to load from `https://clerk.ceremonies.dev/npm/...` because the Clerk production SSL certificate has not been provisioned yet. All 8 Clerk resource requests return status 0 (connection failed). This blocks all authentication: sign-in, sign-up, and the dashboard.
+
+**Root cause:** Production Clerk keys were swapped today, but the Clerk production instance's custom domain (`clerk.ceremonies.dev`) is still showing "SSL certificates: Pending" in the Clerk dashboard. The 3 email DNS records show "Unverified" in Clerk despite being correctly configured in Cloudflare DNS.
+
+**Workaround:** Revert to dev Clerk keys until SSL certs are provisioned, or wait for Clerk to verify the email DNS records and issue certs.
 
 **Repro Steps**
 
 1. Navigate to https://ceremonies.dev/sign-in
-2. **Observe:** Clerk card has default styling, not neobrutalist
-   ![Result](screenshots/09-signin-page.png)
+2. **Observe:** Blank black screen, no Clerk UI renders
+   ![Result](screenshots/20-sign-in.png)
 
-**Fix:** Use Clerk's `variables` API for theming instead of Tailwind class names, or use CSS overrides targeting `.cl-card`.
+Also affects `/dashboard` which redirects to `accounts.ceremonies.dev/sign-in` and shows Cloudflare Error 1000:
+   ![Dashboard unauth](screenshots/23-dashboard-unauth.png)
 
 ---
 
-### ISSUE-005: Password field visible on sign-in page (wanted SSO-only)
+### ISSUE-003: Estimation summary shows 0 tickets when ending session with current ticket still active
 
 | Field | Value |
 |-------|-------|
-| **Severity** | low |
-| **Category** | ux |
-| **URL** | https://engaging-monkfish-58.accounts.dev/sign-in |
+| **Severity** | high |
+| **Category** | functional |
+| **URL** | https://ceremonies.dev/estimation/* |
 | **Repro Video** | N/A |
 
 **Description**
 
-The sign-in page shows an email + password form in addition to Google SSO. The design intent was SSO-only (Google + GitHub) for simplicity. Password auth adds friction and complexity.
+When the facilitator clicks "End" while a ticket is in the "agreed" state (after setting a final estimate), the session summary shows 0 tickets, 0 points, and no results. The "Copy summary", "Download CSV", and "Save session" buttons are all hidden. This is because the current agreed ticket is only pushed to `state.history` when "Next" (NEXT_TICKET) is clicked. Clicking "End" directly passes the empty history to the summary screen.
+
+This is the most common user flow: estimate one ticket, agree, end session. Multi-ticket sessions that use "Next" between tickets work correctly.
 
 **Repro Steps**
 
-1. Navigate to sign-in page
-2. **Observe:** Email address field and password field visible below the Google button
-   ![Result](screenshots/08-dashboard-unauth.png)
-
-**Fix:** Clerk Dashboard > Configure > User & Authentication > disable "Password" as an authentication strategy. Keep only SSO.
+1. Join estimation room, enter ticket "TEST-42", vote, reveal, set estimate to 5
+   ![Agreed](screenshots/12-estimation-final.png)
+2. Click "End" button (top right)
+3. **Observe:** Summary shows 0 tickets, 0 points. No export/save buttons.
+   ![Result](screenshots/13-estimation-summary.png)
 
 ---
 
-### ISSUE-006: Feature cards on landing page not clickable (Estimation, Retros, The Haunting)
+### ISSUE-004: Player name truncated on estimation vote cards
 
 | Field | Value |
 |-------|-------|
 | **Severity** | low |
-| **Category** | ux |
-| **URL** | https://ceremonies.dev |
+| **Category** | visual |
+| **URL** | https://ceremonies.dev/estimation/* |
 | **Repro Video** | N/A |
 
 **Description**
 
-The three feature cards (Estimation, Retros, The Haunting) at the bottom of the landing page have hover animations (shadow lift) suggesting they are interactive, but they are not links. Users may expect clicking "Estimation" takes them to the estimation room, and "Retros" to the retro room.
+Player names longer than ~8 characters are truncated with "..." on the vote cards (e.g., "Dogfood Tester" shows as "Dogfood T..."). The vote card width is fixed and doesn't accommodate longer names. Names like "Alexandra" or "Christopher" would also be cut off.
 
 **Repro Steps**
 
-1. Navigate to https://ceremonies.dev, scroll down to feature cards
-2. **Observe:** Cards have hover-lift animation but no click target
-   ![Result](screenshots/13-dark-mode-cards.png)
-
-**Fix:** Wrap feature cards in links to their respective rooms (e.g., `/estimation/demo` and `/retro/demo`).
-
----
-
-### ISSUE-007: "Try it" and "Start estimating" both link to /estimation/demo (no retro quick-start)
-
-| Field | Value |
-|-------|-------|
-| **Severity** | low |
-| **Category** | ux |
-| **URL** | https://ceremonies.dev |
-| **Repro Video** | N/A |
-
-**Description**
-
-"Try it" in the nav and "Start estimating" CTA both link to `/estimation/demo`. There's no quick-try path for retros from the nav. The "Run a retro" button does go to `/retro/demo` correctly, but "Try it" could be ambiguous about which ceremony it starts.
-
-**Repro Steps**
-
-1. Click "Try it" in nav bar
-2. **Observe:** Goes to estimation join screen, same as "Start estimating"
-   ![Result](screenshots/11-try-it-destination.png)
-
-**Fix:** Consider making "Try it" link to a room picker, or adding separate "Try estimation" / "Try retro" options.
+1. Join estimation room with name "Dogfood Tester"
+2. **Observe:** Name shows as "Dogfood T..." under the vote card
+   ![Result](screenshots/06-estimation-voting.png)
 
 ---
 

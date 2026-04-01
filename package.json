@@ -17,7 +17,8 @@
     "promo:studio": "npx remotion studio promo/src/index.ts",
     "promo:render": "npx remotion render promo/src/index.ts CeremoniesPromo out/ceremonies-promo.mp4",
     "promo:render-reels": "npx remotion render promo/src/index.ts CeremoniesReels out/ceremonies-reels.mp4",
-    "promo:render-scene": "npx remotion render promo/src/index.ts"
+    "promo:render-scene": "npx remotion render promo/src/index.ts",
+    "promo:render-gif": "npx remotion render promo/src/index.ts ReadmeReveal --image-format png --every-nth-frame 2 out/readme-reveal.gif"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

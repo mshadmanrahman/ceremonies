@@ -5,6 +5,7 @@ import { Scene3Estimation } from "./scenes/Scene3Estimation";
 import { Scene4Retro } from "./scenes/Scene4Retro";
 import { Scene5Haunting } from "./scenes/Scene5Haunting";
 import { Scene6Closer } from "./scenes/Scene6Closer";
+import { ReadmeReveal } from "./scenes/ReadmeReveal";
 import { colors, fonts, fontImports } from "./styles";
 
 // Font loader: injects Google Fonts into the Remotion render
@@ -516,6 +517,16 @@ export const RemotionRoot: React.FC = () => {
         fps={30}
         width={1080}
         height={1920}
+      />
+
+      {/* README GIF — compact card reveal (800x450, 5s, no audio) */}
+      <Composition
+        id="ReadmeReveal"
+        component={ReadmeReveal}
+        durationInFrames={150}
+        fps={30}
+        width={800}
+        height={450}
       />
 
       {/* Individual scenes for preview */}

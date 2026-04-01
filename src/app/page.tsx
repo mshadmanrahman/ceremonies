@@ -199,7 +199,7 @@ export default function Home() {
             Simple pricing
           </h2>
           <p className="mx-auto mt-3 max-w-md text-center text-sm text-muted-foreground">
-            Free for small teams. Pro when you need more.
+            Open source and free to self-host. These plans are for the hosted version at ceremonies.dev.
           </p>
           <div className="mt-12 grid gap-6 sm:grid-cols-2">
             {/* Free tier */}
