@@ -5,12 +5,13 @@ import type { RetroCard, CardCategory } from "@/lib/state-machines/retro";
 import { Button } from "@/components/ui/button";
 import { HappyIcon, SadIcon, ConfusedIcon } from "@/components/shared/icons";
 import { cn } from "@/lib/utils";
-import { Plus, Xmark } from "iconoir-react";
+import { Plus, Xmark, EditPencil, Check } from "iconoir-react";
 
 interface WritingPhaseProps {
   readonly cards: ReadonlyArray<RetroCard>;
   readonly myAnonymousId: string | null;
   readonly onAddCard: (category: CardCategory, text: string) => void;
+  readonly onEditCard: (cardId: string, text: string) => void;
   readonly onRemoveCard: (cardId: string) => void;
   readonly isFacilitator: boolean;
   readonly onAdvance: () => void;
@@ -55,6 +56,7 @@ export function WritingPhase({
   cards,
   myAnonymousId,
   onAddCard,
+  onEditCard,
   onRemoveCard,
   isFacilitator,
   onAdvance,
@@ -62,6 +64,8 @@ export function WritingPhase({
 }: WritingPhaseProps) {
   const [activeCategory, setActiveCategory] = useState<CardCategory>("happy");
   const [text, setText] = useState("");
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
 
   const handleSubmit = () => {
     const trimmed = text.trim();
@@ -154,6 +158,7 @@ export function WritingPhase({
               const cat = CATEGORIES.find((c) => c.value === card.category);
               if (!cat) return null;
               const Icon = cat.icon;
+              const isEditing = editingCardId === card.id;
               return (
                 <div
                   key={card.id}
@@ -164,14 +169,66 @@ export function WritingPhase({
                   )}
                 >
                   <Icon size={20} className={cn("mt-0.5 shrink-0", cat.colorClass)} />
-                  <p className="flex-1 text-sm">{card.text}</p>
-                  <button
-                    onClick={() => onRemoveCard(card.id)}
-                    className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
-                    aria-label="Remove card"
-                  >
-                    <Xmark width={16} height={16} />
-                  </button>
+                  {isEditing ? (
+                    <div className="flex flex-1 items-start gap-2">
+                      <textarea
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            const trimmed = editText.trim();
+                            if (trimmed) {
+                              onEditCard(card.id, trimmed);
+                            }
+                            setEditingCardId(null);
+                          }
+                          if (e.key === "Escape") {
+                            setEditingCardId(null);
+                          }
+                        }}
+                        autoFocus
+                        rows={2}
+                        className="flex-1 resize-none rounded border border-border bg-background p-1.5 text-sm focus:outline-none"
+                      />
+                      <button
+                        onClick={() => {
+                          const trimmed = editText.trim();
+                          if (trimmed) {
+                            onEditCard(card.id, trimmed);
+                          }
+                          setEditingCardId(null);
+                        }}
+                        className="shrink-0 text-success hover:text-success/80"
+                        aria-label="Save edit"
+                      >
+                        <Check width={16} height={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="flex-1 text-sm">{card.text}</p>
+                      <button
+                        onClick={() => {
+                          setEditingCardId(card.id);
+                          setEditText(card.text);
+                        }}
+                        className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-primary group-hover:opacity-100"
+                        aria-label="Edit card"
+                      >
+                        <EditPencil width={14} height={14} />
+                      </button>
+                    </>
+                  )}
+                  {!isEditing && (
+                    <button
+                      onClick={() => onRemoveCard(card.id)}
+                      className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                      aria-label="Remove card"
+                    >
+                      <Xmark width={16} height={16} />
+                    </button>
+                  )}
                 </div>
               );
             })}

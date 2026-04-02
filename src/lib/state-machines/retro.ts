@@ -111,6 +111,7 @@ export type RetroEvent =
   | { type: "MARK_ACTION"; facilitatorId: string; actionId: string; done: boolean }
   | { type: "ADVANCE_PHASE"; facilitatorId: string }
   | { type: "ADD_CARD"; card: RetroCard }
+  | { type: "EDIT_CARD"; cardId: string; text: string; anonymousId: string }
   | { type: "REMOVE_CARD"; cardId: string; anonymousId: string }
   | { type: "MOVE_CARD_POSITION"; cardId: string; x: number; y: number }
   | { type: "SCATTER_CARDS"; positions: Readonly<Record<string, CardPosition>> }
@@ -295,6 +296,18 @@ export function transition(state: RetroState, event: RetroEvent): RetroState {
       return {
         ...state,
         cards: [...state.cards, event.card],
+      };
+    }
+
+    case "EDIT_CARD": {
+      if (state.phase !== "writing") return state;
+      const editTarget = state.cards.find((c) => c.id === event.cardId);
+      if (!editTarget || editTarget.anonymousId !== event.anonymousId) return state;
+      return {
+        ...state,
+        cards: state.cards.map((c) =>
+          c.id === event.cardId ? { ...c, text: event.text } : c
+        ),
       };
     }
 

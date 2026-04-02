@@ -142,6 +142,11 @@ export default class RetroServer implements Party.Server {
       };
     }
 
+    // Inject anonymousId for EDIT_CARD (only author can edit)
+    if (event.type === "EDIT_CARD") {
+      event = { ...event, anonymousId: connState.anonymousId };
+    }
+
     // Inject anonymousId for REMOVE_CARD (only author can remove)
     if (event.type === "REMOVE_CARD") {
       event = { ...event, anonymousId: connState.anonymousId };

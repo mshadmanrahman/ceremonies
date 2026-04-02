@@ -29,7 +29,7 @@ interface GroupingPhaseProps {
 }
 
 const CANVAS_WIDTH = 1200;
-const CANVAS_HEIGHT = 700;
+const CANVAS_HEIGHT = 900;
 const CARD_WIDTH = 180;
 const CARD_HEIGHT = 72;
 
@@ -168,10 +168,11 @@ export function GroupingPhase({
       {/* Canvas */}
       <div
         ref={canvasRef}
-        className="relative overflow-hidden rounded-md border-2 border-border bg-card shadow-hard"
+        className="relative overflow-hidden rounded-md border-2 border-border bg-card shadow-hard dark:bg-background"
         style={{
           width: "100%",
           aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}`,
+          minHeight: "400px",
         }}
         onMouseMove={handleMouseMove}
         onPointerUp={handlePointerUp}
@@ -229,7 +230,7 @@ export function GroupingPhase({
               onPointerDown={(e) => handlePointerDown(card.id, e)}
             >
               <Icon size={20} className={cn("shrink-0 mt-0.5", style.color)} />
-              <span className="line-clamp-2 leading-snug">{card.text}</span>
+              <span className="line-clamp-4 leading-snug">{card.text}</span>
             </div>
           );
         })}

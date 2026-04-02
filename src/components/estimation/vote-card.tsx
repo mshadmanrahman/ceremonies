@@ -74,9 +74,10 @@ export function VoteCard({ name, value, revealed, isYou, index = 0 }: VoteCardPr
       <div className="flex h-8 flex-col items-center justify-start gap-0">
         <span
           className={cn(
-            "max-w-18 truncate text-xs font-bold leading-tight",
+            "max-w-28 truncate text-xs font-bold leading-tight",
             isYou ? "text-primary" : "text-muted-foreground"
           )}
+          title={name}
         >
           {name}
         </span>

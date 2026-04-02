@@ -33,6 +33,7 @@ interface UseRetroRoomResult {
 
   // Writing (anonymous)
   readonly addCard: (category: CardCategory, text: string) => void;
+  readonly editCard: (cardId: string, text: string) => void;
   readonly removeCard: (cardId: string) => void;
 
   // Grouping (canvas)
@@ -159,6 +160,13 @@ export function useRetroRoom({
   const addCard = useCallback(
     (category: CardCategory, text: string) => {
       send({ type: "ADD_CARD", category, text });
+    },
+    [send]
+  );
+
+  const editCard = useCallback(
+    (cardId: string, text: string) => {
+      send({ type: "EDIT_CARD", cardId, text });
     },
     [send]
   );
@@ -314,6 +322,7 @@ export function useRetroRoom({
     markAction,
     advancePhase,
     addCard,
+    editCard,
     removeCard,
     moveCardPosition,
     scatterCards,

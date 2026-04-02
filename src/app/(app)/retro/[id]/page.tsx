@@ -139,6 +139,7 @@ function RetroRoom({
     markAction,
     advancePhase,
     addCard,
+    editCard,
     removeCard,
     moveCardPosition,
     scatterCards,
@@ -199,7 +200,7 @@ function RetroRoom({
           <div className="flex items-baseline gap-3">
             <Link
               href="/"
-              className="relative top-[2px] flex h-8 w-8 shrink-0 items-center justify-center rounded-md border-2 border-border bg-card text-muted-foreground shadow-hard-sm transition-colors hover:border-foreground/40 hover:text-foreground"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border-2 border-border bg-card text-muted-foreground shadow-hard-sm transition-colors hover:border-foreground/40 hover:text-foreground"
               aria-label="Back to home"
             >
               <NavArrowLeft width={16} height={16} />
@@ -279,6 +280,7 @@ function RetroRoom({
             cards={state.cards}
             myAnonymousId={myAnonymousId}
             onAddCard={addCard}
+            onEditCard={editCard}
             onRemoveCard={removeCard}
             isFacilitator={isFacilitator}
             onAdvance={advancePhase}

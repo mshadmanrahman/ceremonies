@@ -131,8 +131,8 @@
   --sidebar-ring: oklch(0.76 0.155 55);
 
   /* Shadow system: dark mode uses subtle depth, light mode uses hard press */
-  --shadow-color: oklch(0.08 0.005 60);
-  --shadow-offset: 3px;
+  --shadow-color: oklch(0.04 0.005 60);
+  --shadow-offset: 4px;
 
   /* Motion */
   --ease-ceremony: cubic-bezier(0.25, 1, 0.5, 1);
@@ -227,6 +227,10 @@
 
   .shadow-hard-sm {
     box-shadow: 0 3px 0 0 var(--shadow-color);
+  }
+
+  :is(.dark *) .shadow-hard-sm {
+    box-shadow: 0 3px 0 0 var(--shadow-color), 0 0 0 1px oklch(0.25 0.008 60);
   }
 
   .shadow-hard-lg {
