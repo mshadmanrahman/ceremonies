@@ -179,7 +179,10 @@ export default class EstimationServer implements Party.Server {
     const apiHost = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3456";
     const res = await fetch(`${apiHost}/api/estimation/save`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Internal-Secret": process.env.INTERNAL_API_SECRET ?? "",
+      },
       body: JSON.stringify({
         roomCode: this.room.id,
         teamId: data.teamId ?? "",

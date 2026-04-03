@@ -39,7 +39,6 @@ export const teamMembers = pgTable("team_members", {
 export const retros = pgTable("retros", {
   id: uuid("id").defaultRandom().primaryKey(),
   teamId: uuid("team_id")
-    .notNull()
     .references(() => teams.id),
   roomCode: text("room_code").notNull().unique(),
   status: text("status", { enum: ["active", "closed"] })

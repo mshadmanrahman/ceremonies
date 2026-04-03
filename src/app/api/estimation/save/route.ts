@@ -12,17 +12,31 @@ import { canSaveSession } from "@/lib/plan-limits";
  * teamId is optional until Team CRUD is built.
  */
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json(
-      { error: "Sign in to save sessions" },
-      { status: 401 }
-    );
+  // Accept either a valid Clerk session (browser) or the internal PartyKit secret (server-to-server)
+  const internalSecret = req.headers.get("X-Internal-Secret");
+  const isInternalCall =
+    internalSecret &&
+    internalSecret === process.env.INTERNAL_API_SECRET;
+
+  let userId: string | null = null;
+  if (isInternalCall) {
+    // Authenticated via PartyKit internal secret — createdBy comes from request body
+    userId = null; // resolved below after parsing body
+  } else {
+    const { userId: clerkUserId } = await auth();
+    if (!clerkUserId) {
+      return NextResponse.json(
+        { error: "Sign in to save sessions" },
+        { status: 401 }
+      );
+    }
+    userId = clerkUserId;
   }
 
   const body = (await req.json()) as {
     roomCode: string;
     teamId?: string;
+    createdBy?: string;
     participantCount: number;
     history: ReadonlyArray<{
       ticket: { ref: string; title: string };
@@ -31,6 +45,21 @@ export async function POST(req: Request) {
       completedAt: number;
     }>;
   };
+
+  if (isInternalCall) {
+    userId = body.createdBy ?? null;
+    if (!userId) {
+      return NextResponse.json(
+        { error: "createdBy required for internal saves" },
+        { status: 400 }
+      );
+    }
+  }
+
+  // At this point userId is always non-null (both code paths above guard against it)
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   // Check plan limits
   const sessionLimit = await canSaveSession(body.teamId ?? null, userId);
