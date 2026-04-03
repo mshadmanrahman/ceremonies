@@ -29,9 +29,17 @@ interface GroupingPhaseProps {
 }
 
 const CANVAS_WIDTH = 1200;
-const CANVAS_HEIGHT = 900;
+const BASE_CANVAS_HEIGHT = 900;
 const CARD_WIDTH = 180;
 const CARD_HEIGHT = 72;
+
+/** Scale canvas height based on card count to prevent overcrowding */
+function getCanvasHeight(cardCount: number): number {
+  if (cardCount <= 16) return BASE_CANVAS_HEIGHT;
+  // Add ~60px of canvas height per additional card beyond 16
+  const extra = (cardCount - 16) * 60;
+  return Math.min(BASE_CANVAS_HEIGHT + extra, 2400); // cap at 2400
+}
 
 const CATEGORY_ICON: Record<CardCategory, React.ComponentType<{ size?: number; className?: string }>> = {
   happy: HappyIcon,
@@ -72,6 +80,8 @@ export function GroupingPhase({
   } | null>(null);
   const [hasScattered, setHasScattered] = useState(false);
 
+  const canvasHeight = getCanvasHeight(cards.length);
+
   // Safe access: old state may not have cardPositions at all
   const safePositions = cardPositions ?? {};
 
@@ -80,13 +90,13 @@ export function GroupingPhase({
     if (hasScattered) return;
     const hasPositions = Object.keys(safePositions).length > 0;
     if (!hasPositions && cards.length > 0) {
-      const positions = scatterCardPositions(cards, CANVAS_WIDTH, CANVAS_HEIGHT, CARD_WIDTH, CARD_HEIGHT);
+      const positions = scatterCardPositions(cards, CANVAS_WIDTH, canvasHeight, CARD_WIDTH, CARD_HEIGHT);
       onScatterCards(positions);
       setHasScattered(true);
     } else if (hasPositions) {
       setHasScattered(true);
     }
-  }, [cards, safePositions, hasScattered, onScatterCards]);
+  }, [cards, safePositions, hasScattered, onScatterCards, canvasHeight]);
 
   // Track cursor on canvas
   const handleMouseMove = useCallback(
@@ -94,7 +104,7 @@ export function GroupingPhase({
       if (!canvasRef.current) return;
       const rect = canvasRef.current.getBoundingClientRect();
       const scaleX = CANVAS_WIDTH / rect.width;
-      const scaleY = CANVAS_HEIGHT / rect.height;
+      const scaleY = canvasHeight / rect.height;
       const x = (e.clientX - rect.left) * scaleX;
       const y = (e.clientY - rect.top) * scaleY;
       onSendCursor(x, y);
@@ -102,11 +112,11 @@ export function GroupingPhase({
       // If dragging, move the card
       if (dragging) {
         const newX = Math.max(0, Math.min(CANVAS_WIDTH - CARD_WIDTH, x - dragging.offsetX));
-        const newY = Math.max(0, Math.min(CANVAS_HEIGHT - CARD_HEIGHT, y - dragging.offsetY));
+        const newY = Math.max(0, Math.min(canvasHeight - CARD_HEIGHT, y - dragging.offsetY));
         onMoveCard(dragging.cardId, newX, newY);
       }
     },
-    [onSendCursor, onMoveCard, dragging]
+    [onSendCursor, onMoveCard, dragging, canvasHeight]
   );
 
   const handlePointerDown = useCallback(
@@ -114,7 +124,7 @@ export function GroupingPhase({
       if (!canvasRef.current) return;
       const rect = canvasRef.current.getBoundingClientRect();
       const scaleX = CANVAS_WIDTH / rect.width;
-      const scaleY = CANVAS_HEIGHT / rect.height;
+      const scaleY = canvasHeight / rect.height;
       const canvasX = (e.clientX - rect.left) * scaleX;
       const canvasY = (e.clientY - rect.top) * scaleY;
       const pos = safePositions[cardId];
@@ -126,7 +136,7 @@ export function GroupingPhase({
       });
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
-    [cardPositions]
+    [cardPositions, canvasHeight]
   );
 
   const handlePointerUp = useCallback(() => {
@@ -144,7 +154,7 @@ export function GroupingPhase({
     const maxX = Math.max(...positions.map((p) => p.x)) + CARD_WIDTH + 12;
     const maxY = Math.max(...positions.map((p) => p.y)) + CARD_HEIGHT + 12;
     return { group, x: minX, y: minY, width: maxX - minX, height: maxY - minY };
-  }).filter(Boolean);
+  }).filter(Boolean) as Array<{ group: CardGroup; x: number; y: number; width: number; height: number }>;
 
   return (
     <div className="space-y-4">
@@ -171,7 +181,7 @@ export function GroupingPhase({
         className="relative overflow-hidden rounded-md border-2 border-border bg-card shadow-hard dark:bg-background"
         style={{
           width: "100%",
-          aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}`,
+          aspectRatio: `${CANVAS_WIDTH} / ${canvasHeight}`,
           minHeight: "400px",
         }}
         onMouseMove={handleMouseMove}
@@ -187,9 +197,7 @@ export function GroupingPhase({
         />
 
         {/* Group boundaries (auto-generated from proximity) */}
-        {groupBounds.map((bounds) => {
-          if (!bounds) return null;
-          return (
+        {groupBounds.map((bounds) => (
             <GroupBoundary
               key={bounds.group.id}
               group={bounds.group}
@@ -198,10 +206,10 @@ export function GroupingPhase({
               width={bounds.width}
               height={bounds.height}
               canvasWidth={CANVAS_WIDTH}
+              canvasHeight={canvasHeight}
               onRename={onRenameGroup}
             />
-          );
-        })}
+          ))}
 
         {/* Cards */}
         {cards.map((card) => {
@@ -222,9 +230,9 @@ export function GroupingPhase({
               )}
               style={{
                 left: `${(pos.x / CANVAS_WIDTH) * 100}%`,
-                top: `${(pos.y / CANVAS_HEIGHT) * 100}%`,
+                top: `${(pos.y / canvasHeight) * 100}%`,
                 width: `${(CARD_WIDTH / CANVAS_WIDTH) * 100}%`,
-                minHeight: `${(CARD_HEIGHT / CANVAS_HEIGHT) * 100}%`,
+                minHeight: `${(CARD_HEIGHT / canvasHeight) * 100}%`,
                 transition: isDragging ? "none" : "box-shadow 0.15s, transform 0.15s",
               }}
               onPointerDown={(e) => handlePointerDown(card.id, e)}
@@ -245,7 +253,7 @@ export function GroupingPhase({
               className="pointer-events-none absolute z-40 transition-all duration-75"
               style={{
                 left: `${(cursor.x / CANVAS_WIDTH) * 100}%`,
-                top: `${(cursor.y / CANVAS_HEIGHT) * 100}%`,
+                top: `${(cursor.y / canvasHeight) * 100}%`,
                 transform: "translate(-2px, -2px)",
               }}
             >
@@ -293,6 +301,7 @@ function GroupBoundary({
   width,
   height,
   canvasWidth,
+  canvasHeight,
   onRename,
 }: {
   group: CardGroup;
@@ -301,6 +310,7 @@ function GroupBoundary({
   width: number;
   height: number;
   canvasWidth: number;
+  canvasHeight: number;
   onRename: (groupId: string, label: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -326,9 +336,9 @@ function GroupBoundary({
       className="absolute z-0 rounded-lg border-2 border-dashed border-primary/30 bg-primary/[0.04] transition-all duration-200"
       style={{
         left: `${(x / canvasWidth) * 100}%`,
-        top: `${(y / CANVAS_HEIGHT) * 100}%`,
+        top: `${(y / canvasHeight) * 100}%`,
         width: `${(width / canvasWidth) * 100}%`,
-        height: `${(height / CANVAS_HEIGHT) * 100}%`,
+        height: `${(height / canvasHeight) * 100}%`,
       }}
     >
       {/* Group label */}

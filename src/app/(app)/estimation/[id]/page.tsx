@@ -621,28 +621,7 @@ function SessionSummaryScreen({
 
         {/* Estimate list */}
         {totalEstimated > 0 && (
-          <div className="space-y-2 text-left">
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-              Results
-            </p>
-            <div className="space-y-1.5">
-              {summary.history.map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between rounded-md bg-muted px-3 py-2"
-                >
-                  <span className="text-sm font-medium truncate mr-3">
-                    {item.ticket.ref === "Quick vote"
-                      ? `Quick vote #${i + 1}`
-                      : item.ticket.ref}
-                  </span>
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/15 font-mono text-xs font-bold text-primary">
-                    {VALUE_DISPLAY[item.finalEstimate]}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <EstimateResultsList history={summary.history} />
         )}
 
         {/* Save prompt */}
@@ -732,6 +711,72 @@ function SessionSummaryScreen({
             Done
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Estimate Results with Sort ──
+
+const ESTIMATE_ORDER: Record<string, number> = {
+  "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "8": 8, "13": 13, coffee: 0, question: -1,
+};
+
+type SortMode = "chronological" | "highest" | "lowest";
+
+function EstimateResultsList({
+  history,
+}: {
+  history: ReadonlyArray<CompletedEstimate>;
+}) {
+  const [sortMode, setSortMode] = useState<SortMode>("highest");
+
+  const sorted = [...history].sort((a, b) => {
+    if (sortMode === "chronological") return 0; // keep original order
+    const aVal = ESTIMATE_ORDER[a.finalEstimate] ?? 0;
+    const bVal = ESTIMATE_ORDER[b.finalEstimate] ?? 0;
+    return sortMode === "highest" ? bVal - aVal : aVal - bVal;
+  });
+
+  return (
+    <div className="space-y-2 text-left">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+          Results
+        </p>
+        <div className="flex gap-1">
+          {(["highest", "lowest", "chronological"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setSortMode(mode)}
+              className={`rounded-md px-2 py-0.5 text-[10px] font-bold transition-colors ${
+                sortMode === mode
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {mode === "highest" ? "High→Low" : mode === "lowest" ? "Low→High" : "Order"}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        {sorted.map((item, i) => (
+          <div
+            key={`${item.ticket.ref}-${item.completedAt}`}
+            className="flex items-center justify-between rounded-md bg-muted px-3 py-2"
+          >
+            <span className="text-sm font-medium truncate mr-3">
+              {item.ticket.ref === "Quick vote"
+                ? `Quick vote #${history.indexOf(item) + 1}`
+                : item.ticket.ref}
+            </span>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/15 font-mono text-xs font-bold text-primary">
+              {VALUE_DISPLAY[item.finalEstimate]}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

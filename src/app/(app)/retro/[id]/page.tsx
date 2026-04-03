@@ -161,6 +161,9 @@ function RetroRoom({
     closeRetro,
   } = useRetroRoom({ roomId, playerName });
 
+  // Unresolved items from previous retro (groups without action items)
+  const [unresolvedItems, setUnresolvedItems] = useState<ReadonlyArray<{ id: string; label: string; category?: string; voteCount?: number }>>([]);
+
   const myVotesByGroup = useMemo(() => {
     if (!state || !myId) return new Map<string, number>();
     const map = new Map<string, number>();
@@ -263,12 +266,14 @@ function RetroRoom({
             participantCount={state.participants.length}
             participants={state.participants}
             onStart={startRetro}
+            onUnresolvedItems={setUnresolvedItems}
           />
         )}
 
         {state.phase === "haunting" && (
           <HauntingPhase
             actions={state.previousActions}
+            unresolvedItems={unresolvedItems}
             isFacilitator={isFacilitator}
             onMark={markAction}
             onAdvance={advancePhase}
@@ -352,19 +357,21 @@ function LobbyPhase({
   participantCount,
   participants,
   onStart,
+  onUnresolvedItems,
 }: {
   teamId?: string;
   isFacilitator: boolean;
   participantCount: number;
   participants: ReadonlyArray<{ id: string; name: string }>;
   onStart: (options?: { teamId?: string; createdBy?: string; previousActions?: ReadonlyArray<import("@/lib/state-machines/retro").PreviousAction> }) => void;
+  onUnresolvedItems: (items: ReadonlyArray<{ id: string; label: string; category?: string; voteCount?: number }>) => void;
 }) {
   const { user } = useUser();
   const [previousActions, setPreviousActions] = useState<ReadonlyArray<import("@/lib/state-machines/retro").PreviousAction>>([]);
   const [loadingActions, setLoadingActions] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
-  // Fetch previous action items when facilitator joins (requires a real team ID)
+  // Fetch previous retro data when facilitator joins (requires a real team ID)
   useEffect(() => {
     if (!isFacilitator || !teamId || loaded) return;
     setLoadingActions(true);
@@ -381,13 +388,23 @@ function LobbyPhase({
             }))
           );
         }
+        // Collect unresolved items: groups without action items
+        const unresolved: Array<{ id: string; label: string; category?: string; voteCount?: number }> = [];
+        if (data.groups?.length > 0) {
+          for (const g of data.groups as Array<{ id: string; label: string; voteCount: number; hasActions: boolean }>) {
+            if (!g.hasActions) {
+              unresolved.push({ id: g.id, label: g.label, voteCount: g.voteCount });
+            }
+          }
+        }
+        onUnresolvedItems(unresolved);
       })
       .catch(() => {}) // DB might not be set up yet, that's OK
       .finally(() => {
         setLoadingActions(false);
         setLoaded(true);
       });
-  }, [isFacilitator, teamId, loaded]);
+  }, [isFacilitator, teamId, loaded, onUnresolvedItems]);
 
   const handleStart = () => {
     onStart({
