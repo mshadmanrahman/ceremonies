@@ -11,7 +11,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "border-border bg-primary text-primary-foreground shadow-hard-sm hover-lift",
+          "border-border dark:border-primary/70 bg-primary text-primary-foreground shadow-hard-sm hover-lift",
         outline:
           "border-border bg-card shadow-hard-sm hover:border-primary hover:text-primary",
         secondary:

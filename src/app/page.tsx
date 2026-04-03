@@ -16,7 +16,7 @@ export default function Home() {
     <div className="relative flex min-h-svh flex-col overflow-hidden">
       {/* Dot grid background */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.04]"
+        className="pointer-events-none absolute inset-0 opacity-[0.05]"
         style={{
           backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
           backgroundSize: "24px 24px",

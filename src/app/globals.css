@@ -73,13 +73,13 @@
  */
 :root {
   /* Surface layers: deep → mid → elevated
-   * Lifted from cave-black to softer gray (inspired by Claude Code Guide).
-   * Kept a hint of warm hue (60) for Ceremonies brand, but dialed way back. */
-  --background: oklch(0.17 0.004 60);
+   * Background stays warm-dark. Card bumped to 0.25 for clear elevation delta
+   * (was 0.21 — only 4% vs bg; now 8% delta for Apple-like layered surfaces). */
+  --background: oklch(0.15 0.004 60);
   --foreground: oklch(0.96 0.004 80);
-  --card: oklch(0.21 0.005 60);
+  --card: oklch(0.23 0.006 60);
   --card-foreground: oklch(0.96 0.004 80);
-  --popover: oklch(0.23 0.005 60);
+  --popover: oklch(0.26 0.006 60);
   --popover-foreground: oklch(0.96 0.004 80);
 
   /* Primary: warm amber, slightly less saturated for dark to avoid neon */
@@ -87,18 +87,18 @@
   --primary-foreground: oklch(0.17 0.03 55);
 
   /* Secondary/muted: clearly separated from card */
-  --secondary: oklch(0.25 0.005 60);
+  --secondary: oklch(0.28 0.006 60);
   --secondary-foreground: oklch(0.90 0.005 80);
-  --muted: oklch(0.25 0.005 60);
+  --muted: oklch(0.28 0.006 60);
   --muted-foreground: oklch(0.65 0.010 70);
 
   --accent: oklch(0.60 0.12 275);
   --accent-foreground: oklch(0.96 0 0);
   --destructive: oklch(0.60 0.20 25);
 
-  /* Borders: softer, using reduced chroma for cleaner feel */
-  --border: oklch(0.30 0.008 60);
-  --input: oklch(0.25 0.005 60);
+  /* Borders: increased chroma/lightness for visible card outlines in dark */
+  --border: oklch(0.34 0.009 60);
+  --input: oklch(0.28 0.006 60);
   --ring: oklch(0.76 0.155 55);
   --radius: 0.25rem;
 
@@ -123,17 +123,17 @@
   --chart-4: oklch(0.75 0.15 50);
   --chart-5: oklch(0.55 0.02 70);
 
-  --sidebar: oklch(0.19 0.004 60);
+  --sidebar: oklch(0.17 0.004 60);
   --sidebar-foreground: oklch(0.96 0.004 80);
   --sidebar-primary: oklch(0.76 0.155 55);
   --sidebar-primary-foreground: oklch(0.17 0.03 55);
-  --sidebar-accent: oklch(0.25 0.005 60);
+  --sidebar-accent: oklch(0.28 0.006 60);
   --sidebar-accent-foreground: oklch(0.96 0.004 80);
-  --sidebar-border: oklch(0.30 0.008 60);
+  --sidebar-border: oklch(0.34 0.009 60);
   --sidebar-ring: oklch(0.76 0.155 55);
 
-  /* Shadow system: dark mode uses subtle depth, light mode uses hard press */
-  --shadow-color: oklch(0.06 0.003 60);
+  /* Shadow system: slightly darker for stronger pop against lighter cards */
+  --shadow-color: oklch(0.05 0.002 60);
   --shadow-offset: 4px;
 
   /* Motion */
