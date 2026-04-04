@@ -643,10 +643,9 @@ export function computeProximityGroups(
     clusters.get(root)!.push(id);
   }
 
-  // Only create groups for clusters with 2+ cards
+  // Every cluster becomes a group — solo cards are groups of 1
   const groups: CardGroup[] = [];
   for (const [root, members] of clusters) {
-    if (members.length < 2) continue;
     const firstCard = cards.find((c) => c.id === members[0]);
     const label = firstCard
       ? firstCard.text.slice(0, 30) + (firstCard.text.length > 30 ? "..." : "")
