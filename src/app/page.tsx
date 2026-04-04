@@ -277,46 +277,35 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="relative border-t-2 border-border px-6 py-10 md:px-12">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 sm:flex-row sm:justify-between">
-          <div className="flex items-center gap-1.5">
-            <OwlIcon size={20} className="text-primary" />
-            <span className="font-display text-sm font-bold tracking-ceremony">
-              ceremonies
-            </span>
+      <footer className="relative border-t-2 border-border px-6 py-8 md:px-12">
+        <div className="mx-auto max-w-3xl space-y-5">
+          {/* Row 1: logo + attribution */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <OwlIcon size={20} className="text-primary" />
+              <span className="font-display text-sm font-bold tracking-ceremony">
+                ceremonies
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground/60">
+              Built with{" "}
+              <span className="inline-block" title="love" aria-label="love"><HeartIcon /></span>
+              {" "}by{" "}
+              <Link href="https://github.com/mshadmanrahman" className="font-bold underline underline-offset-4 transition-colors hover:text-foreground">
+                Shadman Rahman
+              </Link>
+            </p>
           </div>
-          <nav className="flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground">
-            <Link href="#pricing" className="transition-colors hover:text-foreground">
-              Pricing
-            </Link>
-            <Link href="https://github.com/mshadmanrahman/ceremonies" className="transition-colors hover:text-foreground">
-              GitHub
-            </Link>
-            <Link href="/dashboard" className="transition-colors hover:text-foreground">
-              Dashboard
-            </Link>
-            <Link href="/sign-in" className="transition-colors hover:text-foreground">
-              Sign in
-            </Link>
-            <span className="text-border">|</span>
-            <Link href="/terms" className="transition-colors hover:text-foreground">
-              Terms
-            </Link>
-            <Link href="/privacy" className="transition-colors hover:text-foreground">
-              Privacy
-            </Link>
-            <Link href="https://github.com/mshadmanrahman/ceremonies/issues/new/choose" className="transition-colors hover:text-foreground">
-              Feedback
-            </Link>
+          {/* Row 2: nav links */}
+          <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+            <Link href="#pricing" className="transition-colors hover:text-foreground">Pricing</Link>
+            <Link href="https://github.com/mshadmanrahman/ceremonies" className="transition-colors hover:text-foreground">GitHub</Link>
+            <Link href="/dashboard" className="transition-colors hover:text-foreground">Dashboard</Link>
+            <Link href="/sign-in" className="transition-colors hover:text-foreground">Sign in</Link>
+            <Link href="/terms" className="transition-colors hover:text-foreground">Terms</Link>
+            <Link href="/privacy" className="transition-colors hover:text-foreground">Privacy</Link>
+            <Link href="https://github.com/mshadmanrahman/ceremonies/issues/new/choose" className="transition-colors hover:text-foreground">Feedback</Link>
           </nav>
-          <p className="text-xs text-muted-foreground/60">
-            Built with{" "}
-            <span className="inline-block" title="love" aria-label="love"><HeartIcon /></span>
-            {" "}by{" "}
-            <Link href="https://github.com/mshadmanrahman" className="font-bold underline underline-offset-4 transition-colors hover:text-foreground">
-              Shadman Rahman
-            </Link>
-          </p>
         </div>
       </footer>
     </div>
