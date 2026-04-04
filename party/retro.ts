@@ -39,10 +39,11 @@ export default class RetroServer implements Party.Server {
   async onStart() {
     const saved = await this.room.storage.get<RetroState>("state");
     if (saved) {
-      // Migrate old state that may not have cardPositions
+      // Migrate old state that may not have cardPositions or renamedLabels
       this.state = {
         ...saved,
         cardPositions: saved.cardPositions ?? {},
+        renamedLabels: saved.renamedLabels ?? {},
       };
       // Resume timer if it was running
       if (this.state.phase === "discussing" && this.state.discussion.timerRunning) {
@@ -55,7 +56,8 @@ export default class RetroServer implements Party.Server {
     const url = new URL(ctx.request.url);
     const name = url.searchParams.get("name") ?? "Anonymous";
     const participantId = conn.id;
-    const anonymousId = generateId();
+    // Reuse the client's persisted anonymousId for session continuity across reconnects
+    const anonymousId = url.searchParams.get("anonId") || generateId();
 
     conn.setState({
       participantId,

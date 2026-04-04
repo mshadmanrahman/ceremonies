@@ -271,9 +271,17 @@ export function VotingPhase({
       )}
 
       {isFacilitator && !allVotesIn && (
-        <p className="text-center text-xs text-muted-foreground">
-          Waiting for all votes before revealing results...
-        </p>
+        <div className="space-y-1.5 text-center pt-2">
+          <p className="text-xs text-muted-foreground">
+            Waiting for everyone to vote ({votingStatus.voted.length}/{participants.length} done)...
+          </p>
+          <button
+            onClick={onAdvance}
+            className="text-[11px] font-bold text-muted-foreground/60 underline underline-offset-4 transition-colors hover:text-foreground"
+          >
+            Force reveal &amp; start discussion
+          </button>
+        </div>
       )}
     </div>
   );

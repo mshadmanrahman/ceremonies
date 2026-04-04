@@ -342,7 +342,7 @@ function GroupBoundary({
       }}
     >
       {/* Group label */}
-      <div className="absolute -top-3 left-2 z-20">
+      <div className="absolute top-1.5 left-2 z-20">
         {editing ? (
           <input
             value={label}

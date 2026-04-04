@@ -84,11 +84,23 @@ export function useRetroRoom({
     stateRef.current = state;
   }, [state]);
 
+  // Persist anonymousId across reconnects so the user keeps ownership of their cards
+  const persistedAnonId = (() => {
+    if (typeof window === "undefined") return "";
+    const key = `retro-anon-${roomId}`;
+    let id = localStorage.getItem(key);
+    if (!id) {
+      id = generateId();
+      localStorage.setItem(key, id);
+    }
+    return id;
+  })();
+
   const socket = usePartySocket({
     host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "127.0.0.1:1999",
     party: "retro",
     room: roomId,
-    query: { name: playerName },
+    query: { name: playerName, anonId: persistedAnonId },
     onOpen() {
       setConnected(true);
     },

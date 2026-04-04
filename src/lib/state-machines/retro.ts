@@ -100,6 +100,7 @@ export interface RetroState {
   readonly discussion: DiscussionState;
   readonly actionItems: ReadonlyArray<ActionItem>;
   readonly rankedGroupIds: ReadonlyArray<string>; // groups sorted by votes for discussion
+  readonly renamedLabels: Readonly<Record<string, string>>; // fingerprint(cardIds) → user label
 }
 
 // ── Events ──
@@ -153,6 +154,7 @@ export function createInitialState(facilitatorId: string): RetroState {
     },
     actionItems: [],
     rankedGroupIds: [],
+    renamedLabels: {},
   };
 }
 
@@ -171,6 +173,11 @@ function rankGroups(groups: ReadonlyArray<CardGroup>): ReadonlyArray<string> {
     .sort((a, b) => b.voteCount - a.voteCount)
     .filter((g) => g.voteCount > 0)
     .map((g) => g.id);
+}
+
+/** Stable key for a group based on its member cards — used to persist user-renamed labels */
+function groupFingerprint(cardIds: ReadonlyArray<string>): string {
+  return [...cardIds].sort().join(",");
 }
 
 function recalcGroupVotes(
@@ -327,8 +334,13 @@ export function transition(state: RetroState, event: RetroEvent): RetroState {
         ...state.cardPositions,
         [event.cardId]: { x: event.x, y: event.y },
       };
-      // Auto-group by proximity after every move
-      const newGroups = computeProximityGroups(state.cards, newPositions);
+      // Auto-group by proximity after every move, then restore any user-renamed labels
+      const rawGroups = computeProximityGroups(state.cards, newPositions);
+      const newGroups = rawGroups.map((g) => {
+        const fp = groupFingerprint(g.cardIds);
+        const savedLabel = state.renamedLabels[fp];
+        return savedLabel ? { ...g, label: savedLabel } : g;
+      });
       return {
         ...state,
         cardPositions: newPositions,
@@ -353,11 +365,15 @@ export function transition(state: RetroState, event: RetroEvent): RetroState {
 
     case "RENAME_GROUP": {
       if (state.phase !== "grouping") return state;
+      const target = state.groups.find((g) => g.id === event.groupId);
+      if (!target) return state;
+      const fp = groupFingerprint(target.cardIds);
       return {
         ...state,
         groups: state.groups.map((g) =>
           g.id === event.groupId ? { ...g, label: event.label } : g
         ),
+        renamedLabels: { ...state.renamedLabels, [fp]: event.label },
       };
     }
 
@@ -662,8 +678,9 @@ export function scatterCardPositions(
   const usableW = canvasWidth - cardWidth - padding * 2;
   const usableH = canvasHeight - cardHeight - padding * 2;
 
-  // Grid-ish scatter to avoid too much overlap
-  const cols = Math.ceil(Math.sqrt(cards.length * (usableW / usableH)));
+  // Cap columns so each cell is at least cardWidth wide (prevents overlap)
+  const maxCols = Math.max(1, Math.floor(usableW / (cardWidth + 8)));
+  const cols = Math.min(Math.ceil(Math.sqrt(cards.length * (usableW / usableH))), maxCols);
   const rows = Math.ceil(cards.length / cols);
   const cellW = usableW / cols;
   const cellH = usableH / rows;
