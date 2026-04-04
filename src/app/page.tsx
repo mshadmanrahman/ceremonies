@@ -257,21 +257,21 @@ export default function Home() {
 
       {/* Trust strip */}
       <section className="relative px-6 py-12 md:px-12">
-        <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-4">
+        <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-3">
           <Link
             href="https://github.com/mshadmanrahman/ceremonies"
-            className="inline-flex items-center gap-2 rounded-md border-2 border-border bg-card px-4 py-2 text-xs font-bold shadow-hard-sm transition-colors hover:border-foreground/40"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/50 px-3.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <GitHubIcon />
             Open source on GitHub
           </Link>
-          <span className="inline-flex items-center gap-2 rounded-md border-2 border-border bg-card px-4 py-2 text-xs font-bold shadow-hard-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/50 px-3.5 py-1.5 text-xs font-medium text-muted-foreground">
             <ShieldIcon />
             MIT License
           </span>
-          <span className="inline-flex items-center gap-2 rounded-md border-2 border-border bg-card px-4 py-2 text-xs font-bold shadow-hard-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/50 px-3.5 py-1.5 text-xs font-medium text-muted-foreground">
             <UsersIcon />
-            Built for teams of 5-12
+            Works with any team size
           </span>
         </div>
       </section>
