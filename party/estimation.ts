@@ -192,12 +192,13 @@ export default class EstimationServer implements Party.Server {
   }
 
   private async saveToDatabase(data: Record<string, unknown>) {
-    const apiHost = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3456";
+    const apiHost = (this.room.env.NEXT_PUBLIC_APP_URL as string) ?? "http://localhost:3456";
+    const secret = (this.room.env.INTERNAL_API_SECRET as string) ?? "";
     const res = await fetch(`${apiHost}/api/estimation/save`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Internal-Secret": process.env.INTERNAL_API_SECRET ?? "",
+        "X-Internal-Secret": secret,
       },
       body: JSON.stringify({
         roomCode: this.room.id,

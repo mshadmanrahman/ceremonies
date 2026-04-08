@@ -270,7 +270,7 @@ export default class RetroServer implements Party.Server {
 
   private async saveToDatabase() {
     // Call the Next.js API route to persist the retro
-    const apiHost = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3456";
+    const apiHost = (this.room.env.NEXT_PUBLIC_APP_URL as string) ?? "http://localhost:3456";
     const res = await fetch(`${apiHost}/api/retros/save`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
