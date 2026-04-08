@@ -36,6 +36,7 @@ export default function EstimationRoomPage({
     history: ReadonlyArray<CompletedEstimate>;
     participants: number;
     playerName: string;
+    autoSaveTriggered: boolean;
   } | null>(null);
 
   if (sessionSummary) {
@@ -44,6 +45,7 @@ export default function EstimationRoomPage({
         roomId={roomId}
         teamId={teamId}
         summary={sessionSummary}
+        autoSaveTriggered={sessionSummary.autoSaveTriggered}
         onDone={() => {
           setSessionSummary(null);
           setJoined(false);
@@ -67,12 +69,13 @@ export default function EstimationRoomPage({
     <EstimationRoom
       roomId={roomId}
       playerName={playerName}
+      teamId={teamId}
       onLeave={() => {
         setJoined(false);
         setPlayerName("");
       }}
-      onEndSession={(history, participants) => {
-        setSessionSummary({ history, participants, playerName });
+      onEndSession={(history, participants, autoSaved) => {
+        setSessionSummary({ history, participants, playerName, autoSaveTriggered: autoSaved });
       }}
     />
   );
@@ -141,13 +144,15 @@ function JoinScreen({
 function EstimationRoom({
   roomId,
   playerName,
+  teamId,
   onLeave,
   onEndSession,
 }: {
   roomId: string;
   playerName: string;
+  teamId?: string;
   onLeave: () => void;
-  onEndSession: (history: ReadonlyArray<CompletedEstimate>, participants: number) => void;
+  onEndSession: (history: ReadonlyArray<CompletedEstimate>, participants: number, autoSaveTriggered: boolean) => void;
 }) {
   const {
     state,
@@ -163,6 +168,8 @@ function EstimationRoom({
     revote,
     nudge,
     nudgeReceived,
+    saveSession,
+    saveResult,
   } = useEstimationRoom({ roomId, playerName });
 
   const { fire: fireConfetti, reset: resetConfetti } = useConfetti();
@@ -237,8 +244,13 @@ function EstimationRoom({
         },
       ];
     }
-    onEndSession(history, state.participants.length);
-  }, [state, onEndSession]);
+    // Auto-save via PartyKit server (no Clerk auth needed)
+    const willAutoSave = isFacilitator && history.length > 0;
+    if (willAutoSave) {
+      saveSession(teamId);
+    }
+    onEndSession(history, state.participants.length, willAutoSave);
+  }, [state, onEndSession, isFacilitator, saveSession, teamId]);
 
   // Loading state
   if (!state) {
@@ -499,6 +511,7 @@ function SessionSummaryScreen({
   roomId,
   teamId,
   summary,
+  autoSaveTriggered,
   onDone,
 }: {
   roomId: string;
@@ -508,11 +521,35 @@ function SessionSummaryScreen({
     participants: number;
     playerName: string;
   };
+  autoSaveTriggered: boolean;
   onDone: () => void;
 }) {
   const { isSignedIn } = useAuth();
   const [copied, setCopied] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>(
+    autoSaveTriggered ? "saving" : "idle"
+  );
+
+  // Poll once to confirm auto-save completed
+  useEffect(() => {
+    if (!autoSaveTriggered) return;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/estimation/check?roomCode=${encodeURIComponent(roomId)}`
+        );
+        if (res.ok) {
+          const data = await res.json() as { found: boolean };
+          setSaveStatus(data.found ? "saved" : "error");
+        } else {
+          setSaveStatus("error");
+        }
+      } catch {
+        setSaveStatus("error");
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [autoSaveTriggered, roomId]);
 
   const totalEstimated = summary.history.length;
   const estimates = summary.history.map((h) => h.finalEstimate);
@@ -555,9 +592,12 @@ function SessionSummaryScreen({
     downloadCSV(csv, `estimation-${roomId}.csv`);
   }, [summary.history, roomId]);
 
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   const handleSave = useCallback(async () => {
     if (saveStatus === "saving" || saveStatus === "saved") return;
     setSaveStatus("saving");
+    setSaveError(null);
 
     try {
       const res = await fetch("/api/estimation/save", {
@@ -576,12 +616,17 @@ function SessionSummaryScreen({
         }),
       });
 
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` })) as { error?: string };
+        throw new Error(body.error ?? `HTTP ${res.status}`);
+      }
       setSaveStatus("saved");
-    } catch {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setSaveError(message);
       setSaveStatus("error");
     }
-  }, [roomId, summary, saveStatus]);
+  }, [roomId, teamId, summary, saveStatus]);
 
   return (
     <div className="flex min-h-svh items-center justify-center px-4">
@@ -624,59 +669,61 @@ function SessionSummaryScreen({
           <EstimateResultsList history={summary.history} />
         )}
 
-        {/* Save prompt */}
+        {/* Save status */}
         {totalEstimated > 0 && (
           <div className="rounded-md border-2 border-dashed border-primary/30 bg-primary/5 p-4">
-            {isSignedIn ? (
-              <>
-                {saveStatus === "idle" && (
-                  <div className="space-y-2">
+            {saveStatus === "saving" && (
+              <p className="text-sm font-bold text-primary/80 animate-pulse">
+                Saving session...
+              </p>
+            )}
+            {saveStatus === "saved" && (
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-primary">
+                  Saved!
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  This session is now part of your history. The Haunting remembers.
+                </p>
+              </div>
+            )}
+            {saveStatus === "error" && (
+              <div className="space-y-2">
+                <p className="text-sm font-bold text-destructive">
+                  {autoSaveTriggered ? "Auto-save failed" : "Failed to save"}
+                </p>
+                {saveError && (
+                  <p className="text-xs text-destructive/70">{saveError}</p>
+                )}
+                {isSignedIn ? (
+                  <Button onClick={handleSave} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
+                    <FloppyDisk width={16} height={16} />
+                    Save manually
+                  </Button>
+                ) : (
+                  <p className="text-xs text-muted-foreground/70">
+                    Sign in to save manually, or copy/download below.
+                  </p>
+                )}
+              </div>
+            )}
+            {saveStatus === "idle" && !autoSaveTriggered && (
+              <div className="space-y-2">
+                {isSignedIn ? (
+                  <>
                     <p className="text-sm font-bold text-primary/80">
                       Save this session?
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Saved sessions unlock The Haunting: past action items follow you into your next retro.
                     </p>
                     <Button onClick={handleSave} variant="outline" className="mt-2 w-full border-primary/40 text-primary hover:bg-primary/10">
                       <FloppyDisk width={16} height={16} />
                       Save session
                     </Button>
-                  </div>
-                )}
-                {saveStatus === "saving" && (
-                  <p className="text-sm font-bold text-primary/80 animate-pulse">
-                    Saving...
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground/70">
+                    Session not saved. Copy or download below to keep your estimates.
                   </p>
                 )}
-                {saveStatus === "saved" && (
-                  <div className="space-y-1">
-                    <p className="text-sm font-bold text-primary">
-                      Saved!
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      This session is now part of your history. The Haunting remembers.
-                    </p>
-                  </div>
-                )}
-                {saveStatus === "error" && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-bold text-destructive">
-                      Failed to save
-                    </p>
-                    <Button onClick={handleSave} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
-                      Try again
-                    </Button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-muted-foreground">
-                  Sign in to save sessions
-                </p>
-                <p className="text-xs text-muted-foreground/70">
-                  Without saving, your estimates vanish. No haunting. No accountability.
-                </p>
               </div>
             )}
           </div>

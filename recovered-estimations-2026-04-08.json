@@ -1,0 +1,33 @@
+{
+  "recovered_at": "2026-04-08",
+  "note": "Recovered from PartyKit hibernation storage. These sessions were never saved to the database due to Clerk auth / opt-in save bug.",
+  "sessions": [
+    {
+      "room_code": "wfw5pn",
+      "team_id": "e5468d22-2270-409a-a3f2-e9bb2f907da0",
+      "date": "2026-04-08",
+      "participant_count": 9,
+      "history": [
+        { "ref": "INS-2707", "title": "INS-2707", "finalEstimate": "3", "participantCount": 9, "completedAt": 1775636592081 },
+        { "ref": "INS-2708", "title": "INS-2708", "finalEstimate": "3", "participantCount": 9, "completedAt": 1775636870326 },
+        { "ref": "INS-2709", "title": "INS-2709", "finalEstimate": "2", "participantCount": 9, "completedAt": 1775638587575 },
+        { "ref": "INS-2721", "title": "INS-2721", "finalEstimate": "2", "participantCount": 9, "completedAt": 1775638723063 },
+        { "ref": "INS-2710", "title": "INS-2710", "finalEstimate": "3", "participantCount": 9, "completedAt": 1775639362961 }
+      ]
+    },
+    {
+      "room_code": "iymbip",
+      "team_id": "e5468d22-2270-409a-a3f2-e9bb2f907da0",
+      "date": "2026-04-02",
+      "participant_count": 8,
+      "history": [
+        { "ref": "INS-2668", "title": "INS-2668", "finalEstimate": "2", "participantCount": 8, "completedAt": 1775032598745 },
+        { "ref": "INS-2682", "title": "INS-2682", "finalEstimate": "1", "participantCount": 8, "completedAt": 1775032997225 },
+        { "ref": "INS-2685", "title": "INS-2685", "finalEstimate": "2", "participantCount": 8, "completedAt": 1775033709406 },
+        { "ref": "INS-2667", "title": "INS-2667", "finalEstimate": "2", "participantCount": 6, "completedAt": 1775034422962 },
+        { "ref": "Matchmaker - Landing Page", "title": "Matchmaker - Landing Page", "finalEstimate": "2", "participantCount": 7, "completedAt": 1775037490060 },
+        { "ref": "Matchmaker - Location", "title": "Matchmaker - Location", "finalEstimate": "4", "participantCount": 5, "completedAt": 1775038120567 }
+      ]
+    }
+  ]
+}

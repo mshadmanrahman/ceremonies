@@ -87,9 +87,25 @@ export default class EstimationServer implements Party.Server {
     if (parsed.type === "SAVE_SESSION") {
       const connState = sender.state as ConnectionState | undefined;
       if (connState && this.state.facilitatorId === connState.participantId) {
-        this.saveToDatabase(parsed as Record<string, unknown>).catch((err) =>
-          console.error("[estimation] Failed to save to DB:", err)
-        );
+        this.saveToDatabase({
+          teamId: parsed.teamId ?? "",
+          createdBy: `partykit:${connState.participantId}`,
+        })
+          .then(() => {
+            this.room.broadcast(
+              JSON.stringify({ type: "save_result", status: "saved" })
+            );
+          })
+          .catch((err) => {
+            console.error("[estimation] Failed to save to DB:", err);
+            this.room.broadcast(
+              JSON.stringify({
+                type: "save_result",
+                status: "error",
+                error: String(err),
+              })
+            );
+          });
       }
       return;
     }

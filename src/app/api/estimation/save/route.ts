@@ -47,13 +47,9 @@ export async function POST(req: Request) {
   };
 
   if (isInternalCall) {
-    userId = body.createdBy ?? null;
-    if (!userId) {
-      return NextResponse.json(
-        { error: "createdBy required for internal saves" },
-        { status: 400 }
-      );
-    }
+    // For server-to-server saves, createdBy can be a PartyKit participant ID
+    // (prefixed with "partykit:") or a Clerk user ID
+    userId = body.createdBy || `partykit:${body.roomCode}`;
   }
 
   // At this point userId is always non-null (both code paths above guard against it)
