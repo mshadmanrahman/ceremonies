@@ -57,8 +57,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Normalize empty string teamId to null (PartyKit sends "" when no team)
+  const teamId = body.teamId || null;
+
   // Check plan limits
-  const sessionLimit = await canSaveSession(body.teamId ?? null, userId);
+  const sessionLimit = await canSaveSession(teamId, userId);
   if (!sessionLimit.allowed) {
     return NextResponse.json(
       { error: "Session limit reached", limit: sessionLimit.max, current: sessionLimit.current, plan: sessionLimit.plan, upgrade: true },
@@ -71,7 +74,7 @@ export async function POST(req: Request) {
   const [session] = await db
     .insert(estimationSessions)
     .values({
-      teamId: body.teamId ?? null,
+      teamId,
       roomCode: body.roomCode,
       createdBy: userId,
       closedAt: new Date(),
