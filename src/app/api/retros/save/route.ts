@@ -15,8 +15,18 @@ import { canSaveSession } from "@/lib/plan-limits";
  * Called by the PartyKit server when a retro closes.
  * Persists the entire retro state to Neon Postgres.
  * This enables The Haunting (loading previous action items).
+ *
+ * Authenticated via X-Internal-Secret header (server-to-server only).
  */
 export async function POST(req: Request) {
+  const internalSecret = req.headers.get("X-Internal-Secret");
+  if (!internalSecret || internalSecret !== process.env.INTERNAL_API_SECRET) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
   const body = (await req.json()) as {
     roomCode: string;
     teamId: string;
@@ -24,10 +34,12 @@ export async function POST(req: Request) {
     state: RetroState;
   };
 
-  const { roomCode, teamId, createdBy, state } = body;
+  const { roomCode, createdBy, state } = body;
+  // Normalize empty string teamId to null (PartyKit sends "" when no team)
+  const teamId = body.teamId || null;
 
   // Check plan limits
-  const sessionLimit = await canSaveSession(teamId ?? null, createdBy);
+  const sessionLimit = await canSaveSession(teamId, createdBy);
   if (!sessionLimit.allowed) {
     return NextResponse.json(
       { error: "Session limit reached", limit: sessionLimit.max, current: sessionLimit.current, upgrade: true },

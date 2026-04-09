@@ -271,9 +271,13 @@ export default class RetroServer implements Party.Server {
   private async saveToDatabase() {
     // Call the Next.js API route to persist the retro
     const apiHost = (this.room.env.NEXT_PUBLIC_APP_URL as string) ?? "http://localhost:3456";
+    const secret = (this.room.env.INTERNAL_API_SECRET as string) ?? "";
     const res = await fetch(`${apiHost}/api/retros/save`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Internal-Secret": secret,
+      },
       body: JSON.stringify({
         roomCode: this.room.id,
         teamId: this.state.teamId,
