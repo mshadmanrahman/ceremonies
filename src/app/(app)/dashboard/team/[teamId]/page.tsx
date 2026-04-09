@@ -12,6 +12,7 @@ import { OwlIcon } from "@/components/shared/icons";
 import { UserButton } from "@clerk/nextjs";
 import { NavArrowLeft, Check as CheckMark, Sparks } from "iconoir-react";
 import { PlanBadge } from "@/components/billing/upgrade-prompt";
+import { JiraConnectSection } from "@/components/jira/jira-connect-section";
 
 interface Member {
   readonly id: string;
@@ -251,6 +252,18 @@ export default function TeamSettingsPage({
           />
         </div>
 
+        {/* Jira Integration */}
+        <div className="space-y-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+            Integrations
+          </p>
+          <JiraConnectSection
+            teamId={teamId}
+            isOwner={isOwner}
+            isPro={(team.plan ?? "free") === "pro"}
+          />
+        </div>
+
         {/* Billing */}
         {isOwner && (
           <div className="space-y-3">
@@ -287,7 +300,7 @@ export default function TeamSettingsPage({
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="text-muted-foreground/50" />
-                    <span className="text-muted-foreground/60">Jira integration (coming soon)</span>
+                    <span className="text-primary/80">Jira integration</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="text-muted-foreground/50" />

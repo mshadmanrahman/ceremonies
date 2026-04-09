@@ -23,7 +23,7 @@ interface UseEstimationRoomResult {
   readonly nudgeReceived: boolean;
   readonly saveResult: SaveResult;
   readonly vote: (value: CardValue) => void;
-  readonly loadTicket: (ref: string, title: string) => void;
+  readonly loadTicket: (ref: string, title: string, url?: string) => void;
   readonly reveal: () => void;
   readonly discuss: () => void;
   readonly agree: (value: CardValue) => void;
@@ -98,10 +98,10 @@ export function useEstimationRoom({
   );
 
   const loadTicket = useCallback(
-    (ref: string, title: string) => {
+    (ref: string, title: string, url?: string) => {
       send({
         type: "LOAD_TICKET",
-        ticket: { ref, title },
+        ticket: { ref, title, url },
         facilitatorId: myId ?? "",
       });
     },

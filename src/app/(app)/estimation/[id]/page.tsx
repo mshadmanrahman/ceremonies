@@ -17,6 +17,7 @@ import { getVoteSpread, type CardValue, type CompletedEstimate } from "@/lib/sta
 import { cn } from "@/lib/utils";
 import { OwlIcon } from "@/components/shared/icons";
 import { ConnectionStatus } from "@/components/shared/connection-status";
+import { TicketInput } from "@/components/estimation/ticket-input";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { NavArrowLeft, LogOut, Copy, Check, FloppyDisk, Download } from "iconoir-react";
@@ -174,7 +175,16 @@ function EstimationRoom({
 
   const { fire: fireConfetti, reset: resetConfetti } = useConfetti();
   const [selectedCard, setSelectedCard] = useState<CardValue | null>(null);
-  const [ticketInput, setTicketInput] = useState("");
+  const [jiraConnected, setJiraConnected] = useState(false);
+
+  // Check if team has Jira connected
+  useEffect(() => {
+    if (!teamId) return;
+    fetch(`/api/jira/${teamId}/status`)
+      .then((r) => r.json())
+      .then((data) => setJiraConnected(data.connected === true))
+      .catch(() => setJiraConnected(false));
+  }, [teamId]);
 
   // Clear card selection on new round
   useEffect(() => {
@@ -216,12 +226,13 @@ function EstimationRoom({
     [vote]
   );
 
-  const handleLoadTicket = useCallback(() => {
-    const ref = ticketInput.trim() || "Quick vote";
-    loadTicket(ref, ref);
-    setTicketInput("");
-    setSelectedCard(null);
-  }, [ticketInput, loadTicket]);
+  const handleLoadTicket = useCallback(
+    (ref: string, title: string, url?: string) => {
+      loadTicket(ref, title, url);
+      setSelectedCard(null);
+    },
+    [loadTicket]
+  );
 
   const handleNextTicket = useCallback(() => {
     nextTicket();
@@ -348,26 +359,11 @@ function EstimationRoom({
 
       {/* Ticket input (waiting phase, facilitator only) */}
       {state.phase === "waiting" && isFacilitator && (
-        <div className="stagger-in rounded-md border-2 border-dashed border-primary/40 bg-primary/5 p-6 text-center">
-          <p className="mb-4 text-sm font-bold tracking-wide text-primary/80">
-            What are we estimating?
-          </p>
-          <div className="mx-auto flex max-w-md gap-2">
-            <Input
-              value={ticketInput}
-              onChange={(e) => setTicketInput(e.target.value)}
-              placeholder="e.g. INS-1234 (optional)"
-              onKeyDown={(e) => e.key === "Enter" && handleLoadTicket()}
-              className="h-11 border-2 border-border bg-card text-center shadow-hard-sm"
-            />
-            <Button
-              onClick={handleLoadTicket}
-              className="h-11"
-            >
-              {ticketInput.trim() ? "Start" : "Quick vote"}
-            </Button>
-          </div>
-        </div>
+        <TicketInput
+          teamId={teamId}
+          jiraConnected={jiraConnected}
+          onLoad={handleLoadTicket}
+        />
       )}
 
       {/* Waiting for facilitator */}

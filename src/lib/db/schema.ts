@@ -111,6 +111,41 @@ export const teamInvites = pgTable("team_invites", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ── Jira Connections ──
+
+export const teamJiraConnections = pgTable("team_jira_connections", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  teamId: uuid("team_id")
+    .notNull()
+    .unique()
+    .references(() => teams.id, { onDelete: "cascade" }),
+  cloudId: text("cloud_id").notNull(),
+  siteUrl: text("site_url").notNull(),
+  siteName: text("site_name").notNull(),
+  accessTokenEnc: text("access_token_enc").notNull(),
+  refreshTokenEnc: text("refresh_token_enc").notNull(),
+  tokenExpiresAt: timestamp("token_expires_at").notNull(),
+  scopes: text("scopes").notNull(),
+  connectedBy: text("connected_by").notNull(),
+  connectedAt: timestamp("connected_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// ── Action Item Jira Links ──
+
+export const actionItemJiraLinks = pgTable("action_item_jira_links", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  actionItemId: uuid("action_item_id")
+    .notNull()
+    .unique()
+    .references(() => actionItems.id, { onDelete: "cascade" }),
+  jiraIssueKey: text("jira_issue_key").notNull(),
+  jiraIssueUrl: text("jira_issue_url").notNull(),
+  jiraIssueStatus: text("jira_issue_status"),
+  statusFetchedAt: timestamp("status_fetched_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ── Estimation Sessions ──
 
 export const estimationSessions = pgTable("estimation_sessions", {
@@ -135,4 +170,9 @@ export const estimationResults = pgTable("estimation_results", {
   finalEstimate: text("final_estimate").notNull(),
   participantCount: integer("participant_count").default(0),
   completedAt: timestamp("completed_at").defaultNow().notNull(),
+  jiraIssueKey: text("jira_issue_key"),
+  jiraWriteBackStatus: text("jira_write_back_status", {
+    enum: ["pending", "written", "failed", "skipped"],
+  }),
+  jiraWriteBackAt: timestamp("jira_write_back_at"),
 });
