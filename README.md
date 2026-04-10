@@ -18,6 +18,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/mshadmanrahman/ceremonies/stargazers"><img src="https://img.shields.io/github/stars/mshadmanrahman/ceremonies?style=social" alt="GitHub stars" /></a>
   <a href="https://github.com/mshadmanrahman/ceremonies/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
   <a href="https://ceremonies.dev"><img src="https://img.shields.io/badge/live-ceremonies.dev-orange.svg" alt="Live Product" /></a>
 </p>
@@ -168,14 +169,22 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and PR
 
 ---
 
-## Part of the PM Toolkit Family
+## Support
 
-Ceremonies is a live agile ceremony app. These are Claude Code tools for PMs — different type of tool, same philosophy of removing friction from the job.
+If this saved you time, give it a star -- it helps others find it and keeps development going.
 
-- **[pm-pilot](https://github.com/mshadmanrahman/pm-pilot)** — Claude Code configured for PMs. Meeting prep, PRDs, market sizing — 25 skills out of the box.
-- **[bug-shepherd](https://github.com/mshadmanrahman/bug-shepherd)** — Zero-code bug triage for PMs. Reproduce and sync bugs without reading a line of code.
-- **[morning-digest](https://github.com/mshadmanrahman/morning-digest)** — Your morning briefed in 30 seconds. Calendar, email, Slack, and action items in one digest.
-- **[claudecode-guide](https://github.com/mshadmanrahman/claudecode-guide)** — The friendly guide to Claude Code.
+[![GitHub stars](https://img.shields.io/github/stars/mshadmanrahman/ceremonies?style=social)](https://github.com/mshadmanrahman/ceremonies/stargazers)
+
+---
+
+## See Also
+
+- **[pm-pilot](https://github.com/mshadmanrahman/pm-pilot)** -- Claude Code configured for PMs. 25 skills out of the box.
+- **[root-kg](https://github.com/mshadmanrahman/root-kg)** -- Personal knowledge graph. Ask questions across all your notes, meetings, and emails.
+- **[morning-digest](https://github.com/mshadmanrahman/morning-digest)** -- Your morning briefed in 30 seconds. Calendar, email, Slack, and action items.
+- **[discovery-md](https://github.com/mshadmanrahman/discovery-md)** -- AI product discovery for PMs. From braindump to stakeholder one-pager.
+- **[bug-shepherd](https://github.com/mshadmanrahman/bug-shepherd)** -- Zero-code bug triage for PMs. Reproduce and sync bugs without reading code.
+- **[claudecode-guide](https://github.com/mshadmanrahman/claudecode-guide)** -- The friendly guide to Claude Code.
 
 ---
 
