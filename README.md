@@ -169,6 +169,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and PR
 
 ---
 
+## Works Great With
+
+- **[Granola](https://www.granola.ai?via=shadman-rahman)** -- AI meeting notes that capture everything. Use Granola during your ceremonies, then let the transcript feed into your retro action items and estimation context. No more "what did we agree on?"
+
+---
+
 ## Support
 
 If this saved you time, give it a star -- it helps others find it and keeps development going.
