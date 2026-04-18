@@ -48,12 +48,21 @@ export const metadata: Metadata = {
     title: "Ceremonies - Agile ceremonies, done right.",
     description:
       "Open-source estimation and retros in one place. Opinionated phases, true anonymity, and action items that haunt you.",
+    images: [
+      {
+        url: "/og-home.png",
+        width: 1200,
+        height: 630,
+        alt: "Ceremonies - Agile ceremonies, done right. Estimation and retros in one place.",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Ceremonies - Agile ceremonies, done right.",
     description:
       "Open-source estimation and retros in one place. Opinionated phases, true anonymity, and action items that haunt you.",
+    images: ["/og-home.png"],
   },
   robots: {
     index: true,

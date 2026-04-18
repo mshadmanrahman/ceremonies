@@ -45,3 +45,12 @@ next-env.d.ts
 .env*.local
 out/
 promo/src/music.mp3
+
+# Local Claude settings
+.claude/settings.local.json
+
+# Debug logs
+*.log
+
+# Dogfood test screenshots (regenerated)
+dogfood-output/
