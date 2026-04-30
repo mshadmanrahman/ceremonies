@@ -148,6 +148,15 @@ export function VotingPhase({
             Results revealed! Groups are now sorted by votes.
           </p>
         )}
+
+        {/* Facilitator advance button lives here so it is visible without scrolling */}
+        {isFacilitator && allVotesIn && (
+          <div className="mt-3 flex justify-center consensus-enter">
+            <Button onClick={onAdvance} className="h-11">
+              Start discussion
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Groups to vote on */}
@@ -260,15 +269,6 @@ export function VotingPhase({
           );
         })}
       </div>
-
-      {/* Facilitator advance: only after all votes are revealed */}
-      {isFacilitator && allVotesIn && (
-        <div className="text-center pt-2 consensus-enter">
-          <Button onClick={onAdvance} className="h-11">
-            Start discussion
-          </Button>
-        </div>
-      )}
 
       {isFacilitator && !allVotesIn && (
         <div className="space-y-1.5 text-center pt-2">
