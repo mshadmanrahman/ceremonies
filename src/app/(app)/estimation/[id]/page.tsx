@@ -155,6 +155,8 @@ function EstimationRoom({
   onLeave: () => void;
   onEndSession: (history: ReadonlyArray<CompletedEstimate>, participants: number, autoSaveTriggered: boolean) => void;
 }) {
+  const { userId: clerkUserId } = useAuth();
+
   const {
     state,
     myId,
@@ -171,7 +173,7 @@ function EstimationRoom({
     nudgeReceived,
     saveSession,
     saveResult,
-  } = useEstimationRoom({ roomId, playerName });
+  } = useEstimationRoom({ roomId, playerName, clerkUserId });
 
   const { fire: fireConfetti, reset: resetConfetti } = useConfetti();
   const [selectedCard, setSelectedCard] = useState<CardValue | null>(null);
@@ -520,7 +522,7 @@ function SessionSummaryScreen({
   autoSaveTriggered: boolean;
   onDone: () => void;
 }) {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, userId: clerkUserId } = useAuth();
   const [copied, setCopied] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(
     autoSaveTriggered ? "saving" : "idle"
