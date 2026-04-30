@@ -157,11 +157,11 @@ function TopicSection({
     >
       {/* Topic header */}
       <div className="flex items-center justify-between border-b-2 border-border bg-muted/30 px-5 py-3">
-        <div className="flex items-center gap-3">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/15 font-mono text-xs font-bold text-primary">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/15 font-mono text-xs font-bold text-primary">
             {rank}
           </span>
-          <h3 className="font-display text-lg tracking-ceremony">
+          <h3 className="min-w-0 break-words font-display text-lg tracking-ceremony">
             {group.label}
           </h3>
         </div>
