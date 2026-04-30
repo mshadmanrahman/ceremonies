@@ -280,16 +280,70 @@ export function GroupingPhase({
             {groups.length} group{groups.length !== 1 ? "s" : ""} formed:
           </span>
           {groups.map((g) => (
-            <span
+            <RenameableChip
               key={g.id}
-              className="rounded-md border-2 border-border bg-muted px-2.5 py-1 text-xs font-bold"
-            >
-              {g.label} ({g.cardIds.length})
-            </span>
+              group={g}
+              onRename={onRenameGroup}
+            />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+/** Inline-editable chip for renaming a group from the summary row. */
+function RenameableChip({
+  group,
+  onRename,
+}: {
+  group: CardGroup;
+  onRename: (groupId: string, label: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [label, setLabel] = useState(group.label);
+
+  // Sync when an external rename (e.g. canvas boundary) changes the label.
+  useEffect(() => {
+    if (!editing) setLabel(group.label);
+  }, [group.label, editing]);
+
+  const handleSave = () => {
+    const trimmed = label.trim();
+    if (trimmed && trimmed !== group.label) {
+      onRename(group.id, trimmed);
+    } else {
+      setLabel(group.label);
+    }
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <input
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        onBlur={handleSave}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleSave();
+          if (e.key === "Escape") { setLabel(group.label); setEditing(false); }
+        }}
+        autoFocus
+        className="h-7 rounded-md border-2 border-primary bg-card px-2 text-xs font-bold focus:outline-none"
+        style={{ minWidth: "6rem" }}
+      />
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className="flex items-center gap-1 rounded-md border-2 border-border bg-muted px-2.5 py-1 text-xs font-bold transition-colors hover:border-primary hover:bg-primary/10"
+      title="Click to rename group"
+    >
+      {group.label} ({group.cardIds.length})
+      <EditPencil width={10} height={10} className="shrink-0 text-muted-foreground" />
+    </button>
   );
 }
 

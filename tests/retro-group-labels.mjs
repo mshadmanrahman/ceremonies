@@ -1,14 +1,11 @@
 /**
- * Unit tests for auto-generated group labels.
+ * Group label and chip-rename tests.
  *
- * Verifies that:
- *   1. Cards with long text (>30 chars, >40 chars) produce group labels that
- *      equal the full card text, not a truncated version.
- *   2. The "advance to voting" auto-group path uses the full card text.
- *   3. The proximity-grouping path uses the full card text.
- *
- * These tests operate against a running PartyKit server by sending events and
- * asserting on the returned state — consistent with the project's test pattern.
+ * Three scenarios:
+ *   1. Advance-to-voting auto-group label uses the full card text (was truncated at 40 chars).
+ *   2. Proximity-group label uses the full card text (was truncated at 30 chars).
+ *   3. Renaming a group via RENAME_GROUP (what the summary chip calls) persists the new label
+ *      in state, and survives a card move that re-triggers proximity computation.
  *
  * Usage: node tests/retro-group-labels.mjs [host] [roomId]
  *
@@ -18,7 +15,7 @@
 import WebSocket from "ws";
 
 const HOST = process.argv[2] || "127.0.0.1:1999";
-const ROOM_ID = process.argv[3] || `label-test-${Date.now().toString(36)}`;
+const BASE_ROOM = process.argv[3] || `labels-${Date.now().toString(36)}`;
 
 const log = (msg) => console.log(`[${new Date().toISOString().slice(11, 19)}] ${msg}`);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -33,11 +30,11 @@ function assert(condition, msg) {
   }
 }
 
-function connect(name, userId = null) {
+function connectRoom(name, roomId, userId = null) {
   return new Promise((resolve, reject) => {
     const qs = new URLSearchParams({ name });
     if (userId) qs.set("userId", userId);
-    const url = `ws://${HOST}/parties/retro/${ROOM_ID}?${qs.toString()}`;
+    const url = `ws://${HOST}/parties/retro/${roomId}?${qs.toString()}`;
     const ws = new WebSocket(url);
     let resolved = false;
     let latestState = null;
@@ -60,7 +57,7 @@ function connect(name, userId = null) {
   });
 }
 
-function waitFor(getState, predicate, timeoutMs = 3000) {
+function waitFor(getState, predicate, timeoutMs = 4000) {
   return new Promise((resolve, reject) => {
     const deadline = Date.now() + timeoutMs;
     const check = () => {
@@ -73,106 +70,140 @@ function waitFor(getState, predicate, timeoutMs = 3000) {
   });
 }
 
-async function run() {
-  log(`Room: ${ROOM_ID}`);
+// ── Scenario 1: advance-to-voting auto-group label ──
+async function testAutoGroupLabel() {
+  log("--- Scenario 1: auto-group full label on advance-to-voting ---");
+  const roomId = `${BASE_ROOM}-s1`;
+  const fac = await connectRoom("Fac1", roomId);
 
-  const fac = await connect("Facilitator");
-  log(`Facilitator joined, id=${fac.id}`);
-
-  // Start the retro (no previous actions, goes straight to writing)
   fac.ws.send(JSON.stringify({ type: "START_RETRO", facilitatorId: fac.id }));
   await waitFor(fac.getState, (s) => s.phase === "writing");
-  log("Phase: writing");
 
-  // ── Scenario 1: auto-group label on advance-to-voting ──
-  // The old code truncated the label at 40 chars for this path.
-  const longText40 = "this is a fairly long topic name that exceeds forty characters easily yes it does";
-  assert(longText40.length > 40, "test text exceeds old 40-char threshold");
+  const longText = "this is a fairly long topic name that exceeds forty characters easily";
+  assert(longText.length > 40, "test text exceeds old 40-char auto-group threshold");
 
-  fac.ws.send(JSON.stringify({ type: "ADD_CARD", category: "happy", text: longText40 }));
+  fac.ws.send(JSON.stringify({ type: "ADD_CARD", category: "happy", text: longText }));
   await waitFor(fac.getState, (s) => s.cards.length > 0);
 
-  // Advance to grouping, then to voting (voting auto-groups ungrouped cards)
   fac.ws.send(JSON.stringify({ type: "ADVANCE_PHASE", facilitatorId: fac.id }));
   await waitFor(fac.getState, (s) => s.phase === "grouping");
-  log("Phase: grouping");
 
   fac.ws.send(JSON.stringify({ type: "ADVANCE_PHASE", facilitatorId: fac.id }));
   await waitFor(fac.getState, (s) => s.phase === "voting");
-  log("Phase: voting");
 
   const state = fac.getState();
-  assert(state.groups.length > 0, "at least one group exists after advance-to-voting");
   const autoGroup = state.groups.find((g) => g.cardIds.length > 0);
-  assert(autoGroup !== undefined, "an auto-group was created");
+  assert(autoGroup !== undefined, "auto-group exists");
   assert(
-    autoGroup?.label === longText40,
-    `auto-group label equals full text (got "${autoGroup?.label?.slice(0, 50)}...")`
+    autoGroup?.label === longText,
+    `auto-group label is full text (got "${autoGroup?.label?.slice(0, 50)}")`
   );
 
-  // ── Scenario 2: proximity-group label in grouping phase ──
-  // Use a separate room to test proximity grouping label via a fresh retro.
-  const ROOM_2 = `${ROOM_ID}-prox`;
-  const fac2 = await connect("Facilitator2");
-  // Connect to second room separately
-  const qs2 = new URLSearchParams({ name: "Fac2" });
-  const url2 = `ws://${HOST}/parties/retro/${ROOM_2}?${qs2.toString()}`;
-  const fac2b = await new Promise((resolve, reject) => {
-    const ws = new WebSocket(url2);
-    let latestState = null;
-    let resolved = false;
-    ws.on("message", (raw) => {
-      const data = JSON.parse(raw.toString());
-      if (data.type === "sync") {
-        latestState = data.state;
-        if (!resolved) { resolved = true; resolve({ ws, id: data.you, getState: () => latestState }); }
-      } else if (data.type === "update") { latestState = data.state; }
-    });
-    ws.on("error", (err) => { if (!resolved) reject(err); });
-    setTimeout(() => { if (!resolved) reject(new Error("timeout")); }, 5000);
-  });
+  fac.ws.close();
+}
 
-  fac2b.ws.send(JSON.stringify({ type: "START_RETRO", facilitatorId: fac2b.id }));
-  await waitFor(fac2b.getState, (s) => s.phase === "writing");
+// ── Scenario 2: proximity-group label ──
+async function testProximityGroupLabel() {
+  log("--- Scenario 2: proximity-group full label ---");
+  const roomId = `${BASE_ROOM}-s2`;
+  const fac = await connectRoom("Fac2", roomId);
 
-  const longText30 = "this topic text is longer than thirty characters absolutely";
-  assert(longText30.length > 30, "test text exceeds old 30-char proximity threshold");
+  fac.ws.send(JSON.stringify({ type: "START_RETRO", facilitatorId: fac.id }));
+  await waitFor(fac.getState, (s) => s.phase === "writing");
 
-  fac2b.ws.send(JSON.stringify({ type: "ADD_CARD", category: "sad", text: longText30 }));
-  await waitFor(fac2b.getState, (s) => s.cards.length > 0);
+  const longText = "this topic text is longer than thirty characters absolutely yes";
+  assert(longText.length > 30, "test text exceeds old 30-char proximity threshold");
 
-  // Advance to grouping
-  fac2b.ws.send(JSON.stringify({ type: "ADVANCE_PHASE", facilitatorId: fac2b.id }));
-  await waitFor(fac2b.getState, (s) => s.phase === "grouping");
+  fac.ws.send(JSON.stringify({ type: "ADD_CARD", category: "sad", text: longText }));
+  await waitFor(fac.getState, (s) => s.cards.length > 0);
 
-  // Move a card to trigger proximity grouping computation
-  const cardId = fac2b.getState().cards[0].id;
-  fac2b.ws.send(JSON.stringify({ type: "MOVE_CARD_POSITION", cardId, x: 200, y: 200 }));
-  await sleep(300);
+  fac.ws.send(JSON.stringify({ type: "ADVANCE_PHASE", facilitatorId: fac.id }));
+  await waitFor(fac.getState, (s) => s.phase === "grouping");
 
-  const state2 = fac2b.getState();
-  const proxGroup = state2.groups.find((g) => g.cardIds.includes(cardId));
-  assert(proxGroup !== undefined, "proximity group contains the moved card");
+  const cardId = fac.getState().cards[0].id;
+  fac.ws.send(JSON.stringify({ type: "MOVE_CARD_POSITION", cardId, x: 200, y: 200 }));
+  await sleep(400);
+
+  const state = fac.getState();
+  const proxGroup = state.groups.find((g) => g.cardIds.includes(cardId));
+  assert(proxGroup !== undefined, "proximity group contains the card");
   assert(
-    proxGroup?.label === longText30,
-    `proximity group label equals full text (got "${proxGroup?.label?.slice(0, 50)}...")`
+    proxGroup?.label === longText,
+    `proximity group label is full text (got "${proxGroup?.label?.slice(0, 50)}")`
   );
 
-  // ── Summary ──
+  fac.ws.close();
+}
+
+// ── Scenario 3: chip rename persists through card moves ──
+async function testChipRenamePersistedThroughMove() {
+  log("--- Scenario 3: group rename via chip persists after card move ---");
+  const roomId = `${BASE_ROOM}-s3`;
+  const fac = await connectRoom("Fac3", roomId);
+
+  fac.ws.send(JSON.stringify({ type: "START_RETRO", facilitatorId: fac.id }));
+  await waitFor(fac.getState, (s) => s.phase === "writing");
+
+  fac.ws.send(JSON.stringify({ type: "ADD_CARD", category: "happy", text: "card alpha" }));
+  fac.ws.send(JSON.stringify({ type: "ADD_CARD", category: "sad", text: "card beta" }));
+  await waitFor(fac.getState, (s) => s.cards.length >= 2);
+
+  fac.ws.send(JSON.stringify({ type: "ADVANCE_PHASE", facilitatorId: fac.id }));
+  await waitFor(fac.getState, (s) => s.phase === "grouping");
+
+  // Move two cards close together to form a proximity group
+  const cards = fac.getState().cards;
+  fac.ws.send(JSON.stringify({ type: "MOVE_CARD_POSITION", cardId: cards[0].id, x: 100, y: 100 }));
+  fac.ws.send(JSON.stringify({ type: "MOVE_CARD_POSITION", cardId: cards[1].id, x: 140, y: 120 }));
+  await sleep(400);
+
+  const groupsBefore = fac.getState().groups;
+  assert(groupsBefore.length > 0, "groups formed by proximity");
+
+  const groupId = groupsBefore[0].id;
+  const newLabel = "Our renamed group via chip";
+
+  // Send the same RENAME_GROUP event the chip calls through onRenameGroup
+  fac.ws.send(JSON.stringify({ type: "RENAME_GROUP", groupId, label: newLabel }));
+  await waitFor(fac.getState, (s) => s.groups.some((g) => g.id === groupId && g.label === newLabel));
+
+  assert(
+    fac.getState().groups.find((g) => g.id === groupId)?.label === newLabel,
+    "label updated to chip-renamed value"
+  );
+
+  // Move a card slightly: proximity recomputes, but renamedLabels fingerprint should restore the label
+  fac.ws.send(JSON.stringify({ type: "MOVE_CARD_POSITION", cardId: cards[0].id, x: 110, y: 105 }));
+  await sleep(400);
+
+  const labelAfterMove = fac.getState().groups.find((g) =>
+    g.cardIds.includes(cards[0].id) || g.cardIds.includes(cards[1].id)
+  )?.label;
+  assert(
+    labelAfterMove === newLabel,
+    `label persists after card move (got "${labelAfterMove}")`
+  );
+
+  fac.ws.close();
+}
+
+async function run() {
+  log(`Base room: ${BASE_ROOM}`);
+
+  await testAutoGroupLabel();
+  await testProximityGroupLabel();
+  await testChipRenamePersistedThroughMove();
+
   log("=".repeat(50));
-  log("GROUP LABEL TESTS COMPLETE");
+  log("GROUP LABEL + CHIP RENAME TESTS COMPLETE");
   log("=".repeat(50));
   if (failures === 0) {
     log("ALL CHECKS PASSED");
+    process.exit(0);
   } else {
     log(`${failures} CHECK(S) FAILED`);
+    process.exit(1);
   }
-
-  try { fac.ws.close(); } catch {}
-  try { fac2.ws.close(); } catch {}
-  try { fac2b.ws.close(); } catch {}
-
-  process.exit(failures === 0 ? 0 : 1);
 }
 
 run().catch((err) => {
