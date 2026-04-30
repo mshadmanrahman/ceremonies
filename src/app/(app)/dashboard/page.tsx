@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { teams, teamMembers, retros, actionItems, estimationSessions, estimationResults } from "@/lib/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, or } from "drizzle-orm";
 import Link from "next/link";
 import { GhostIcon, OwlIcon } from "@/components/shared/icons";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
@@ -32,26 +32,30 @@ export default async function DashboardPage({
       .from(teamMembers)
       .innerJoin(teams, eq(teamMembers.teamId, teams.id))
       .where(eq(teamMembers.userId, userId));
-  } catch {
-    // DB might not be ready
+  } catch (error) {
+    console.error("[dashboard] userTeams query failed", error);
   }
 
-  const currentTeamId = activeTeamId ?? userTeams[0]?.id;
+  const validatedActiveTeamId =
+    activeTeamId && userTeams.some(t => t.id === activeTeamId)
+      ? activeTeamId
+      : undefined;
+  const currentTeamId = validatedActiveTeamId ?? userTeams[0]?.id;
 
   // Fetch retros for current team or user
   let pastRetros: Awaited<ReturnType<typeof fetchRetros>> = [];
   try {
     pastRetros = await fetchRetros(userId, currentTeamId);
-  } catch {
-    // DB might not be ready
+  } catch (error) {
+    console.error("[dashboard] fetchRetros failed", error);
   }
 
   // Fetch estimation sessions for current team or user
   let pastEstimations: Awaited<ReturnType<typeof fetchEstimations>> = [];
   try {
     pastEstimations = await fetchEstimations(userId, currentTeamId);
-  } catch {
-    // DB might not be ready
+  } catch (error) {
+    console.error("[dashboard] fetchEstimations failed", error);
   }
 
   return (
@@ -261,10 +265,17 @@ export default async function DashboardPage({
 
 async function fetchRetros(userId: string, teamId?: string) {
   const db = getDb();
+
+  // When teamId is provided, return retros the user created OR any retro scoped
+  // to that team (so teammates' retros appear in the shared view).
+  const whereClause = teamId
+    ? or(eq(retros.createdBy, userId), eq(retros.teamId, teamId))
+    : eq(retros.createdBy, userId);
+
   const userRetros = await db
     .select()
     .from(retros)
-    .where(eq(retros.createdBy, userId))
+    .where(whereClause)
     .orderBy(desc(retros.createdAt))
     .limit(20);
 
