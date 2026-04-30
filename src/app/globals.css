@@ -393,6 +393,24 @@
   animation: timer-pulse 2s var(--ease-ceremony) infinite;
 }
 
+/* ── Typing indicator dot ── */
+
+@keyframes typing-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: typing-pulse 1.2s ease-in-out infinite;
+  color: var(--muted-foreground);
+  opacity: 0.7;
+}
+
 /* ── Reduced motion ── */
 
 @media (prefers-reduced-motion: reduce) {
@@ -422,6 +440,10 @@
   }
   .timer-pulse {
     animation: none;
+  }
+  .typing-dot {
+    animation: none;
+    opacity: 0.5;
   }
   [class*="animate-[drift"] {
     animation: none !important;

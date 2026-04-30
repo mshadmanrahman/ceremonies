@@ -14,8 +14,10 @@ import {
  * transition(), broadcasts new state. Server is single source of truth.
  *
  * ANONYMITY: During writing phase, the server strips the sender's
- * real identity and assigns a random anonymousId. The mapping is
- * NEVER broadcast. No typing indicators are sent.
+ * real identity and assigns a random anonymousId. The mapping is NEVER
+ * broadcast. Typing indicators are ephemeral: only participantIds are
+ * broadcast (never names), and clients filter their own ID before showing
+ * the indicator. Typing state is never persisted to storage.
  */
 
 interface ConnectionState {
@@ -32,6 +34,8 @@ function generateId(): string {
 export default class RetroServer implements Party.Server {
   state: RetroState;
   timerInterval: ReturnType<typeof setInterval> | null = null;
+  /** Ephemeral set of participantIds currently typing. Never persisted. */
+  private typingParticipants: Set<string> = new Set();
 
   constructor(readonly room: Party.Room) {
     this.state = createInitialState("");
@@ -138,6 +142,18 @@ export default class RetroServer implements Party.Server {
       return;
     }
 
+    // ── Typing indicators (ephemeral, never persisted, never includes names) ──
+    if (parsed.type === "TYPING_START") {
+      this.typingParticipants.add(connState.participantId);
+      this.broadcastTyping();
+      return;
+    }
+    if (parsed.type === "TYPING_STOP") {
+      this.typingParticipants.delete(connState.participantId);
+      this.broadcastTyping();
+      return;
+    }
+
     let event = parsed as RetroEvent;
 
     // ── Anonymity enforcement for ADD_CARD ──
@@ -211,17 +227,32 @@ export default class RetroServer implements Party.Server {
   async onClose(conn: Party.Connection) {
     const connState = conn.state as ConnectionState | undefined;
     if (connState) {
+      // Remove from typing set and broadcast if they were typing when they disconnected
+      if (this.typingParticipants.has(connState.participantId)) {
+        this.typingParticipants.delete(connState.participantId);
+        this.broadcastTyping();
+      }
+
       this.state = transition(this.state, {
         type: "PARTICIPANT_LEAVE",
         participantId: connState.participantId,
       });
 
-      // Reassign facilitator if needed
+      // Fix 6: if the leaving participant is the room creator, keep facilitatorId
+      // as-is and wait for the creator to reconnect (reclaim-on-join handles return).
+      // Only reassign if the leaver is a non-creator facilitator.
       if (this.state.facilitatorId === connState.participantId) {
-        const next = this.getFirstConnectedParticipantId(connState.participantId);
-        if (next) {
-          this.state = { ...this.state, facilitatorId: next };
+        const isCreator =
+          connState.userId !== null && connState.userId === this.state.createdBy;
+        if (!isCreator) {
+          const next = this.getFirstConnectedParticipantId(connState.participantId);
+          if (next) {
+            this.state = { ...this.state, facilitatorId: next };
+          }
         }
+        // If the creator is leaving, facilitatorId intentionally keeps pointing to their
+        // (now disconnected) participantId. The reclaim-on-join logic in onConnect will
+        // restore it when they reconnect.
       }
 
       await this.persist();
@@ -329,6 +360,15 @@ export default class RetroServer implements Party.Server {
 
   private broadcast() {
     const message = JSON.stringify({ type: "update", state: this.state });
+    this.room.broadcast(message);
+  }
+
+  /** Broadcast the current typing set to all connections. Never includes names. */
+  private broadcastTyping() {
+    const message = JSON.stringify({
+      type: "typing_update",
+      participantIds: Array.from(this.typingParticipants),
+    });
     this.room.broadcast(message);
   }
 
