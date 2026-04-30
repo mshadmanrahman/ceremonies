@@ -68,21 +68,10 @@ export async function POST(req: Request) {
     })
     .returning();
 
-  // Save cards
-  if (state.cards.length > 0) {
-    await db.insert(retroCards).values(
-      state.cards.map((card) => ({
-        retroId: retro.id,
-        category: card.category as "happy" | "sad" | "confused",
-        text: card.text,
-        anonymousId: card.anonymousId,
-        groupId: null, // We'll link via groups
-      }))
-    );
-  }
-
-  // Save groups
+  // Save groups first so we can link cards and action items to their DB group IDs.
+  // (Groups in PartyKit state hold cardIds; cards do not carry groupId.)
   const groupIdMap = new Map<string, string>(); // partykit group ID → DB group ID
+  const cardIdToGroupId = new Map<string, string>(); // partykit card ID → DB group ID
   if (state.groups.length > 0) {
     const rankedGroupIds = state.rankedGroupIds ?? [];
     const insertedGroups = await db
@@ -99,7 +88,23 @@ export async function POST(req: Request) {
 
     state.groups.forEach((group, i) => {
       groupIdMap.set(group.id, insertedGroups[i].id);
+      for (const cardId of group.cardIds ?? []) {
+        cardIdToGroupId.set(cardId, insertedGroups[i].id);
+      }
     });
+  }
+
+  // Save cards with their DB group IDs (cards live inside groups; ungrouped cards stay null).
+  if (state.cards.length > 0) {
+    await db.insert(retroCards).values(
+      state.cards.map((card) => ({
+        retroId: retro.id,
+        category: card.category as "happy" | "sad" | "confused",
+        text: card.text,
+        anonymousId: card.anonymousId,
+        groupId: cardIdToGroupId.get(card.id) ?? null,
+      }))
+    );
   }
 
   // Save action items
