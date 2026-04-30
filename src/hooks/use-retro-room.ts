@@ -25,6 +25,13 @@ interface UseRetroRoomResult {
   readonly isFacilitator: boolean;
   readonly connected: boolean;
 
+  /** Number of other participants currently typing (excludes self). */
+  readonly typingOthers: number;
+  /** Notify the server that this participant started typing. */
+  readonly startTyping: () => void;
+  /** Notify the server that this participant stopped typing. */
+  readonly stopTyping: () => void;
+
   // Lobby
   readonly startRetro: (options?: { teamId?: string; createdBy?: string; previousActions?: ReadonlyArray<PreviousAction> }) => void;
 
@@ -82,6 +89,7 @@ export function useRetroRoom({
   const [myAnonymousId, setMyAnonymousId] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
   const [cursors, setCursors] = useState<ReadonlyMap<string, CursorPosition>>(new Map());
+  const [typingParticipantIds, setTypingParticipantIds] = useState<ReadonlyArray<string>>([]);
   const stateRef = useRef(state);
 
   useEffect(() => {
@@ -136,6 +144,8 @@ export function useRetroRoom({
           });
           return next;
         });
+      } else if (data.type === "typing_update") {
+        setTypingParticipantIds(data.participantIds as string[]);
       }
     },
   });
@@ -199,6 +209,14 @@ export function useRetroRoom({
     },
     [send, myAnonymousId]
   );
+
+  const startTyping = useCallback(() => {
+    send({ type: "TYPING_START" });
+  }, [send]);
+
+  const stopTyping = useCallback(() => {
+    send({ type: "TYPING_STOP" });
+  }, [send]);
 
   // ── Grouping (canvas) ──
 
@@ -334,12 +352,18 @@ export function useRetroRoom({
 
   const isFacilitator = Boolean(myId && state && state.facilitatorId === myId);
 
+  // Count participants typing, excluding self. Never includes names.
+  const typingOthers = typingParticipantIds.filter((id) => id !== myId).length;
+
   return {
     state,
     myId,
     myAnonymousId,
     isFacilitator,
     connected,
+    typingOthers,
+    startTyping,
+    stopTyping,
     startRetro,
     markAction,
     advancePhase,

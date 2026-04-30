@@ -161,6 +161,9 @@ function RetroRoom({
     removeActionItem,
     updateActionItem,
     closeRetro,
+    typingOthers,
+    startTyping,
+    stopTyping,
   } = useRetroRoom({ roomId, playerName, clerkUserId });
 
   // Unresolved items from previous retro (groups without action items)
@@ -292,6 +295,9 @@ function RetroRoom({
             isFacilitator={isFacilitator}
             onAdvance={advancePhase}
             participantCount={state.participants.length}
+            typingOthers={typingOthers}
+            onStartTyping={startTyping}
+            onStopTyping={stopTyping}
           />
         )}
 
