@@ -87,9 +87,15 @@ export default class EstimationServer implements Party.Server {
     if (parsed.type === "SAVE_SESSION") {
       const connState = sender.state as ConnectionState | undefined;
       if (connState && this.state.facilitatorId === connState.participantId) {
+        // Use the Clerk userId the client forwarded if present; fall back to a
+        // partykit-prefixed participant ID so old clients still work.
+        const clerkUserId =
+          typeof parsed.clerkUserId === "string" && parsed.clerkUserId
+            ? parsed.clerkUserId
+            : null;
         this.saveToDatabase({
           teamId: parsed.teamId ?? "",
-          createdBy: `partykit:${connState.participantId}`,
+          createdBy: clerkUserId ?? `partykit:${connState.participantId}`,
         })
           .then(() => {
             this.room.broadcast(

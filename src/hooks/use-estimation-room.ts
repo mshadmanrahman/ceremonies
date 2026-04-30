@@ -11,6 +11,9 @@ import type {
 interface UseEstimationRoomOptions {
   readonly roomId: string;
   readonly playerName: string;
+  /** Clerk userId of the signed-in facilitator. When provided it is forwarded
+   *  to the PartyKit server so saved sessions are queryable by Clerk userId. */
+  readonly clerkUserId?: string | null;
 }
 
 type SaveResult = "idle" | "saving" | "saved" | "error";
@@ -36,6 +39,7 @@ interface UseEstimationRoomResult {
 export function useEstimationRoom({
   roomId,
   playerName,
+  clerkUserId,
 }: UseEstimationRoomOptions): UseEstimationRoomResult {
   const [state, setState] = useState<EstimationState | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
@@ -139,10 +143,16 @@ export function useEstimationRoom({
     (teamId?: string) => {
       setSaveResult("saving");
       socket.send(
-        JSON.stringify({ type: "SAVE_SESSION", teamId: teamId ?? "" })
+        JSON.stringify({
+          type: "SAVE_SESSION",
+          teamId: teamId ?? "",
+          // Forward the Clerk userId so PartyKit can write a queryable createdBy.
+          // Falls back to undefined (PartyKit will use its own participantId prefix).
+          clerkUserId: clerkUserId ?? undefined,
+        })
       );
     },
-    [socket]
+    [socket, clerkUserId]
   );
 
   const isFacilitator = Boolean(
