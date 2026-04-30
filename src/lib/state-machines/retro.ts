@@ -284,7 +284,7 @@ export function transition(state: RetroState, event: RetroEvent): RetroState {
         const ungrouped = state.cards.filter((c) => !groupedCardIds.has(c.id));
         const newGroups = ungrouped.map((c) => ({
           id: `auto-${c.id}`,
-          label: c.text.slice(0, 40),
+          label: c.text,
           cardIds: [c.id] as ReadonlyArray<string>,
           voteCount: 0,
         }));
@@ -647,9 +647,7 @@ export function computeProximityGroups(
   const groups: CardGroup[] = [];
   for (const [root, members] of clusters) {
     const firstCard = cards.find((c) => c.id === members[0]);
-    const label = firstCard
-      ? firstCard.text.slice(0, 30) + (firstCard.text.length > 30 ? "..." : "")
-      : "Group";
+    const label = firstCard ? firstCard.text : "Group";
     groups.push({
       id: `prox-${root}`,
       label,
