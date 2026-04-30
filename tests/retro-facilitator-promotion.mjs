@@ -8,8 +8,10 @@
  *   1. Anonymous participant A joins first and becomes facilitator (fallback).
  *   2. Creator participant B joins with userId matching state.createdBy.
  *      Facilitator should transfer to B.
- *   3. B disconnects. Facilitator should fall back to A.
- *   4. B reconnects. Facilitator should transfer back to B (creator reclaims).
+ *   3. B (creator) disconnects. Facilitator should STAY as B's participantId,
+ *      NOT fall back to A. The role is sticky to the creator.
+ *   4. B reconnects. Facilitator should transfer to B2's new participantId
+ *      (creator reclaims on join, no double-assignment).
  *
  * Usage: node tests/retro-facilitator-promotion.mjs [host] [roomId]
  *
@@ -149,26 +151,35 @@ async function run() {
     "A's broadcast state also shows B as facilitator"
   );
 
-  // ── Step 3: B disconnects, facilitator falls back to A ──
-  log("Disconnecting B...");
+  // ── Step 3: B (creator) disconnects. Facilitator role is sticky to the creator. ──
+  // The facilitatorId should STAY pointing to B's (now-disconnected) participantId.
+  // It must NOT fall back to A. Reclaim-on-join will restore it when B reconnects.
+  log("Disconnecting B (creator)...");
+  const bParticipantId = b.id; // capture before close
   await close(b);
   await sleep(500); // let onClose propagate and broadcast
 
   assert(
-    a.getState().facilitatorId === a.id,
-    "After B disconnects, facilitator falls back to A"
+    a.getState().facilitatorId === bParticipantId,
+    "After B (creator) disconnects, facilitatorId stays as B's participantId (not reassigned to A)"
+  );
+  assert(
+    a.getState().facilitatorId !== a.id,
+    "facilitatorId is NOT A's id after B (creator) disconnects"
   );
 
-  // ── Step 4: B reconnects, reclaims facilitator ──
+  // ── Step 4: B reconnects. Reclaims facilitator via reclaim-on-join. ──
   log("Reconnecting B (creator)...");
   const b2 = await connect("Bob (Creator)", CREATOR_USER_ID);
   log(`  B2 joined, id=${b2.id}`);
 
+  // B2 gets a new participantId on reconnect. The reclaim-on-join logic in onConnect
+  // should promote B2 to facilitator because their userId matches state.createdBy.
   await waitForFacilitator(a.getState, b2.id);
 
   assert(
     b2.getState().facilitatorId === b2.id,
-    "B (creator) reclaims facilitator on reconnect"
+    "B (creator) reclaims facilitator on reconnect (no double-assignment)"
   );
   assert(
     a.getState().facilitatorId === b2.id,
