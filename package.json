@@ -10,7 +10,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:generate": "npx dotenv -e .env.local -- npx drizzle-kit generate",
-    "db:push": "npx dotenv -e .env.local -- npx drizzle-kit push",
+    "db:push:dangerous": "npx dotenv -e .env.local -- npx drizzle-kit push",
     "db:studio": "npx dotenv -e .env.local -- npx drizzle-kit studio",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
