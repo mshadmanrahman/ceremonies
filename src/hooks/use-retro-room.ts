@@ -13,6 +13,9 @@ import type {
 interface UseRetroRoomOptions {
   readonly roomId: string;
   readonly playerName: string;
+  /** Clerk userId of the signed-in user. When provided the server uses it to
+   *  promote the room creator to facilitator on join. */
+  readonly clerkUserId?: string | null;
 }
 
 interface UseRetroRoomResult {
@@ -72,6 +75,7 @@ function generateId(): string {
 export function useRetroRoom({
   roomId,
   playerName,
+  clerkUserId,
 }: UseRetroRoomOptions): UseRetroRoomResult {
   const [state, setState] = useState<RetroState | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
@@ -100,7 +104,13 @@ export function useRetroRoom({
     host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "127.0.0.1:1999",
     party: "retro",
     room: roomId,
-    query: { name: playerName, anonId: persistedAnonId },
+    query: {
+      name: playerName,
+      anonId: persistedAnonId,
+      // Forward the Clerk userId so the server can promote the room creator
+      // to facilitator on join. Omit when not signed in.
+      ...(clerkUserId ? { userId: clerkUserId } : {}),
+    },
     onOpen() {
       setConnected(true);
     },

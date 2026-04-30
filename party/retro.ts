@@ -22,6 +22,7 @@ interface ConnectionState {
   participantId: string;
   participantName: string;
   anonymousId: string; // unique per connection, never revealed
+  userId: string | null; // Clerk userId, null for anonymous participants
 }
 
 function generateId(): string {
@@ -58,11 +59,14 @@ export default class RetroServer implements Party.Server {
     const participantId = conn.id;
     // Reuse the client's persisted anonymousId for session continuity across reconnects
     const anonymousId = url.searchParams.get("anonId") || generateId();
+    // Clerk userId forwarded by the client; null for anonymous participants
+    const userId = url.searchParams.get("userId") ?? null;
 
     conn.setState({
       participantId,
       participantName: name,
       anonymousId,
+      userId,
     } satisfies ConnectionState);
 
     // Add participant
@@ -71,9 +75,21 @@ export default class RetroServer implements Party.Server {
       participant: { id: participantId, name, joinedAt: Date.now() },
     });
 
-    // Assign facilitator if needed
+    // Facilitator assignment:
+    // 1. If the joining participant is the room creator (Clerk userId matches
+    //    state.createdBy), promote them immediately. This ensures the creator
+    //    always reclaims facilitator on join, even if someone else joined first.
+    //    Incident 2026-04-30: a participant loaded the page before the creator,
+    //    claimed facilitator, and the creator could not close their own retro.
+    // 2. Fallback: assign to the first-connected participant when no facilitator
+    //    is present or the current facilitator has left.
     const facilitatorStillHere = this.isFacilitatorConnected();
-    if (!this.state.facilitatorId || !facilitatorStillHere) {
+    if (userId && userId === this.state.createdBy) {
+      // Creator joined: promote regardless of who is currently facilitator
+      if (this.state.facilitatorId !== participantId) {
+        this.state = { ...this.state, facilitatorId: participantId };
+      }
+    } else if (!this.state.facilitatorId || !facilitatorStillHere) {
       this.state = { ...this.state, facilitatorId: participantId };
     }
 
