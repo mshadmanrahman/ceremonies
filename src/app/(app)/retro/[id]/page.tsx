@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect, use } from "react";
 import { useSearchParams } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -129,6 +129,8 @@ function RetroRoom({
   playerName: string;
   onLeave: () => void;
 }) {
+  const { userId: clerkUserId } = useAuth();
+
   const {
     state,
     myId,
@@ -159,7 +161,7 @@ function RetroRoom({
     removeActionItem,
     updateActionItem,
     closeRetro,
-  } = useRetroRoom({ roomId, playerName });
+  } = useRetroRoom({ roomId, playerName, clerkUserId });
 
   // Unresolved items from previous retro (groups without action items)
   const [unresolvedItems, setUnresolvedItems] = useState<ReadonlyArray<{ id: string; label: string; category?: string; voteCount?: number }>>([]);
