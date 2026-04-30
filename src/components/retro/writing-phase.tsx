@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { RetroCard, CardCategory } from "@/lib/state-machines/retro";
 import { Button } from "@/components/ui/button";
 import { HappyIcon, SadIcon, ConfusedIcon } from "@/components/shared/icons";
@@ -16,6 +16,10 @@ interface WritingPhaseProps {
   readonly isFacilitator: boolean;
   readonly onAdvance: () => void;
   readonly participantCount: number;
+  /** How many other participants are currently typing (excludes self). */
+  readonly typingOthers: number;
+  readonly onStartTyping: () => void;
+  readonly onStopTyping: () => void;
 }
 
 const CATEGORIES: ReadonlyArray<{
@@ -61,15 +65,41 @@ export function WritingPhase({
   isFacilitator,
   onAdvance,
   participantCount,
+  typingOthers,
+  onStartTyping,
+  onStopTyping,
 }: WritingPhaseProps) {
   const [activeCategory, setActiveCategory] = useState<CardCategory>("happy");
   const [text, setText] = useState("");
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
 
+  // Debounce ref for the typing stop timeout.
+  const stopTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clean up the typing indicator when the component unmounts (e.g. phase changes).
+  useEffect(() => {
+    return () => {
+      if (stopTypingTimer.current) clearTimeout(stopTypingTimer.current);
+      onStopTyping();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleTextChange = (value: string) => {
+    setText(value);
+    onStartTyping();
+    if (stopTypingTimer.current) clearTimeout(stopTypingTimer.current);
+    stopTypingTimer.current = setTimeout(() => {
+      onStopTyping();
+    }, 3000);
+  };
+
   const handleSubmit = () => {
     const trimmed = text.trim();
     if (!trimmed) return;
+    if (stopTypingTimer.current) clearTimeout(stopTypingTimer.current);
+    onStopTyping();
     onAddCard(activeCategory, trimmed);
     setText("");
   };
@@ -120,7 +150,7 @@ export function WritingPhase({
       <div className="space-y-3">
         <textarea
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => handleTextChange(e.target.value)}
           placeholder={`What made you ${activeCategory}?`}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -135,7 +165,19 @@ export function WritingPhase({
             `focus:${activeCat.borderClass}`
           )}
         />
-        <div className="flex justify-end">
+
+        {/* Anonymous typing indicator: shows when others are typing. Never shows names. */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 h-4">
+            {typingOthers > 0 && (
+              <>
+                <span className="typing-dot" />
+                <span className="text-[11px] font-medium text-muted-foreground opacity-70">
+                  Someone is typing...
+                </span>
+              </>
+            )}
+          </div>
           <Button
             onClick={handleSubmit}
             disabled={!text.trim()}
