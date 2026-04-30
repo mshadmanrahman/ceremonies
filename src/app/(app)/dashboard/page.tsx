@@ -195,9 +195,10 @@ export default async function DashboardPage({
           )}
 
           {pastRetros.map((retro) => (
-            <div
+            <Link
               key={retro.id}
-              className="rounded-md border-2 border-border bg-card p-4 shadow-hard-sm"
+              href={`/retro/${retro.roomCode}`}
+              className="block rounded-md border-2 border-border bg-card p-4 shadow-hard-sm transition-all hover:border-primary hover:shadow-hard"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -255,7 +256,7 @@ export default async function DashboardPage({
                   ))}
                 </div>
               )}
-            </div>
+            </Link>
           ))}
         </div>
       </div>
