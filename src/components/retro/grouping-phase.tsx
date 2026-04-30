@@ -238,7 +238,7 @@ export function GroupingPhase({
               onPointerDown={(e) => handlePointerDown(card.id, e)}
             >
               <Icon size={20} className={cn("shrink-0 mt-0.5", style.color)} />
-              <span className="line-clamp-4 leading-snug">{card.text}</span>
+              <span className="leading-snug">{card.text}</span>
             </div>
           );
         })}
