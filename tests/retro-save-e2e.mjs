@@ -5,7 +5,10 @@
  * 1. Connect 3 participants to a retro room
  * 2. Walk through all phases: lobby -> writing -> grouping -> voting -> discussing -> closed
  * 3. When phase hits "closed", PartyKit server POSTs to /api/retros/save
- * 4. Verify the save succeeded by checking the API response or DB
+ * 4. Verify the save succeeded by querying the DB directly (SELECT after close)
+ *
+ * Also runs a second case: anonymous retro (createdBy: null) to confirm the
+ * row lands with created_by = 'anonymous' rather than failing a NOT NULL constraint.
  *
  * Usage: node tests/retro-save-e2e.mjs [partykit-host] [nextjs-host]
  *
@@ -16,24 +19,43 @@
  */
 
 import WebSocket from "ws";
+import { neon } from "@neondatabase/serverless";
 
 const PARTY_HOST = process.argv[2] || "127.0.0.1:1999";
 const APP_HOST = process.argv[3] || "http://localhost:3456";
-const ROOM_ID = `e2e-save-${Date.now().toString(36)}`;
 const PARTICIPANTS = ["Alice", "Bob", "Carol"];
 
 const log = (msg) =>
   console.log(`[${new Date().toISOString().slice(11, 19)}] ${msg}`);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// ── DB helper ──
+
+function getDbSql() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL env var is required for DB assertions");
+  return neon(url);
+}
+
+async function queryRetroByRoomCode(roomCode) {
+  const sql = getDbSql();
+  const rows = await sql`
+    SELECT id, room_code, created_by, status, closed_at
+    FROM retros
+    WHERE room_code = ${roomCode}
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+}
+
+// ── WebSocket helpers ──
+
 let latestState = null;
-const connections = []; // { ws, id, name, anonymousId }
+const connections = [];
 
-// ── Helpers ──
-
-function connect(name) {
+function connect(name, roomId) {
   return new Promise((resolve, reject) => {
-    const url = `ws://${PARTY_HOST}/parties/retro/${ROOM_ID}?name=${encodeURIComponent(name)}`;
+    const url = `ws://${PARTY_HOST}/parties/retro/${roomId}?name=${encodeURIComponent(name)}`;
     const ws = new WebSocket(url);
     let resolved = false;
 
@@ -89,239 +111,199 @@ function closeAll() {
       // ignore
     }
   }
+  connections.length = 0;
 }
 
-// ── Main Test ──
+// ── Full lifecycle runner ──
+
+async function runRetroLifecycle(roomId, createdBy) {
+  latestState = null;
+
+  log(`Connecting 3 participants to room: ${roomId} (createdBy: ${createdBy ?? "null"})`);
+  for (const name of PARTICIPANTS) {
+    const conn = await connect(name, roomId);
+    connections.push(conn);
+    log(`  ${name} connected (id=${conn.id})`);
+    await sleep(200);
+  }
+
+  const facilitator = connections[0];
+  log(`Facilitator: ${facilitator.name} (${facilitator.id})`);
+  log(`Current phase: ${latestState.phase}`);
+
+  if (latestState.phase !== "lobby") {
+    throw new Error(`Expected lobby phase, got: ${latestState.phase}`);
+  }
+
+  log("Starting retro...");
+  send(facilitator.ws, {
+    type: "START_RETRO",
+    facilitatorId: facilitator.id,
+    teamId: "e2e-test-team",
+    createdBy,
+  });
+  await waitForPhase("writing");
+  log(`Phase: ${latestState.phase}`);
+
+  const cards = [
+    { type: "ADD_CARD", category: "happy", text: "Great team collaboration this sprint" },
+    { type: "ADD_CARD", category: "happy", text: "CI/CD pipeline is much faster now" },
+    { type: "ADD_CARD", category: "sad", text: "Too many meetings eating focus time" },
+    { type: "ADD_CARD", category: "sad", text: "Flaky tests in the auth module" },
+    { type: "ADD_CARD", category: "confused", text: "New deployment process unclear" },
+    { type: "ADD_CARD", category: "confused", text: "Who owns the data pipeline?" },
+  ];
+
+  log("Adding 6 cards...");
+  for (let i = 0; i < cards.length; i++) {
+    const conn = connections[i % connections.length];
+    send(conn.ws, cards[i]);
+    await sleep(150);
+  }
+
+  await sleep(500);
+  log(`Cards in state: ${latestState.cards.length}`);
+  if (latestState.cards.length !== 6) {
+    throw new Error(`Expected 6 cards, got ${latestState.cards.length}`);
+  }
+
+  log("Advancing to grouping...");
+  send(facilitator.ws, { type: "ADVANCE_PHASE", facilitatorId: facilitator.id });
+  await waitForPhase("grouping");
+
+  const happyCards = latestState.cards.filter((c) => c.category === "happy");
+  if (happyCards.length >= 2) {
+    const groupId = `grp-${Date.now().toString(36)}`;
+    send(facilitator.ws, {
+      type: "CREATE_GROUP",
+      group: {
+        id: groupId,
+        label: "Team wins",
+        cardIds: happyCards.map((c) => c.id),
+        voteCount: 0,
+      },
+    });
+    await sleep(300);
+  }
+
+  log("Advancing to voting...");
+  send(facilitator.ws, { type: "ADVANCE_PHASE", facilitatorId: facilitator.id });
+  await waitForPhase("voting");
+
+  log("Casting votes...");
+  for (const conn of connections) {
+    if (latestState.groups.length > 0) {
+      send(conn.ws, {
+        type: "CAST_VOTE",
+        odiedId: conn.id,
+        groupId: latestState.groups[0].id,
+      });
+      await sleep(100);
+    }
+  }
+  await sleep(300);
+
+  log("Advancing to discussing...");
+  send(facilitator.ws, { type: "ADVANCE_PHASE", facilitatorId: facilitator.id });
+  await waitForPhase("discussing");
+
+  const actionItemId = `action-${Date.now().toString(36)}`;
+  send(facilitator.ws, {
+    type: "ADD_ACTION_ITEM",
+    item: {
+      id: actionItemId,
+      text: "Fix flaky auth tests by next sprint",
+      assignees: ["Bob"],
+      groupId: latestState.rankedGroupIds[0] || null,
+      createdAt: Date.now(),
+    },
+  });
+  await sleep(300);
+
+  log("Closing retro...");
+  send(facilitator.ws, { type: "CLOSE_RETRO", facilitatorId: facilitator.id });
+  await waitForPhase("closed");
+  log(`Phase: ${latestState.phase}`);
+
+  log("Waiting 3s for server-side DB save to complete...");
+  await sleep(3000);
+
+  closeAll();
+  return roomId;
+}
+
+// ── Test case: named user ──
+
+async function testNamedUser() {
+  log("\n==== Test 1: named user (createdBy: e2e-test-user) ====");
+  const roomId = `e2e-save-${Date.now().toString(36)}`;
+  await runRetroLifecycle(roomId, "e2e-test-user");
+
+  log("Querying DB for saved retro row...");
+  const row = await queryRetroByRoomCode(roomId);
+
+  const checks = [
+    { name: "row exists in DB", ok: row !== null },
+    { name: "status is closed", ok: row?.status === "closed" },
+    { name: "created_by is e2e-test-user", ok: row?.created_by === "e2e-test-user" },
+    { name: "closed_at is set", ok: row?.closed_at != null },
+  ];
+
+  log("\n-- Verification (Test 1) --");
+  for (const c of checks) {
+    log(`  ${c.ok ? "PASS" : "FAIL"}: ${c.name}`);
+  }
+  return checks.every((c) => c.ok);
+}
+
+// ── Test case: anonymous retro (createdBy: null) ──
+
+async function testAnonymousUser() {
+  log("\n==== Test 2: anonymous retro (createdBy: null) ====");
+  const roomId = `e2e-anon-${Date.now().toString(36)}`;
+  // Pass null createdBy to simulate a retro started before Clerk fully loaded.
+  await runRetroLifecycle(roomId, null);
+
+  log("Querying DB for saved retro row...");
+  const row = await queryRetroByRoomCode(roomId);
+
+  const checks = [
+    { name: "row exists in DB", ok: row !== null },
+    { name: "status is closed", ok: row?.status === "closed" },
+    // The save route must normalize null to "anonymous" before inserting.
+    { name: "created_by is 'anonymous'", ok: row?.created_by === "anonymous" },
+    { name: "closed_at is set", ok: row?.closed_at != null },
+  ];
+
+  log("\n-- Verification (Test 2) --");
+  for (const c of checks) {
+    log(`  ${c.ok ? "PASS" : "FAIL"}: ${c.name}`);
+  }
+  return checks.every((c) => c.ok);
+}
+
+// ── Main ──
 
 async function run() {
   let exitCode = 0;
 
   try {
-    // Step 1: Connect 3 participants
-    log(`Connecting 3 participants to room: ${ROOM_ID}`);
-    for (const name of PARTICIPANTS) {
-      const conn = await connect(name);
-      connections.push(conn);
-      log(`  ${name} connected (id=${conn.id})`);
-      await sleep(200); // stagger connections
-    }
+    const t1 = await testNamedUser();
+    const t2 = await testAnonymousUser();
 
-    const facilitator = connections[0]; // First to join is facilitator
-    log(`Facilitator: ${facilitator.name} (${facilitator.id})`);
-    log(`Current phase: ${latestState.phase}`);
-
-    if (latestState.phase !== "lobby") {
-      throw new Error(`Expected lobby phase, got: ${latestState.phase}`);
-    }
-
-    // Step 2: Start retro (no previousActions -> goes directly to "writing")
-    log("Starting retro (no previous actions -> writing phase)...");
-    send(facilitator.ws, {
-      type: "START_RETRO",
-      facilitatorId: facilitator.id,
-      teamId: "e2e-test-team",
-      createdBy: "e2e-test-user",
-    });
-    await waitForPhase("writing");
-    log(`Phase: ${latestState.phase}`);
-
-    // Step 3: Add cards during writing phase
-    // ADD_CARD must be flat { type, category, text } - server enforces anonymity
-    const cards = [
-      { type: "ADD_CARD", category: "happy", text: "Great team collaboration this sprint" },
-      { type: "ADD_CARD", category: "happy", text: "CI/CD pipeline is much faster now" },
-      { type: "ADD_CARD", category: "sad", text: "Too many meetings eating focus time" },
-      { type: "ADD_CARD", category: "sad", text: "Flaky tests in the auth module" },
-      { type: "ADD_CARD", category: "confused", text: "New deployment process unclear" },
-      { type: "ADD_CARD", category: "confused", text: "Who owns the data pipeline?" },
-    ];
-
-    log("Adding 6 cards (2 per participant)...");
-    for (let i = 0; i < cards.length; i++) {
-      const conn = connections[i % connections.length];
-      send(conn.ws, cards[i]);
-      await sleep(150);
-    }
-
-    // Wait for cards to be reflected
-    await sleep(500);
-    log(`Cards in state: ${latestState.cards.length}`);
-    if (latestState.cards.length !== 6) {
-      throw new Error(
-        `Expected 6 cards, got ${latestState.cards.length}`
-      );
-    }
-
-    // Step 4: Advance to grouping
-    log("Advancing to grouping phase...");
-    send(facilitator.ws, {
-      type: "ADVANCE_PHASE",
-      facilitatorId: facilitator.id,
-    });
-    await waitForPhase("grouping");
-    log(`Phase: ${latestState.phase}`);
-
-    // Create a group with two cards
-    const happyCards = latestState.cards.filter((c) => c.category === "happy");
-    if (happyCards.length >= 2) {
-      const groupId = `grp-${Date.now().toString(36)}`;
-      send(facilitator.ws, {
-        type: "CREATE_GROUP",
-        group: {
-          id: groupId,
-          label: "Team wins",
-          cardIds: happyCards.map((c) => c.id),
-          voteCount: 0,
-        },
-      });
-      await sleep(300);
-      log(`Created group with ${happyCards.length} happy cards`);
-    }
-
-    // Step 5: Advance to voting (auto-groups ungrouped cards)
-    log("Advancing to voting phase...");
-    send(facilitator.ws, {
-      type: "ADVANCE_PHASE",
-      facilitatorId: facilitator.id,
-    });
-    await waitForPhase("voting");
-    log(`Phase: ${latestState.phase}, groups: ${latestState.groups.length}`);
-
-    // Cast some votes (each participant gets 3 votes)
-    log("Casting votes...");
-    for (const conn of connections) {
-      if (latestState.groups.length > 0) {
-        // Vote on the first group
-        send(conn.ws, {
-          type: "CAST_VOTE",
-          odiedId: conn.id,
-          groupId: latestState.groups[0].id,
-        });
-        await sleep(100);
-      }
-    }
-    await sleep(300);
-    log(`Votes cast: ${latestState.votes.length}`);
-
-    // Step 6: Advance to discussing
-    log("Advancing to discussing phase...");
-    send(facilitator.ws, {
-      type: "ADVANCE_PHASE",
-      facilitatorId: facilitator.id,
-    });
-    await waitForPhase("discussing");
-    log(`Phase: ${latestState.phase}`);
+    const allPassed = t1 && t2;
     log(
-      `Ranked groups: ${latestState.rankedGroupIds.length}, discussion index: ${latestState.discussion.currentGroupIndex}`
+      allPassed
+        ? "\nRESULT: ALL CHECKS PASSED"
+        : "\nRESULT: SOME CHECKS FAILED"
     );
-
-    // Add an action item during discussion
-    const actionItemId = `action-${Date.now().toString(36)}`;
-    send(facilitator.ws, {
-      type: "ADD_ACTION_ITEM",
-      item: {
-        id: actionItemId,
-        text: "Fix flaky auth tests by next sprint",
-        assignees: ["Bob"],
-        groupId: latestState.rankedGroupIds[0] || null,
-        createdAt: Date.now(),
-      },
-    });
-    await sleep(300);
-    log(`Action items: ${latestState.actionItems.length}`);
-
-    // Step 7: Close retro (this triggers saveToDatabase on the server)
-    log("Closing retro (CLOSE_RETRO) - this should trigger DB save...");
-    send(facilitator.ws, {
-      type: "CLOSE_RETRO",
-      facilitatorId: facilitator.id,
-    });
-    await waitForPhase("closed");
-    log(`Phase: ${latestState.phase}`);
-
-    // Step 8: Wait for the save to complete (server does it async)
-    log("Waiting 3s for server-side save to complete...");
-    await sleep(3000);
-
-    // Step 9: Verify the save by hitting the PartyKit HTTP endpoint
-    // The room state should still be "closed" with all data intact
-    log("Verifying room state via PartyKit HTTP endpoint...");
-    const roomRes = await fetch(
-      `http://${PARTY_HOST}/parties/retro/${ROOM_ID}`
-    );
-    if (!roomRes.ok) {
-      throw new Error(`Room HTTP check failed: ${roomRes.status}`);
-    }
-    const roomState = await roomRes.json();
-    log(`Room state phase: ${roomState.phase}`);
-    log(`Room state cards: ${roomState.cards.length}`);
-    log(`Room state groups: ${roomState.groups.length}`);
-    log(`Room state actionItems: ${roomState.actionItems.length}`);
-    log(`Room state teamId: ${roomState.teamId}`);
-    log(`Room state createdBy: ${roomState.createdBy}`);
-
-    // Validate final state
-    const checks = [
-      { name: "phase is closed", ok: roomState.phase === "closed" },
-      { name: "has 6 cards", ok: roomState.cards.length === 6 },
-      { name: "has groups", ok: roomState.groups.length > 0 },
-      { name: "has action items", ok: roomState.actionItems.length > 0 },
-      { name: "teamId set", ok: roomState.teamId === "e2e-test-team" },
-      { name: "createdBy set", ok: roomState.createdBy === "e2e-test-user" },
-    ];
-
-    log("\n── Verification ──");
-    for (const c of checks) {
-      log(`  ${c.ok ? "PASS" : "FAIL"}: ${c.name}`);
-    }
-
-    const allPassed = checks.every((c) => c.ok);
-
-    // Step 10: Try to verify DB save via the Next.js API
-    // Note: there's no GET endpoint for retros, so we check PartyKit server logs
-    // and the fact that the room reached "closed" state successfully
-    log("\n── DB Save Verification ──");
-    log(
-      "The PartyKit server calls POST /api/retros/save when phase=closed."
-    );
-    log(
-      "Check PartyKit server console for: '[retro] Saved retro <id> for room ...'"
-    );
-    log(
-      "If you see '[retro] Failed to save to DB: ...' then the save failed."
-    );
-
-    // AUTH GAP FLAG
-    log("\n── Security Note ──");
-    log(
-      "WARNING: /api/retros/save does NOT check X-Internal-Secret header."
-    );
-    log(
-      "Compare with /api/estimation/save which requires X-Internal-Secret."
-    );
-    log(
-      "The retro save is server-initiated (PartyKit -> Next.js API), but anyone "
-    );
-    log(
-      "could POST to /api/retros/save directly. This should be addressed."
-    );
-
-    if (allPassed) {
-      log("\nRESULT: ALL CHECKS PASSED");
-      log(
-        `Room ${ROOM_ID} completed full lifecycle: lobby -> writing -> grouping -> voting -> discussing -> closed`
-      );
-    } else {
-      log("\nRESULT: SOME CHECKS FAILED");
-      exitCode = 1;
-    }
+    if (!allPassed) exitCode = 1;
   } catch (err) {
     log(`\nERROR: ${err.message}`);
     if (err.stack) log(err.stack);
     exitCode = 1;
   } finally {
     closeAll();
-    // Give time for close frames
     await sleep(500);
     process.exit(exitCode);
   }
