@@ -30,13 +30,17 @@ export async function POST(req: Request) {
   const body = (await req.json()) as {
     roomCode: string;
     teamId: string;
-    createdBy: string;
+    createdBy?: string | null;
     state: RetroState;
   };
 
-  const { roomCode, createdBy, state } = body;
+  const { roomCode, state } = body;
   // Normalize empty string teamId to null (PartyKit sends "" when no team)
   const teamId = body.teamId || null;
+  // Normalize missing/null createdBy so the NOT NULL constraint never fails.
+  // Retros started before Clerk fully loaded will land as "anonymous" rather
+  // than silently dropping the row.
+  const createdBy = body.createdBy || "anonymous";
 
   // Check plan limits
   const sessionLimit = await canSaveSession(teamId, createdBy);
