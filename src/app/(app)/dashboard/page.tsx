@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { UserButton } from "@clerk/nextjs";
 import { TeamSelector } from "@/components/teams/team-selector";
 import { ClaimSession } from "@/components/estimation/claim-session";
+import { ClaimRetro } from "@/components/retro/claim-retro";
 
 export default async function DashboardPage({
   searchParams,
@@ -272,6 +273,17 @@ export default async function DashboardPage({
               )}
             </Link>
           ))}
+
+          {/* Claim a past retro */}
+          <div className="rounded-md border-2 border-dashed border-border p-3 space-y-1.5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              Claim a past retro
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Ran a retro without signing in? Enter the room code to add it to your history.
+            </p>
+            <ClaimRetro />
+          </div>
         </div>
       </div>
     </div>
