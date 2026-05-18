@@ -73,6 +73,9 @@ interface UseRetroRoomResult {
 
   // Close
   readonly closeRetro: () => void;
+
+  /** True if the automatic DB save after closing failed. Show recovery UI. */
+  readonly saveFailed: boolean;
 }
 
 function generateId(): string {
@@ -90,6 +93,7 @@ export function useRetroRoom({
   const [connected, setConnected] = useState(false);
   const [cursors, setCursors] = useState<ReadonlyMap<string, CursorPosition>>(new Map());
   const [typingParticipantIds, setTypingParticipantIds] = useState<ReadonlyArray<string>>([]);
+  const [saveFailed, setSaveFailed] = useState(false);
   const stateRef = useRef(state);
 
   useEffect(() => {
@@ -146,6 +150,8 @@ export function useRetroRoom({
         });
       } else if (data.type === "typing_update") {
         setTypingParticipantIds(data.participantIds as string[]);
+      } else if (data.type === "save_error") {
+        setSaveFailed(true);
       }
     },
   });
@@ -388,5 +394,6 @@ export function useRetroRoom({
     removeActionItem,
     updateActionItem,
     closeRetro,
+    saveFailed,
   };
 }

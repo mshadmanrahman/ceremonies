@@ -217,9 +217,10 @@ export default class RetroServer implements Party.Server {
 
       // Save to DB when retro closes (teamId optional — anonymous retros save too)
       if (nextState.phase === "closed") {
-        this.saveToDatabase().catch((err) =>
-          console.error("[retro] Failed to save to DB:", err)
-        );
+        this.saveToDatabase().catch((err) => {
+          console.error("[retro] Failed to save to DB:", err);
+          this.room.broadcast(JSON.stringify({ type: "save_error" }));
+        });
       }
     }
   }

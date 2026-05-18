@@ -164,6 +164,7 @@ function RetroRoom({
     typingOthers,
     startTyping,
     stopTyping,
+    saveFailed,
   } = useRetroRoom({ roomId, playerName, clerkUserId });
 
   // Unresolved items from previous retro (groups without action items)
@@ -350,7 +351,7 @@ function RetroRoom({
         )}
 
         {state.phase === "closed" && (
-          <ClosedPhase roomId={roomId} state={state} onDone={onLeave} />
+          <ClosedPhase roomId={roomId} state={state} saveFailed={saveFailed} onDone={onLeave} />
         )}
       </div>
     </div>
@@ -492,15 +493,25 @@ function LobbyPhase({
 function ClosedPhase({
   roomId,
   state,
+  saveFailed,
   onDone,
 }: {
   roomId: string;
   state: RetroState;
+  saveFailed: boolean;
   onDone: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Promote to visible error state as soon as the server signals a save failure
+  useEffect(() => {
+    if (saveFailed && saveStatus === "idle") {
+      setSaveStatus("error");
+      setSaveError("Retro wasn't saved automatically. Use the button below to save it now.");
+    }
+  }, [saveFailed, saveStatus]);
   const stats = getRetroStats(state);
 
   // Build summary text grouped by topic
@@ -590,6 +601,18 @@ function ClosedPhase({
           Great session. Here's your snapshot.
         </p>
       </div>
+
+      {/* Save failure warning */}
+      {saveFailed && saveStatus !== "saved" && (
+        <div className="rounded-md border-2 border-destructive/50 bg-destructive/10 p-3 text-center space-y-2">
+          <p className="text-sm font-bold text-destructive">
+            This retro wasn&apos;t saved to your history.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Click &quot;Save to history&quot; below before leaving this page.
+          </p>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="flex justify-center gap-4">
