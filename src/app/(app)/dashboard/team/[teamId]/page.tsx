@@ -10,8 +10,7 @@ import { InviteMemberDialog } from "@/components/teams/invite-member-dialog";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { OwlIcon } from "@/components/shared/icons";
 import { UserButton } from "@clerk/nextjs";
-import { NavArrowLeft, Check as CheckMark, Sparks } from "iconoir-react";
-import { PlanBadge } from "@/components/billing/upgrade-prompt";
+import { NavArrowLeft, Check as CheckMark } from "iconoir-react";
 import { JiraConnectSection } from "@/components/jira/jira-connect-section";
 
 interface Member {
@@ -24,8 +23,6 @@ interface Member {
 interface TeamData {
   readonly id: string;
   readonly name: string;
-  readonly plan?: "free" | "pro" | null;
-  readonly stripeCustomerId?: string | null;
   readonly members: ReadonlyArray<Member>;
   readonly myRole: string;
 }
@@ -43,7 +40,6 @@ export default function TeamSettingsPage({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [billingLoading, setBillingLoading] = useState(false);
 
   const fetchTeam = useCallback(async () => {
     try {
@@ -100,7 +96,7 @@ export default function TeamSettingsPage({
     setTeam((prev) =>
       prev
         ? { ...prev, members: prev.members.filter((m) => m.userId !== userId) }
-        : null
+        : null,
     );
   }, []);
 
@@ -110,58 +106,12 @@ export default function TeamSettingsPage({
         ? {
             ...prev,
             members: prev.members.map((m) =>
-              m.id === memberId ? { ...m, role: role as Member["role"] } : m
+              m.id === memberId ? { ...m, role: role as Member["role"] } : m,
             ),
           }
-        : null
+        : null,
     );
   }, []);
-
-  const handleUpgrade = useCallback(async () => {
-    setBillingLoading(true);
-    try {
-      const res = await fetch("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        console.error("[billing] Checkout error:", data.error ?? "No URL returned");
-        alert(data.error ?? "Failed to start checkout. Please try again.");
-        setBillingLoading(false);
-      }
-    } catch (err) {
-      console.error("[billing] Checkout failed:", err);
-      alert("Failed to connect to billing. Please try again.");
-      setBillingLoading(false);
-    }
-  }, [teamId]);
-
-  const handleManageBilling = useCallback(async () => {
-    setBillingLoading(true);
-    try {
-      const res = await fetch("/api/billing/portal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        console.error("[billing] Portal error:", data.error);
-        alert(data.error ?? "Failed to open billing portal");
-      }
-    } catch (err) {
-      console.error("[billing] Portal fetch failed:", err);
-      alert("Failed to connect to billing. Please try again.");
-    } finally {
-      setBillingLoading(false);
-    }
-  }, [teamId]);
 
   // Early returns AFTER all hooks
   if (loading) {
@@ -195,7 +145,6 @@ export default function TeamSettingsPage({
           <h1 className="font-display text-2xl tracking-ceremony sm:text-3xl">
             Team Settings
           </h1>
-          {team && <PlanBadge plan={team.plan ?? "free"} />}
         </div>
         <div className="flex items-center gap-3">
           <UserButton />
@@ -257,102 +206,8 @@ export default function TeamSettingsPage({
           <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
             Integrations
           </p>
-          <JiraConnectSection
-            teamId={teamId}
-            isOwner={isOwner}
-            isPro={(team.plan ?? "free") === "pro"}
-          />
+          <JiraConnectSection teamId={teamId} isOwner={isOwner} />
         </div>
-
-        {/* Billing */}
-        {isOwner && (
-          <div className="space-y-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-              Billing
-            </p>
-            {(team.plan ?? "free") === "pro" ? (
-              <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-bold text-primary">Pro plan</p>
-                    <p className="text-xs text-muted-foreground">
-                      $5/user/month
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleManageBilling}
-                    disabled={billingLoading}
-                  >
-                    {billingLoading ? "Loading..." : "Manage billing"}
-                  </Button>
-                </div>
-                <ul className="space-y-1.5 text-xs text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <CheckIcon className="text-primary" /> Unlimited teams
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon className="text-primary" /> Unlimited members
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon className="text-primary" /> Unlimited saved sessions
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon className="text-muted-foreground/50" />
-                    <span className="text-primary/80">Jira integration</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon className="text-muted-foreground/50" />
-                    <span className="text-muted-foreground/60">Team analytics (coming soon)</span>
-                  </li>
-                </ul>
-              </div>
-            ) : (
-              <div className="rounded-md border-2 border-dashed border-border p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-bold">Free plan</p>
-                    <p className="text-xs text-muted-foreground">
-                      Great for trying it out
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={handleUpgrade}
-                    disabled={billingLoading}
-                  >
-                    <Sparks width={14} height={14} />
-                    {billingLoading ? "Loading..." : "Upgrade to Pro"}
-                  </Button>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
-                      Free includes
-                    </p>
-                    <ul className="space-y-1 text-xs text-muted-foreground">
-                      <li>1 team</li>
-                      <li>5 members</li>
-                      <li>10 saved sessions</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-primary mb-1.5">
-                      Pro unlocks
-                    </p>
-                    <ul className="space-y-1 text-xs">
-                      <li className="font-bold">Unlimited teams</li>
-                      <li className="font-bold">Unlimited members</li>
-                      <li className="font-bold">Unlimited sessions</li>
-                      <li className="text-muted-foreground">+ Jira integration</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Danger zone */}
         {isOwner && (
@@ -380,7 +235,17 @@ export default function TeamSettingsPage({
 
 function CheckIcon({ className }: { className?: string }) {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
       <path d="M5 12l5 5L20 7" />
     </svg>
   );

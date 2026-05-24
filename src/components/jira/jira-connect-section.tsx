@@ -14,13 +14,11 @@ interface JiraStatus {
 interface JiraConnectSectionProps {
   readonly teamId: string;
   readonly isOwner: boolean;
-  readonly isPro: boolean;
 }
 
 export function JiraConnectSection({
   teamId,
   isOwner,
-  isPro,
 }: JiraConnectSectionProps) {
   const [status, setStatus] = useState<JiraStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,22 +60,6 @@ export function JiraConnectSection({
     );
   }
 
-  // Not on Pro plan
-  if (!isPro) {
-    return (
-      <div className="rounded-md border-2 border-border bg-card p-4">
-        <h3 className="font-bold">Jira Integration</h3>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Auto-complete tickets and sync estimates back to Jira.
-          Requires Pro plan.
-        </p>
-        <Button variant="outline" className="mt-3" disabled>
-          Upgrade to Pro
-        </Button>
-      </div>
-    );
-  }
-
   // Connected
   if (status?.connected) {
     return (
@@ -98,8 +80,7 @@ export function JiraConnectSection({
             </p>
             {status.connectedAt && (
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Connected{" "}
-                {new Date(status.connectedAt).toLocaleDateString()}
+                Connected {new Date(status.connectedAt).toLocaleDateString()}
               </p>
             )}
           </div>
@@ -123,8 +104,8 @@ export function JiraConnectSection({
     <div className="rounded-md border-2 border-border bg-card p-4">
       <h3 className="font-bold">Jira Integration</h3>
       <p className="mt-2 text-sm text-muted-foreground">
-        Connect Jira to auto-complete tickets in estimation rooms and
-        sync story points back automatically.
+        Connect Jira to auto-complete tickets in estimation rooms and sync story
+        points back automatically.
       </p>
       {isOwner ? (
         <a href={`/api/jira/connect?teamId=${teamId}`}>

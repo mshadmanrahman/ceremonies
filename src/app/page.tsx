@@ -55,12 +55,6 @@ export default function Home() {
         {/* Desktop nav */}
         <nav className="hidden items-center gap-4 md:flex">
           <Link
-            href="#pricing"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Pricing
-          </Link>
-          <Link
             href="https://github.com/mshadmanrahman/ceremonies"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
@@ -226,78 +220,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="relative px-6 py-20 md:px-12">
-        <div className="mx-auto max-w-3xl">
-          <h2 className="text-center font-display text-3xl tracking-ceremony sm:text-4xl">
-            Simple pricing
-          </h2>
-          <p className="mx-auto mt-3 max-w-md text-center text-sm text-muted-foreground">
-            Open source and free to self-host. These plans are for the hosted
-            version at ceremonies.dev.
-          </p>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2">
-            {/* Free tier */}
-            <div className="rounded-xl border-2 border-border bg-card p-6 shadow-hard">
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                Free
-              </p>
-              <p className="mt-2 font-display text-4xl tracking-ceremony">$0</p>
-              <p className="mt-1 text-sm text-muted-foreground">Forever free</p>
-              <div className="my-6 h-px bg-border" />
-              <ul className="space-y-2.5 text-sm">
-                <PricingItem>1 team</PricingItem>
-                <PricingItem>5 members</PricingItem>
-                <PricingItem>10 saved sessions</PricingItem>
-                <PricingItem>Estimation + Retro rooms</PricingItem>
-                <PricingItem>Real-time collaboration</PricingItem>
-              </ul>
-              <div className="mt-6">
-                <LinkButton
-                  href={`/estimation/${estRoom}`}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Get started free
-                </LinkButton>
-              </div>
-            </div>
-            {/* Pro tier */}
-            <div className="relative rounded-xl border-2 border-primary bg-card p-6 shadow-hard">
-              <span className="absolute -top-3 right-4 rounded-md bg-primary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary-foreground">
-                Pro
-              </span>
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
-                Pro
-              </p>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="font-display text-4xl tracking-ceremony">
-                  $5
-                </span>
-                <span className="text-sm text-muted-foreground">/user/mo</span>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                For growing teams
-              </p>
-              <div className="my-6 h-px bg-border" />
-              <ul className="space-y-2.5 text-sm">
-                <PricingItem highlight>Unlimited teams</PricingItem>
-                <PricingItem highlight>Unlimited members</PricingItem>
-                <PricingItem highlight>Unlimited sessions</PricingItem>
-                <PricingItem>Everything in Free</PricingItem>
-                <PricingItem>Jira integration (coming soon)</PricingItem>
-                <PricingItem>Team analytics (coming soon)</PricingItem>
-              </ul>
-              <div className="mt-6">
-                <LinkButton href="/sign-in" className="w-full">
-                  Get started
-                </LinkButton>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Trust strip */}
       <section className="relative px-6 py-12 md:px-12">
         <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-3">
@@ -346,12 +268,6 @@ export default function Home() {
           </div>
           {/* Row 2: nav links */}
           <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-            <Link
-              href="#pricing"
-              className="transition-colors hover:text-foreground"
-            >
-              Pricing
-            </Link>
             <Link
               href="https://github.com/mshadmanrahman/ceremonies"
               className="transition-colors hover:text-foreground"
@@ -478,35 +394,6 @@ function StepCard({
         {description}
       </p>
     </div>
-  );
-}
-
-function PricingItem({
-  children,
-  highlight,
-}: {
-  children: React.ReactNode;
-  highlight?: boolean;
-}) {
-  return (
-    <li className="flex items-center gap-2">
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={highlight ? "text-primary" : "text-muted-foreground"}
-      >
-        <path d="M5 12l5 5L20 7" />
-      </svg>
-      <span className={highlight ? "font-bold" : "text-muted-foreground"}>
-        {children}
-      </span>
-    </li>
   );
 }
 
