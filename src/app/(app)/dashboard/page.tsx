@@ -12,6 +12,7 @@ import {
 import { eq, desc, or, and, isNull } from "drizzle-orm";
 import Link from "next/link";
 import { GhostIcon, OwlIcon } from "@/components/shared/icons";
+import { HalftoneBlob } from "@/components/shared/halftone-blob";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { UserButton } from "@clerk/nextjs";
 import { TeamSelector } from "@/components/teams/team-selector";
@@ -68,7 +69,14 @@ export default async function DashboardPage({
   }
 
   return (
-    <div className="mx-auto min-h-svh max-w-3xl px-4 py-6 sm:py-8">
+    <div className="relative mx-auto min-h-svh max-w-3xl px-4 py-6 sm:py-8">
+      <HalftoneBlob
+        variant="primary"
+        size={380}
+        anim="b"
+        delay={3}
+        className="-top-24 -right-20"
+      />
       {/* Header */}
       <header className="flex items-center justify-between">
         <Link href="/" className="flex items-center gap-1.5">
@@ -103,7 +111,7 @@ export default async function DashboardPage({
         <div className="grid grid-cols-2 gap-3">
           <Link
             href={`/retro/${generateRoomCode()}${currentTeamId ? `?team=${currentTeamId}` : ""}`}
-            className="rounded-md border-2 border-border bg-card p-4 shadow-hard hover-lift"
+            className="rounded-xl border-2 border-border bg-card p-4 shadow-hard hover-lift"
           >
             <GhostIcon size={28} className="text-coffee" />
             <p className="mt-2 text-sm font-bold">New retro</p>
@@ -113,7 +121,7 @@ export default async function DashboardPage({
           </Link>
           <Link
             href={`/estimation/${generateRoomCode()}${currentTeamId ? `?team=${currentTeamId}` : ""}`}
-            className="rounded-md border-2 border-border bg-card p-4 shadow-hard hover-lift"
+            className="rounded-xl border-2 border-border bg-card p-4 shadow-hard hover-lift"
           >
             <OwlIcon size={28} className="text-primary" />
             <p className="mt-2 text-sm font-bold">New estimation</p>
@@ -132,7 +140,7 @@ export default async function DashboardPage({
           </div>
 
           {pastEstimations.length === 0 && (
-            <div className="rounded-md border-2 border-dashed border-border p-8 text-center">
+            <div className="rounded-xl border-2 border-dashed border-border p-8 text-center">
               <OwlIcon size={40} className="mx-auto text-muted-foreground/30" />
               <p className="mt-3 text-sm text-muted-foreground">
                 No estimation sessions yet. Start one above!
@@ -143,7 +151,7 @@ export default async function DashboardPage({
           {pastEstimations.map((session, i) => (
             <div
               key={session.id}
-              className="stagger-in rounded-md border-2 border-border bg-card p-4 shadow-hard-sm"
+              className="stagger-in rounded-xl border-2 border-border bg-card p-4 shadow-hard-sm"
               style={{ animationDelay: `${i * 60}ms` }}
             >
               <div className="flex items-center justify-between">
@@ -210,7 +218,7 @@ export default async function DashboardPage({
           ))}
 
           {/* Claim a past session */}
-          <div className="rounded-md border-2 border-dashed border-border p-3 space-y-1.5">
+          <div className="rounded-xl border-2 border-dashed border-border p-3 space-y-1.5">
             <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
               Claim a past session
             </p>
@@ -229,7 +237,7 @@ export default async function DashboardPage({
           </h2>
 
           {pastRetros.length === 0 && (
-            <div className="rounded-md border-2 border-dashed border-border p-8 text-center">
+            <div className="rounded-xl border-2 border-dashed border-border p-8 text-center">
               <GhostIcon
                 size={40}
                 className="mx-auto text-muted-foreground/30"
@@ -244,7 +252,7 @@ export default async function DashboardPage({
             <Link
               key={retro.id}
               href={`/retro/${retro.roomCode}`}
-              className="stagger-in block rounded-md border-2 border-border bg-card p-4 shadow-hard-sm transition-all hover:border-primary hover:shadow-hard"
+              className="stagger-in block rounded-xl border-2 border-border bg-card p-4 shadow-hard-sm transition-all hover:border-primary hover:shadow-hard"
               style={{ animationDelay: `${i * 60}ms` }}
             >
               <div className="flex items-center justify-between">
@@ -311,7 +319,7 @@ export default async function DashboardPage({
           ))}
 
           {/* Claim a past retro */}
-          <div className="rounded-md border-2 border-dashed border-border p-3 space-y-1.5">
+          <div className="rounded-xl border-2 border-dashed border-border p-3 space-y-1.5">
             <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
               Claim a past retro
             </p>

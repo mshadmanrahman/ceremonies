@@ -3,7 +3,13 @@ import { Show, UserButton } from "@clerk/nextjs";
 import { LinkButton } from "@/components/shared/link-button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { MobileNav } from "@/components/shared/mobile-nav";
-import { OwlIcon, GhostIcon, CardsIcon, CrystalBallIcon } from "@/components/shared/icons";
+import {
+  OwlIcon,
+  GhostIcon,
+  CardsIcon,
+  CrystalBallIcon,
+} from "@/components/shared/icons";
+import { HalftoneBlob } from "@/components/shared/halftone-blob";
 
 function roomCode() {
   return Math.random().toString(36).slice(2, 8);
@@ -18,9 +24,25 @@ export default function Home() {
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.05]"
         style={{
-          backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
+          backgroundImage:
+            "radial-gradient(circle, currentColor 1px, transparent 1px)",
           backgroundSize: "24px 24px",
         }}
+      />
+
+      <HalftoneBlob
+        variant="primary"
+        size={540}
+        anim="a"
+        delay={0}
+        className="-top-20 -right-28"
+      />
+      <HalftoneBlob
+        variant="coffee"
+        size={340}
+        anim="b"
+        delay={8}
+        className="bottom-16 -left-20"
       />
 
       <header className="relative flex items-center justify-between px-6 py-5 md:px-12">
@@ -63,9 +85,18 @@ export default function Home() {
 
       <main className="relative flex flex-1 flex-col items-center justify-center px-6 text-center">
         {/* Floating decorative shapes — gentle drift animations */}
-        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div
+          className="pointer-events-none absolute inset-0"
+          aria-hidden="true"
+        >
           <div className="absolute left-[10%] top-[15%] h-4 w-4 rounded-full border-2 border-primary/20 animate-[drift-a_8s_ease-in-out_infinite]" />
-          <svg className="absolute right-[12%] top-[20%] h-5 w-5 text-coffee/25 animate-[drift-b_10s_ease-in-out_infinite]" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            className="absolute right-[12%] top-[20%] h-5 w-5 text-coffee/25 animate-[drift-b_10s_ease-in-out_infinite]"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="M10 2 L18 18 L2 18 Z" />
           </svg>
           <div className="absolute left-[8%] top-[55%] h-3 w-3 border-2 border-coffee/20 animate-[drift-c_9s_ease-in-out_infinite]" />
@@ -79,13 +110,19 @@ export default function Home() {
           <div className="!mb-0 flex items-center justify-center gap-6">
             <div
               className="-rotate-6 text-primary transition-transform hover:scale-110 hover:-rotate-12"
-              style={{ transitionDuration: "var(--duration-normal)", transitionTimingFunction: "var(--ease-bounce)" }}
+              style={{
+                transitionDuration: "var(--duration-normal)",
+                transitionTimingFunction: "var(--ease-bounce)",
+              }}
             >
               <OwlIcon size={68} />
             </div>
             <div
               className="rotate-6 text-coffee transition-transform hover:scale-110 hover:rotate-12"
-              style={{ transitionDuration: "var(--duration-normal)", transitionTimingFunction: "var(--ease-bounce)" }}
+              style={{
+                transitionDuration: "var(--duration-normal)",
+                transitionTimingFunction: "var(--ease-bounce)",
+              }}
             >
               <GhostIcon size={68} />
             </div>
@@ -121,10 +158,7 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <LinkButton
-              href={`/estimation/${estRoom}`}
-              size="xl"
-            >
+            <LinkButton href={`/estimation/${estRoom}`} size="xl">
               Start estimating
             </LinkButton>
             <LinkButton
@@ -199,11 +233,12 @@ export default function Home() {
             Simple pricing
           </h2>
           <p className="mx-auto mt-3 max-w-md text-center text-sm text-muted-foreground">
-            Open source and free to self-host. These plans are for the hosted version at ceremonies.dev.
+            Open source and free to self-host. These plans are for the hosted
+            version at ceremonies.dev.
           </p>
           <div className="mt-12 grid gap-6 sm:grid-cols-2">
             {/* Free tier */}
-            <div className="rounded-md border-2 border-border bg-card p-6 shadow-hard">
+            <div className="rounded-xl border-2 border-border bg-card p-6 shadow-hard">
               <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
                 Free
               </p>
@@ -218,13 +253,17 @@ export default function Home() {
                 <PricingItem>Real-time collaboration</PricingItem>
               </ul>
               <div className="mt-6">
-                <LinkButton href={`/estimation/${estRoom}`} variant="outline" className="w-full">
+                <LinkButton
+                  href={`/estimation/${estRoom}`}
+                  variant="outline"
+                  className="w-full"
+                >
                   Get started free
                 </LinkButton>
               </div>
             </div>
             {/* Pro tier */}
-            <div className="relative rounded-md border-2 border-primary bg-card p-6 shadow-hard">
+            <div className="relative rounded-xl border-2 border-primary bg-card p-6 shadow-hard">
               <span className="absolute -top-3 right-4 rounded-md bg-primary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary-foreground">
                 Pro
               </span>
@@ -232,10 +271,14 @@ export default function Home() {
                 Pro
               </p>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="font-display text-4xl tracking-ceremony">$5</span>
+                <span className="font-display text-4xl tracking-ceremony">
+                  $5
+                </span>
                 <span className="text-sm text-muted-foreground">/user/mo</span>
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">For growing teams</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                For growing teams
+              </p>
               <div className="my-6 h-px bg-border" />
               <ul className="space-y-2.5 text-sm">
                 <PricingItem highlight>Unlimited teams</PricingItem>
@@ -289,22 +332,62 @@ export default function Home() {
             </div>
             <p className="text-xs text-muted-foreground/60">
               Built with{" "}
-              <span className="inline-block" title="love" aria-label="love"><HeartIcon /></span>
-              {" "}by{" "}
-              <Link href="https://github.com/mshadmanrahman" className="font-bold underline underline-offset-4 transition-colors hover:text-foreground">
+              <span className="inline-block" title="love" aria-label="love">
+                <HeartIcon />
+              </span>{" "}
+              by{" "}
+              <Link
+                href="https://github.com/mshadmanrahman"
+                className="font-bold underline underline-offset-4 transition-colors hover:text-foreground"
+              >
                 Shadman Rahman
               </Link>
             </p>
           </div>
           {/* Row 2: nav links */}
           <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-            <Link href="#pricing" className="transition-colors hover:text-foreground">Pricing</Link>
-            <Link href="https://github.com/mshadmanrahman/ceremonies" className="transition-colors hover:text-foreground">GitHub</Link>
-            <Link href="/dashboard" className="transition-colors hover:text-foreground">Dashboard</Link>
-            <Link href="/sign-in" className="transition-colors hover:text-foreground">Sign in</Link>
-            <Link href="/terms" className="transition-colors hover:text-foreground">Terms</Link>
-            <Link href="/privacy" className="transition-colors hover:text-foreground">Privacy</Link>
-            <Link href="https://github.com/mshadmanrahman/ceremonies/issues/new/choose" className="transition-colors hover:text-foreground">Feedback</Link>
+            <Link
+              href="#pricing"
+              className="transition-colors hover:text-foreground"
+            >
+              Pricing
+            </Link>
+            <Link
+              href="https://github.com/mshadmanrahman/ceremonies"
+              className="transition-colors hover:text-foreground"
+            >
+              GitHub
+            </Link>
+            <Link
+              href="/dashboard"
+              className="transition-colors hover:text-foreground"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/sign-in"
+              className="transition-colors hover:text-foreground"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/terms"
+              className="transition-colors hover:text-foreground"
+            >
+              Terms
+            </Link>
+            <Link
+              href="/privacy"
+              className="transition-colors hover:text-foreground"
+            >
+              Privacy
+            </Link>
+            <Link
+              href="https://github.com/mshadmanrahman/ceremonies/issues/new/choose"
+              className="transition-colors hover:text-foreground"
+            >
+              Feedback
+            </Link>
           </nav>
         </div>
       </footer>
@@ -322,16 +405,17 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="group h-full rounded-md border-2 border-border bg-card p-6 shadow-hard hover-lift">
+    <div className="group h-full rounded-xl border-2 border-border bg-card p-6 shadow-hard hover-lift">
       <div
         className="text-primary transition-transform group-hover:scale-110"
-        style={{ transitionDuration: "var(--duration-normal)", transitionTimingFunction: "var(--ease-bounce)" }}
+        style={{
+          transitionDuration: "var(--duration-normal)",
+          transitionTimingFunction: "var(--ease-bounce)",
+        }}
       >
         {icon}
       </div>
-      <h3 className="mt-4 font-display text-lg tracking-ceremony">
-        {title}
-      </h3>
+      <h3 className="mt-4 font-display text-lg tracking-ceremony">{title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         {description}
       </p>
@@ -341,7 +425,13 @@ function FeatureCard({
 
 function HeartIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="inline -mt-0.5 text-destructive">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="inline -mt-0.5 text-destructive"
+    >
       <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
     </svg>
   );
@@ -349,7 +439,17 @@ function HeartIcon() {
 
 function CoffeeIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="inline -mt-0.5 text-coffee">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="inline -mt-0.5 text-coffee"
+    >
       <path d="M17 8h1a4 4 0 0 1 0 8h-1" />
       <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
       <path d="M6 2v3" />
@@ -374,7 +474,9 @@ function StepCard({
         {step}
       </div>
       <h3 className="mt-4 font-display text-lg tracking-ceremony">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+        {description}
+      </p>
     </div>
   );
 }
@@ -388,10 +490,22 @@ function PricingItem({
 }) {
   return (
     <li className="flex items-center gap-2">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={highlight ? "text-primary" : "text-muted-foreground"}>
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={highlight ? "text-primary" : "text-muted-foreground"}
+      >
         <path d="M5 12l5 5L20 7" />
       </svg>
-      <span className={highlight ? "font-bold" : "text-muted-foreground"}>{children}</span>
+      <span className={highlight ? "font-bold" : "text-muted-foreground"}>
+        {children}
+      </span>
     </li>
   );
 }
@@ -406,7 +520,16 @@ function GitHubIcon() {
 
 function ShieldIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   );
@@ -414,7 +537,16 @@ function ShieldIcon() {
 
 function UsersIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M22 21v-2a4 4 0 0 0-3-3.87" />

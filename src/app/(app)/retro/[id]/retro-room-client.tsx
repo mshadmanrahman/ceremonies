@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { GhostIcon, OwlIcon } from "@/components/shared/icons";
+import { HalftoneBlob } from "@/components/shared/halftone-blob";
 import { ConnectionStatus } from "@/components/shared/connection-status";
 import { PhaseIndicator } from "@/components/retro/phase-indicator";
 import { HauntingPhase } from "@/components/retro/haunting-phase";
@@ -16,7 +17,11 @@ import { GroupingPhase } from "@/components/retro/grouping-phase";
 import { VotingPhase } from "@/components/retro/voting-phase";
 import { DiscussActPhase } from "@/components/retro/discuss-act-phase";
 import { useRetroRoom } from "@/hooks/use-retro-room";
-import { getRetroStats, type RetroState, type CardGroup } from "@/lib/state-machines/retro";
+import {
+  getRetroStats,
+  type RetroState,
+  type CardGroup,
+} from "@/lib/state-machines/retro";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { NavArrowLeft, LogOut, Copy, Check, Download } from "iconoir-react";
@@ -68,7 +73,14 @@ function JoinScreen({
   onJoin: () => void;
 }) {
   return (
-    <div className="flex min-h-svh flex-col px-4">
+    <div className="relative flex min-h-svh flex-col px-4">
+      <HalftoneBlob
+        variant="coffee"
+        size={340}
+        anim="b"
+        delay={5}
+        className="-top-16 -right-16"
+      />
       <div className="px-2 py-5 sm:px-8">
         <Link
           href="/"
@@ -80,7 +92,7 @@ function JoinScreen({
       </div>
 
       <div className="stagger-in mx-auto flex flex-1 w-full max-w-sm flex-col items-center justify-center space-y-8 text-center">
-        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-md border-2 border-coffee/40 bg-coffee/10 text-coffee shadow-hard">
+        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-xl border-2 border-coffee/40 bg-coffee/10 text-coffee shadow-hard">
           <GhostIcon size={52} />
         </div>
 
@@ -168,7 +180,14 @@ function RetroRoom({
   } = useRetroRoom({ roomId, playerName, clerkUserId });
 
   // Unresolved items from previous retro (groups without action items)
-  const [unresolvedItems, setUnresolvedItems] = useState<ReadonlyArray<{ id: string; label: string; category?: string; voteCount?: number }>>([]);
+  const [unresolvedItems, setUnresolvedItems] = useState<
+    ReadonlyArray<{
+      id: string;
+      label: string;
+      category?: string;
+      voteCount?: number;
+    }>
+  >([]);
 
   const myVotesByGroup = useMemo(() => {
     if (!state || !myId) return new Map<string, number>();
@@ -201,7 +220,14 @@ function RetroRoom({
   }
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-4xl flex-col px-4 py-6 sm:py-8">
+    <div className="relative mx-auto flex min-h-svh max-w-4xl flex-col px-4 py-6 sm:py-8">
+      <HalftoneBlob
+        variant="coffee"
+        size={320}
+        anim="b"
+        delay={11}
+        className="-top-20 -right-12"
+      />
       <ConnectionStatus connected={connected} hasState={!!state} />
       {/* Header */}
       <header className="flex items-center justify-between">
@@ -226,7 +252,7 @@ function RetroRoom({
             <span
               className={cn(
                 "inline-block h-2 w-2 rounded-full",
-                connected ? "bg-success" : "bg-destructive animate-pulse"
+                connected ? "bg-success" : "bg-destructive animate-pulse",
               )}
             />
             {isFacilitator && (
@@ -351,7 +377,12 @@ function RetroRoom({
         )}
 
         {state.phase === "closed" && (
-          <ClosedPhase roomId={roomId} state={state} saveFailed={saveFailed} onDone={onLeave} />
+          <ClosedPhase
+            roomId={roomId}
+            state={state}
+            saveFailed={saveFailed}
+            onDone={onLeave}
+          />
         )}
       </div>
     </div>
@@ -372,11 +403,26 @@ function LobbyPhase({
   isFacilitator: boolean;
   participantCount: number;
   participants: ReadonlyArray<{ id: string; name: string }>;
-  onStart: (options?: { teamId?: string; createdBy?: string; previousActions?: ReadonlyArray<import("@/lib/state-machines/retro").PreviousAction> }) => void;
-  onUnresolvedItems: (items: ReadonlyArray<{ id: string; label: string; category?: string; voteCount?: number }>) => void;
+  onStart: (options?: {
+    teamId?: string;
+    createdBy?: string;
+    previousActions?: ReadonlyArray<
+      import("@/lib/state-machines/retro").PreviousAction
+    >;
+  }) => void;
+  onUnresolvedItems: (
+    items: ReadonlyArray<{
+      id: string;
+      label: string;
+      category?: string;
+      voteCount?: number;
+    }>,
+  ) => void;
 }) {
   const { user } = useUser();
-  const [previousActions, setPreviousActions] = useState<ReadonlyArray<import("@/lib/state-machines/retro").PreviousAction>>([]);
+  const [previousActions, setPreviousActions] = useState<
+    ReadonlyArray<import("@/lib/state-machines/retro").PreviousAction>
+  >([]);
   const [loadingActions, setLoadingActions] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -389,20 +435,41 @@ function LobbyPhase({
       .then((data) => {
         if (data.actions?.length > 0) {
           setPreviousActions(
-            data.actions.map((a: { id: string; text: string; assignees: string[]; done: boolean }) => ({
-              id: a.id,
-              text: a.text,
-              assignees: a.assignees ?? [],
-              done: a.done,
-            }))
+            data.actions.map(
+              (a: {
+                id: string;
+                text: string;
+                assignees: string[];
+                done: boolean;
+              }) => ({
+                id: a.id,
+                text: a.text,
+                assignees: a.assignees ?? [],
+                done: a.done,
+              }),
+            ),
           );
         }
         // Collect unresolved items: groups without action items
-        const unresolved: Array<{ id: string; label: string; category?: string; voteCount?: number }> = [];
+        const unresolved: Array<{
+          id: string;
+          label: string;
+          category?: string;
+          voteCount?: number;
+        }> = [];
         if (data.groups?.length > 0) {
-          for (const g of data.groups as Array<{ id: string; label: string; voteCount: number; hasActions: boolean }>) {
+          for (const g of data.groups as Array<{
+            id: string;
+            label: string;
+            voteCount: number;
+            hasActions: boolean;
+          }>) {
             if (!g.hasActions) {
-              unresolved.push({ id: g.id, label: g.label, voteCount: g.voteCount });
+              unresolved.push({
+                id: g.id,
+                label: g.label,
+                voteCount: g.voteCount,
+              });
             }
           }
         }
@@ -433,8 +500,8 @@ function LobbyPhase({
           Ready for retro?
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          {participantCount} participant{participantCount !== 1 ? "s" : ""}{" "}
-          in the room
+          {participantCount} participant{participantCount !== 1 ? "s" : ""} in
+          the room
         </p>
       </div>
 
@@ -455,7 +522,8 @@ function LobbyPhase({
         <div className="rounded-md border-2 border-coffee/30 bg-coffee/5 p-3 text-left">
           <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-coffee mb-2">
             <GhostIcon size={12} className="inline mr-1" />
-            {previousActions.length} action item{previousActions.length !== 1 ? "s" : ""} from last retro
+            {previousActions.length} action item
+            {previousActions.length !== 1 ? "s" : ""} from last retro
           </p>
           {previousActions.slice(0, 3).map((a) => (
             <p key={a.id} className="text-xs text-muted-foreground truncate">
@@ -502,14 +570,18 @@ function ClosedPhase({
   onDone: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Promote to visible error state as soon as the server signals a save failure
   useEffect(() => {
     if (saveFailed && saveStatus === "idle") {
       setSaveStatus("error");
-      setSaveError("Retro wasn't saved automatically. Use the button below to save it now.");
+      setSaveError(
+        "Retro wasn't saved automatically. Use the button below to save it now.",
+      );
     }
   }, [saveFailed, saveStatus]);
   const stats = getRetroStats(state);
@@ -533,7 +605,9 @@ function ClosedPhase({
     const actions = state.actionItems.filter((a) => a.groupId === group.id);
     summaryLines.push(`## ${group.label} (${group.voteCount} votes)`);
     for (const a of actions) {
-      summaryLines.push(`  - [ ] ${a.text}${a.assignees.length > 0 ? ` (${a.assignees.join(", ")})` : ""}`);
+      summaryLines.push(
+        `  - [ ] ${a.text}${a.assignees.length > 0 ? ` (${a.assignees.join(", ")})` : ""}`,
+      );
     }
     summaryLines.push("");
   }
@@ -541,7 +615,9 @@ function ClosedPhase({
   if (generalActions.length > 0) {
     summaryLines.push("## General");
     for (const a of generalActions) {
-      summaryLines.push(`  - [ ] ${a.text}${a.assignees.length > 0 ? ` (${a.assignees.join(", ")})` : ""}`);
+      summaryLines.push(
+        `  - [ ] ${a.text}${a.assignees.length > 0 ? ` (${a.assignees.join(", ")})` : ""}`,
+      );
     }
   }
   const summaryText = summaryLines.join("\n");
@@ -564,9 +640,12 @@ function ClosedPhase({
           group?.label ?? "General",
           String(group?.voteCount ?? 0),
         ];
-      })
+      }),
     );
-    downloadCSV(csv, `retro-actions-${new Date().toISOString().slice(0, 10)}.csv`);
+    downloadCSV(
+      csv,
+      `retro-actions-${new Date().toISOString().slice(0, 10)}.csv`,
+    );
   }, [state]);
 
   const handleSaveToHistory = useCallback(async () => {
@@ -579,7 +658,11 @@ function ClosedPhase({
         body: JSON.stringify({ roomCode: roomId, state }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: `HTTP ${res.status}` })) as { error?: string };
+        const data = (await res
+          .json()
+          .catch(() => ({ error: `HTTP ${res.status}` }))) as {
+          error?: string;
+        };
         throw new Error(data.error ?? `HTTP ${res.status}`);
       }
       setSaveStatus("saved");
@@ -626,7 +709,10 @@ function ClosedPhase({
         const actions = state.actionItems.filter((a) => a.groupId === group.id);
         if (group.voteCount === 0 && actions.length === 0) return null;
         return (
-          <div key={group.id} className="rounded-md border-2 border-border bg-card p-4 shadow-hard-sm">
+          <div
+            key={group.id}
+            className="rounded-md border-2 border-border bg-card p-4 shadow-hard-sm"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/15 font-mono text-[10px] font-bold text-primary">
@@ -642,7 +728,10 @@ function ClosedPhase({
               <div className="mt-3 space-y-1.5">
                 {actions.map((item) => (
                   <div key={item.id} className="flex items-start gap-2 text-sm">
-                    <GhostIcon size={14} className="mt-0.5 shrink-0 text-coffee" />
+                    <GhostIcon
+                      size={14}
+                      className="mt-0.5 shrink-0 text-coffee"
+                    />
                     <div>
                       <span className="font-medium">{item.text}</span>
                       {item.assignees.length > 0 && (
@@ -666,7 +755,10 @@ function ClosedPhase({
             General action items
           </p>
           {generalActions.map((item) => (
-            <div key={item.id} className="flex items-start gap-2 text-sm mb-1.5">
+            <div
+              key={item.id}
+              className="flex items-start gap-2 text-sm mb-1.5"
+            >
               <GhostIcon size={14} className="mt-0.5 shrink-0 text-coffee" />
               <span className="font-medium">{item.text}</span>
               {item.assignees.length > 0 && (
@@ -684,9 +776,13 @@ function ClosedPhase({
         <div className="grid grid-cols-2 gap-3">
           <Button onClick={handleCopy} variant="outline">
             {copied ? (
-              <><Check width={16} height={16} /> Copied!</>
+              <>
+                <Check width={16} height={16} /> Copied!
+              </>
             ) : (
-              <><Copy width={16} height={16} /> Copy summary</>
+              <>
+                <Copy width={16} height={16} /> Copy summary
+              </>
             )}
           </Button>
           {state.actionItems.length > 0 && (
@@ -732,4 +828,3 @@ function StatBox({ value, label }: { value: number; label: string }) {
     </div>
   );
 }
-

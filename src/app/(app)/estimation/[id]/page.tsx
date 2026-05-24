@@ -20,6 +20,7 @@ import {
 } from "@/lib/state-machines/estimation";
 import { cn } from "@/lib/utils";
 import { OwlIcon } from "@/components/shared/icons";
+import { HalftoneBlob } from "@/components/shared/halftone-blob";
 import { ConnectionStatus } from "@/components/shared/connection-status";
 import { TicketInput } from "@/components/estimation/ticket-input";
 import Link from "next/link";
@@ -120,7 +121,14 @@ function JoinScreen({
   onJoin: () => void;
 }) {
   return (
-    <div className="flex min-h-svh flex-col px-4">
+    <div className="relative flex min-h-svh flex-col px-4">
+      <HalftoneBlob
+        variant="primary"
+        size={340}
+        anim="b"
+        delay={6}
+        className="-top-16 -right-16"
+      />
       {/* Back link */}
       <div className="px-2 py-5 sm:px-8">
         <Link
@@ -134,7 +142,7 @@ function JoinScreen({
 
       <div className="stagger-in mx-auto flex flex-1 w-full max-w-sm flex-col items-center justify-center space-y-8 text-center">
         {/* Owl mascot */}
-        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-md border-2 border-primary/40 bg-primary/10 text-primary shadow-hard">
+        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-xl border-2 border-primary/40 bg-primary/10 text-primary shadow-hard">
           <OwlIcon size={52} />
         </div>
 
@@ -328,7 +336,14 @@ function EstimationRoom({
     : null;
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-3xl flex-col px-4 py-6 sm:py-8">
+    <div className="relative mx-auto flex min-h-svh max-w-3xl flex-col px-4 py-6 sm:py-8">
+      <HalftoneBlob
+        variant="primary"
+        size={320}
+        anim="b"
+        delay={9}
+        className="-top-20 -right-12"
+      />
       <ConnectionStatus connected={connected} hasState={!!state} />
       {/* Header */}
       <header className="flex items-center justify-between">
