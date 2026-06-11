@@ -88,9 +88,12 @@ export default class RetroServer implements Party.Server {
 
     // Assign the facilitator when a room/session starts. After that,
     // facilitation only changes via an explicit TRANSFER_FACILITATION event.
-    // Do not promote later joiners, including the room creator, while another
-    // facilitator is already assigned.
-    if (!this.state.facilitatorId || isFirstActiveConnection) {
+    // Allow creator-reclaim on the first reconnect only when no explicit
+    // transfer has been made (facilitatorLocked is false/undefined).
+    if (
+      !this.state.facilitatorId ||
+      (isFirstActiveConnection && !this.state.facilitatorLocked)
+    ) {
       this.state = { ...this.state, facilitatorId: participantId };
     }
 

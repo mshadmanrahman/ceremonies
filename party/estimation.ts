@@ -60,7 +60,7 @@ export default class EstimationServer implements Party.Server {
     // facilitation only changes via an explicit TRANSFER_FACILITATION event.
     // In particular, do not promote a later joiner just because the facilitator
     // is briefly reconnecting.
-    if (!this.state.facilitatorId || isFirstActiveConnection) {
+    if (!this.state.facilitatorId) {
       this.state = { ...this.state, facilitatorId: participantId };
     }
 
@@ -72,7 +72,7 @@ export default class EstimationServer implements Party.Server {
         type: "sync",
         state: this.state,
         you: participantId,
-      })
+      }),
     );
 
     // Broadcast updated state to everyone
@@ -105,7 +105,7 @@ export default class EstimationServer implements Party.Server {
         })
           .then(() => {
             this.room.broadcast(
-              JSON.stringify({ type: "save_result", status: "saved" })
+              JSON.stringify({ type: "save_result", status: "saved" }),
             );
           })
           .catch((err) => {
@@ -115,7 +115,7 @@ export default class EstimationServer implements Party.Server {
                 type: "save_result",
                 status: "error",
                 error: String(err),
-              })
+              }),
             );
           });
       }
@@ -129,7 +129,7 @@ export default class EstimationServer implements Party.Server {
         JSON.stringify({
           type: "nudge",
           from: connState?.participantName ?? "Someone",
-        })
+        }),
       );
       return;
     }
@@ -202,7 +202,8 @@ export default class EstimationServer implements Party.Server {
   }
 
   private async saveToDatabase(data: Record<string, unknown>) {
-    const apiHost = (this.room.env.NEXT_PUBLIC_APP_URL as string) ?? "http://localhost:3456";
+    const apiHost =
+      (this.room.env.NEXT_PUBLIC_APP_URL as string) ?? "http://localhost:3456";
     const secret = (this.room.env.INTERNAL_API_SECRET as string) ?? "";
     const res = await fetch(`${apiHost}/api/estimation/save`, {
       method: "POST",
@@ -223,7 +224,9 @@ export default class EstimationServer implements Party.Server {
       throw new Error(`Save failed (${res.status}): ${text}`);
     }
     const result = await res.json();
-    console.log(`[estimation] Saved session ${result.sessionId} for room ${this.room.id}`);
+    console.log(
+      `[estimation] Saved session ${result.sessionId} for room ${this.room.id}`,
+    );
   }
 
   private isParticipantConnected(participantId: string): boolean {
