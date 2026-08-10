@@ -163,6 +163,20 @@ For contributors and the technically curious.
 
 ---
 
+## What went wrong and what I learned
+
+Three Jira columns were added to the `estimation_results` schema in April. The migration was never pushed to production.
+
+The deploy carrying the new schema went out on the 19th. Drizzle's `select()` enumerates every column it knows about, Postgres rejected the query with "column does not exist", and an outer `try/catch` in `dashboard/page.tsx` carrying the comment "DB might not be ready" swallowed it. Every signed-in user saw zero sessions for eleven days.
+
+The reported symptom was "my history is gone". That points straight at data loss. Nothing was lost. Every row was intact the entire time and the dashboard could not read them. Trusting the symptom would have meant restoring backups over healthy data.
+
+Two more bugs were sitting behind it. Some rows carried a literal placeholder string where a real identifier belonged, and one person had two teams because the same email registered against a test Clerk namespace and a live one, both pointing at the same database.
+
+The pattern worth taking: a catch block with a reassuring comment is where bugs go to live. "DB might not be ready" was written for local startup and it silently absorbed a production schema mismatch for a week and a half.
+
+This repo has a second instance of the same shape. `retros.created_by` was `NOT NULL`, retros started before Clerk finished loading had a null `createdBy`, and the save path was `saveToDatabase().catch(err => console.error(...))`. Fire and forget. The retros table was globally empty for three weeks with no user-visible signal. The fix that mattered was not the null check. It was broadcasting `save_error` back to connected clients so a failed write is visible to the person who caused it.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and PR guidelines.
