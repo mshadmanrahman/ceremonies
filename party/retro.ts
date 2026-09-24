@@ -78,8 +78,6 @@ export default class RetroServer implements Party.Server {
       userId,
     } satisfies ConnectionState);
 
-    const isFirstActiveConnection = [...this.room.getConnections()].length <= 1;
-
     // Add participant
     this.state = transition(this.state, {
       type: "PARTICIPANT_JOIN",
@@ -88,11 +86,14 @@ export default class RetroServer implements Party.Server {
 
     // Assign the facilitator when a room/session starts. After that,
     // facilitation only changes via an explicit TRANSFER_FACILITATION event.
-    // Allow creator-reclaim on the first reconnect only when no explicit
-    // transfer has been made (facilitatorLocked is false/undefined).
+    // The retro's creator (matched by Clerk userId) may reclaim it on reconnect,
+    // unless an explicit transfer has been made. Never hand it to whoever
+    // happens to reconnect first after every socket drops.
+    const isCreator =
+      userId !== null && userId === this.state.createdBy;
     if (
       !this.state.facilitatorId ||
-      (isFirstActiveConnection && !this.state.facilitatorLocked)
+      (isCreator && !this.state.facilitatorLocked)
     ) {
       this.state = { ...this.state, facilitatorId: participantId };
     }
