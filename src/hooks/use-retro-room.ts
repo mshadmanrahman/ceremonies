@@ -9,6 +9,8 @@ import type {
   CursorPosition,
   PreviousAction,
 } from "@/lib/state-machines/retro";
+import { canClaimFacilitation } from "@/lib/state-machines/retro";
+import { rememberRoom } from "@/lib/recent-rooms";
 
 interface UseRetroRoomOptions {
   readonly roomId: string;
@@ -92,6 +94,16 @@ interface UseRetroRoomResult {
   // Facilitation transfer
   readonly transferFacilitation: (targetId: string) => void;
 
+  // Pause and resume
+  readonly pauseRetro: () => void;
+  readonly resumeRetro: () => void;
+
+  /** True when the facilitator is offline. */
+  readonly facilitatorAway: boolean;
+  /** True when this participant may take over facilitation right now. */
+  readonly canClaim: boolean;
+  readonly claimFacilitation: () => void;
+
   /** True if the automatic DB save after closing failed. Show recovery UI. */
   readonly saveFailed: boolean;
 }
@@ -121,6 +133,14 @@ export function useRetroRoom({
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  // Remember this room so the homepage can offer it again later.
+  const phase = state?.phase;
+  const paused = Boolean(state?.paused);
+  useEffect(() => {
+    if (!phase) return;
+    rememberRoom({ id: roomId, phase, paused });
+  }, [roomId, phase, paused]);
 
   // Persist anonymousId across reconnects so the user keeps ownership of their cards
   const persistedAnonId = (() => {
@@ -394,7 +414,40 @@ export function useRetroRoom({
     [send, myId],
   );
 
+  const pauseRetro = useCallback(() => {
+    send({ type: "PAUSE_RETRO", facilitatorId: myId });
+  }, [send, myId]);
+
+  const resumeRetro = useCallback(() => {
+    send({ type: "RESUME_RETRO", facilitatorId: myId });
+  }, [send, myId]);
+
+  const claimFacilitation = useCallback(() => {
+    // The server overwrites both fields with the sender's ID and its own clock.
+    send({ type: "CLAIM_FACILITATION", participantId: myId, now: Date.now() });
+  }, [send, myId]);
+
   const isFacilitator = Boolean(myId && state && state.facilitatorId === myId);
+
+  const facilitatorAway = Boolean(
+    state &&
+      state.phase !== "closed" &&
+      state.facilitatorId &&
+      !state.participants.some((p) => p.id === state.facilitatorId),
+  );
+
+  // Re-check claim eligibility every few seconds while the facilitator is away,
+  // so the button appears once the grace period passes.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!facilitatorAway) return;
+    const id = setInterval(() => setNow(Date.now()), 5000);
+    return () => clearInterval(id);
+  }, [facilitatorAway]);
+
+  const canClaim = Boolean(
+    myId && state && canClaimFacilitation(state, myId, now),
+  );
 
   // Count participants typing, excluding self. Never includes names.
   const typingOthers = typingParticipantIds.filter((id) => id !== myId).length;
@@ -432,6 +485,11 @@ export function useRetroRoom({
     removeActionItem,
     updateActionItem,
     transferFacilitation,
+    pauseRetro,
+    resumeRetro,
+    facilitatorAway,
+    canClaim,
+    claimFacilitation,
     closeRetro,
     saveFailed,
   };

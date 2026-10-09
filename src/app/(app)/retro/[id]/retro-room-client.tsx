@@ -12,6 +12,11 @@ import { HalftoneBlob } from "@/components/shared/halftone-blob";
 import { ConnectionStatus } from "@/components/shared/connection-status";
 import { TransferFacilitationDialog } from "@/components/shared/transfer-facilitation-dialog";
 import { PhaseIndicator } from "@/components/retro/phase-indicator";
+import {
+  PauseButton,
+  PausedBanner,
+  FacilitatorAwayBanner,
+} from "@/components/retro/pause-controls";
 import { HauntingPhase } from "@/components/retro/haunting-phase";
 import { WritingPhase } from "@/components/retro/writing-phase";
 import { GroupingPhase } from "@/components/retro/grouping-phase";
@@ -175,6 +180,11 @@ function RetroRoom({
     updateActionItem,
     closeRetro,
     transferFacilitation,
+    pauseRetro,
+    resumeRetro,
+    facilitatorAway,
+    canClaim,
+    claimFacilitation,
     typingOthers,
     startTyping,
     stopTyping,
@@ -268,6 +278,12 @@ function RetroRoom({
                   onTransfer={transferFacilitation}
                   accent="coffee"
                 />
+                {state.phase !== "lobby" && state.phase !== "closed" && (
+                  <PauseButton
+                    paused={Boolean(state.paused)}
+                    onPause={pauseRetro}
+                  />
+                )}
               </>
             )}
           </div>
@@ -299,8 +315,21 @@ function RetroRoom({
       {/* Divider */}
       <div className="my-5 h-0.5 bg-border" />
 
-      {/* Phase content */}
-      <div className="relative z-10 flex-1">
+      {state.paused && state.phase !== "closed" && (
+        <PausedBanner isFacilitator={isFacilitator} onResume={resumeRetro} />
+      )}
+      {facilitatorAway && !isFacilitator && (
+        <FacilitatorAwayBanner canClaim={canClaim} onClaim={claimFacilitation} />
+      )}
+
+      {/* Phase content (read-only while paused; the server ignores edits too) */}
+      <div
+        className={cn(
+          "relative z-10 flex-1",
+          state.paused && state.phase !== "closed" && "pointer-events-none opacity-60",
+        )}
+        inert={state.paused && state.phase !== "closed" ? true : undefined}
+      >
         {state.phase === "lobby" && (
           <LobbyPhase
             teamId={teamId}

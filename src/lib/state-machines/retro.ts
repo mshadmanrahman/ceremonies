@@ -103,6 +103,8 @@ export interface RetroState {
   readonly rankedGroupIds: ReadonlyArray<string>; // groups sorted by votes for discussion
   readonly renamedLabels: Readonly<Record<string, string>>; // fingerprint(cardIds) → user label
   readonly facilitatorLocked?: boolean; // true after an explicit TRANSFER_FACILITATION — suppresses creator-reclaim
+  readonly paused?: boolean; // facilitator paused the retro; anyone can resume it later from the room link
+  readonly facilitatorAwaySince?: number | null; // when the facilitator's last connection dropped; null while connected
 }
 
 // ── Events ──
@@ -148,7 +150,23 @@ export type RetroEvent =
       assignees?: ReadonlyArray<string>;
     }
   | { type: "CLOSE_RETRO"; facilitatorId: string }
-  | { type: "TRANSFER_FACILITATION"; targetId: string; facilitatorId: string };
+  | { type: "TRANSFER_FACILITATION"; targetId: string; facilitatorId: string }
+  | { type: "PAUSE_RETRO"; facilitatorId: string }
+  | { type: "RESUME_RETRO"; facilitatorId: string }
+  | { type: "CLAIM_FACILITATION"; participantId: string; now: number };
+
+/** How long the facilitator must be offline before someone else can claim facilitation. */
+export const CLAIM_GRACE_MS = 60_000;
+
+/** Events still accepted while a retro is paused. Everything else is ignored. */
+const ALLOWED_WHILE_PAUSED: ReadonlySet<RetroEvent["type"]> = new Set([
+  "PARTICIPANT_JOIN",
+  "PARTICIPANT_LEAVE",
+  "RESUME_RETRO",
+  "CLAIM_FACILITATION",
+  "TRANSFER_FACILITATION",
+  "CLOSE_RETRO",
+]);
 
 // ── Initial State ──
 
@@ -235,6 +253,7 @@ function nextPhase(current: RetroPhase): RetroPhase | null {
 // ── Transition ──
 
 export function transition(state: RetroState, event: RetroEvent): RetroState {
+  if (state.paused && !ALLOWED_WHILE_PAUSED.has(event.type)) return state;
   switch (event.type) {
     case "PARTICIPANT_JOIN": {
       const exists = state.participants.some(
@@ -594,12 +613,65 @@ export function transition(state: RetroState, event: RetroEvent): RetroState {
       };
     }
 
+    case "PAUSE_RETRO": {
+      if (!isFacilitator(state, event.facilitatorId)) return state;
+      if (state.phase === "lobby" || state.phase === "closed") return state;
+      if (state.paused) return state;
+      return {
+        ...state,
+        paused: true,
+        discussion: { ...state.discussion, timerRunning: false },
+      };
+    }
+
+    case "RESUME_RETRO": {
+      if (!isFacilitator(state, event.facilitatorId)) return state;
+      if (!state.paused) return state;
+      return { ...state, paused: false };
+    }
+
+    case "CLAIM_FACILITATION": {
+      if (!canClaimFacilitation(state, event.participantId, event.now)) {
+        return state;
+      }
+      return {
+        ...state,
+        facilitatorId: event.participantId,
+        facilitatorLocked: true,
+        facilitatorAwaySince: null,
+      };
+    }
+
     default:
       return state;
   }
 }
 
 // ── Utilities ──
+
+/**
+ * A participant may take over facilitation when the facilitator has been
+ * offline for at least CLAIM_GRACE_MS. Rooms that predate the away timestamp
+ * (undefined) with an offline facilitator are claimable straight away.
+ */
+export function canClaimFacilitation(
+  state: RetroState,
+  participantId: string,
+  now: number,
+): boolean {
+  if (state.phase === "closed") return false;
+  if (!state.facilitatorId || state.facilitatorId === participantId) {
+    return false;
+  }
+  if (!state.participants.some((p) => p.id === participantId)) return false;
+  const facilitatorOnline = state.participants.some(
+    (p) => p.id === state.facilitatorId,
+  );
+  if (facilitatorOnline) return false;
+  const awaySince = state.facilitatorAwaySince;
+  if (awaySince == null) return awaySince === undefined;
+  return now - awaySince >= CLAIM_GRACE_MS;
+}
 
 export function getCardsByCategory(
   cards: ReadonlyArray<RetroCard>,

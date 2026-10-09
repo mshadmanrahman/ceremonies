@@ -100,6 +100,11 @@ export class RetroServer extends Server<Env> {
       this.state = { ...this.state, facilitatorId: participantId };
     }
 
+    // The facilitator is back, so nobody may claim facilitation now.
+    if (this.state.facilitatorId === participantId) {
+      this.state = { ...this.state, facilitatorAwaySince: null };
+    }
+
     await this.persist();
 
     // Send full state + identity to new connection
@@ -199,6 +204,11 @@ export class RetroServer extends Server<Env> {
       event = { ...event, facilitatorId: connState.participantId };
     }
 
+    // Claims use the sender's real ID and the server clock, never the client's
+    if (event.type === "CLAIM_FACILITATION") {
+      event = { ...event, participantId: connState.participantId, now: Date.now() };
+    }
+
     const nextState = transition(this.state, event);
 
     if (nextState !== this.state) {
@@ -253,6 +263,10 @@ export class RetroServer extends Server<Env> {
           type: "PARTICIPANT_LEAVE",
           participantId: connState.participantId,
         });
+        // Start the claim clock once the facilitator's last socket is gone.
+        if (connState.participantId === this.state.facilitatorId) {
+          this.state = { ...this.state, facilitatorAwaySince: Date.now() };
+        }
       }
 
       // Do not auto-transfer facilitation when the facilitator disconnects.
