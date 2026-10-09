@@ -189,6 +189,10 @@ export class EstimationServer extends Server<Env> {
     if (req.method === "POST") {
       const body = (await req.json()) as { action?: string };
       if (body.action === "reset") {
+        const secret = this.env.INTERNAL_API_SECRET;
+        if (!secret || req.headers.get("X-Internal-Secret") !== secret) {
+          return new Response("Unauthorized", { status: 401 });
+        }
         this.state = createInitialState("");
         await this.persist();
         this.broadcastState();
