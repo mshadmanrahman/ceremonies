@@ -171,11 +171,11 @@ export function WritingPhase({
 
         {/* Anonymous typing indicator: shows when others are typing. Never shows names. */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 h-4">
+          <div className="flex items-center gap-1.5 h-5">
             {typingOthers > 0 && (
               <>
                 <span className="typing-dot" />
-                <span className="text-[11px] font-medium text-muted-foreground opacity-70">
+                <span className="text-sm font-medium text-muted-foreground">
                   Someone is typing...
                 </span>
               </>
