@@ -88,9 +88,14 @@ export class RetroServer extends Server<Env> {
     // happens to reconnect first after every socket drops.
     const isCreator =
       userId !== null && userId === this.state.createdBy;
+    // The creator reclaims facilitation on join (e.g. from a new device),
+    // unless it was explicitly handed off, or one of the creator's own live
+    // connections already holds it (a second tab must not steal from the first).
     if (
       !this.state.facilitatorId ||
-      (isCreator && !this.state.facilitatorLocked)
+      (isCreator &&
+        !this.state.facilitatorLocked &&
+        !this.isCreatorConnectedAsFacilitator(conn.id))
     ) {
       this.state = { ...this.state, facilitatorId: participantId };
     }
@@ -273,6 +278,32 @@ export class RetroServer extends Server<Env> {
         this.broadcastState();
         return new Response("OK");
       }
+      // Restore a room exported from another host (e.g. the old PartyKit deploy).
+      if (body.action === "import") {
+        const secret = this.env.INTERNAL_API_SECRET;
+        if (!secret || req.headers.get("X-Internal-Secret") !== secret) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+        const saved = (body as { state?: RetroState }).state;
+        if (!saved?.phase) {
+          return new Response("Missing state", { status: 400 });
+        }
+        this.state = {
+          ...saved,
+          cardPositions: saved.cardPositions ?? {},
+          renamedLabels: saved.renamedLabels ?? {},
+        };
+        this.stopTimerInterval();
+        if (
+          this.state.phase === "discussing" &&
+          this.state.discussion.timerRunning
+        ) {
+          this.startTimerInterval();
+        }
+        await this.persist();
+        this.broadcastState();
+        return new Response("OK");
+      }
     }
     return new Response("Not found", { status: 404 });
   }
@@ -340,6 +371,22 @@ export class RetroServer extends Server<Env> {
   }
 
   // ── Helpers ──
+
+  /** True when the facilitator is a live connection (other than `excludeId`) owned by the creator. */
+  private isCreatorConnectedAsFacilitator(excludeId: string): boolean {
+    for (const conn of this.getConnections()) {
+      if (conn.id === excludeId) continue;
+      const cs = conn.state as ConnectionState | undefined;
+      if (
+        cs?.participantId === this.state.facilitatorId &&
+        cs.userId !== null &&
+        cs.userId === this.state.createdBy
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   private isParticipantConnected(participantId: string): boolean {
     for (const conn of this.getConnections()) {
