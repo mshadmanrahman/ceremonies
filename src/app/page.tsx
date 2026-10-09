@@ -10,6 +10,7 @@ import {
   CrystalBallIcon,
 } from "@/components/shared/icons";
 import { HalftoneBlob } from "@/components/shared/halftone-blob";
+import { RecentRooms } from "@/components/shared/recent-rooms";
 
 function roomCode() {
   return Math.random().toString(36).slice(2, 8);
@@ -162,6 +163,10 @@ export default function Home() {
             >
               Run a retro
             </LinkButton>
+          </div>
+
+          <div className="flex justify-center">
+            <RecentRooms />
           </div>
         </div>
 
