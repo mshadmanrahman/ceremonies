@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ceremonies-live",
+  "main": "party/server.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      // Binding names become the /parties/:party/:room segment (kebab-cased):
+      // Main -> "main" (estimation), Retro -> "retro".
+      { "name": "Main", "class_name": "EstimationServer" },
+      { "name": "Retro", "class_name": "RetroServer" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["EstimationServer", "RetroServer"] }
+  ],
+  "vars": {
+    "NEXT_PUBLIC_APP_URL": "https://ceremonies.dev"
+  },
+  // INTERNAL_API_SECRET is a secret: `npx wrangler secret put INTERNAL_API_SECRET`.
+  // Locally, wrangler dev reads it from .env.local.
+  "dev": { "port": 1999 }
+}

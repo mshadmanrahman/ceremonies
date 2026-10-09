@@ -118,13 +118,13 @@ If your team runs ceremonies in Miro or FigJam, you're using the wrong tool for 
 
 Ceremonies is MIT-licensed and designed to be self-hosted.
 
-### Vercel + PartyKit Cloud (recommended)
+### Vercel + Cloudflare (recommended)
 
 1. Fork this repo
 2. Import to [Vercel](https://vercel.com/new)
 3. Add environment variables (Clerk keys, Neon database URL  - see `.env.example`)
-4. Deploy PartyKit: `npx partykit deploy`
-5. Set `NEXT_PUBLIC_PARTYKIT_HOST` to your PartyKit deployment URL
+4. Deploy the real-time server to your Cloudflare account (Workers free plan works): `npx wrangler login`, then `npx wrangler secret put INTERNAL_API_SECRET` and `npm run deploy:party`
+5. Set `NEXT_PUBLIC_PARTYKIT_HOST` to the Worker host (for example `ceremonies-live.<subdomain>.workers.dev`), and `NEXT_PUBLIC_APP_URL` in `wrangler.jsonc` to your app URL
 
 ### Run locally
 
@@ -138,7 +138,7 @@ npm run db:push
 npm run dev
 ```
 
-Opens at [http://localhost:3456](http://localhost:3456). PartyKit runs on `:1999` in parallel.
+Opens at [http://localhost:3456](http://localhost:3456). The PartyServer worker runs on `:1999` in parallel.
 
 **Prerequisites:** Node.js 20+, a [Clerk](https://clerk.com) account (free tier), a [Neon](https://neon.tech) database (free tier).
 
@@ -156,10 +156,10 @@ For contributors and the technically curious.
 |-------|-----------|
 | Framework | Next.js 16 (App Router, Turbopack) |
 | UI | shadcn/ui + Tailwind CSS v4 |
-| Real-time | PartyKit (WebSocket rooms) |
+| Real-time | PartyServer on Cloudflare Durable Objects (WebSocket rooms) |
 | Auth | Clerk (Google + GitHub SSO) |
 | Database | Neon Postgres + Drizzle ORM |
-| Deploy | Vercel + PartyKit Cloud |
+| Deploy | Vercel + Cloudflare Workers |
 
 ---
 

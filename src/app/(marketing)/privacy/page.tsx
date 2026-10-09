@@ -99,10 +99,10 @@ export default function PrivacyPage() {
               </a>
             </li>
             <li>
-              <span className="font-bold text-foreground">PartyKit</span>{" "}
+              <span className="font-bold text-foreground">Cloudflare</span>{" "}
               (real-time):{" "}
-              <a href="https://partykit.io/privacy" className="underline underline-offset-4 hover:text-foreground">
-                partykit.io/privacy
+              <a href="https://www.cloudflare.com/privacypolicy/" className="underline underline-offset-4 hover:text-foreground">
+                cloudflare.com/privacypolicy
               </a>
             </li>
           </ul>

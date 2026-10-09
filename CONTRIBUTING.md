@@ -25,15 +25,17 @@ npm run dev
 
 This starts:
 - Next.js dev server on port 3456
-- PartyKit dev server on port 1999
+- PartyServer worker (`wrangler dev`) on port 1999
 
 ### Available Scripts
 
 | Command | What it does |
 |---------|-------------|
-| `npm run dev` | Start both Next.js + PartyKit |
+| `npm run dev` | Start both Next.js + PartyServer |
 | `npm run dev:next` | Start only Next.js (port 3456) |
-| `npm run dev:party` | Start only PartyKit (port 1999) |
+| `npm run dev:party` | Start only the PartyServer worker (port 1999) |
+| `npm run typecheck:party` | Typecheck the worker in `party/` |
+| `npm run deploy:party` | Deploy the worker to Cloudflare |
 | `npm run build` | Production build |
 | `npm run lint` | Run ESLint |
 | `npm run db:push` | Push Drizzle schema to Neon |
@@ -55,13 +57,13 @@ This starts:
 
 Ceremony flows are driven by state machines in `src/lib/state-machines/`. Each ceremony has defined phases with explicit transitions. Changes to ceremony flow should start by updating the state machine.
 
-### Real-time (PartyKit)
+### Real-time (PartyServer)
 
-WebSocket servers live in `party/`. Each ceremony type has its own PartyKit server. The client hooks (`src/hooks/`) handle connection, reconnection, and message parsing.
+WebSocket servers live in `party/`. Each ceremony type has its own PartyServer class, running as a Durable Object on Cloudflare (`party/server.ts` is the Worker entry, `wrangler.jsonc` the config). The client hooks (`src/hooks/`) handle connection, reconnection, and message parsing.
 
 ### Persistence
 
-PartyKit servers call Next.js API routes (`src/app/api/`) to persist session data to Neon Postgres via Drizzle ORM when a ceremony closes.
+The room servers call Next.js API routes (`src/app/api/`) to persist session data to Neon Postgres via Drizzle ORM when a ceremony closes.
 
 ## Pull Request Process
 

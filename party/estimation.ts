@@ -1,4 +1,4 @@
-import type * as Party from "partykit/server";
+import { Server, type Connection, type ConnectionContext } from "partyserver";
 import {
   createInitialState,
   transition,
@@ -7,7 +7,7 @@ import {
 } from "../src/lib/state-machines/estimation";
 
 /**
- * PartyKit server for estimation rooms.
+ * PartyServer (Cloudflare Durable Object) server for estimation rooms.
  *
  * Each room is a Durable Object that holds the estimation state.
  * Clients send events, the server runs transition(), and broadcasts
@@ -22,21 +22,18 @@ interface ConnectionState {
   participantName: string;
 }
 
-export default class EstimationServer implements Party.Server {
-  state: EstimationState;
+export class EstimationServer extends Server<Env> {
+  state: EstimationState = createInitialState("");
 
-  constructor(readonly room: Party.Room) {
-    this.state = createInitialState("");
-  }
 
   async onStart() {
-    const saved = await this.room.storage.get<EstimationState>("state");
+    const saved = await this.ctx.storage.get<EstimationState>("state");
     if (saved) {
       this.state = saved;
     }
   }
 
-  async onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
+  async onConnect(conn: Connection, ctx: ConnectionContext) {
     const url = new URL(ctx.request.url);
     const name = url.searchParams.get("name") ?? "Anonymous";
     // Use a client-stable participant id so reconnects do not accidentally
@@ -48,7 +45,7 @@ export default class EstimationServer implements Party.Server {
       participantName: name,
     } satisfies ConnectionState);
 
-    const isFirstActiveConnection = [...this.room.getConnections()].length <= 1;
+    const isFirstActiveConnection = [...this.getConnections()].length <= 1;
 
     // Add participant to state
     this.state = transition(this.state, {
@@ -76,10 +73,10 @@ export default class EstimationServer implements Party.Server {
     );
 
     // Broadcast updated state to everyone
-    this.broadcast();
+    this.broadcastState();
   }
 
-  async onMessage(message: string | ArrayBuffer, sender: Party.Connection) {
+  async onMessage(sender: Connection, message: string | ArrayBuffer) {
     if (typeof message !== "string") return;
 
     let parsed: Record<string, unknown>;
@@ -104,13 +101,13 @@ export default class EstimationServer implements Party.Server {
           createdBy: clerkUserId ?? `partykit:${connState.participantId}`,
         })
           .then(() => {
-            this.room.broadcast(
+            this.broadcast(
               JSON.stringify({ type: "save_result", status: "saved" }),
             );
           })
           .catch((err) => {
             console.error("[estimation] Failed to save to DB:", err);
-            this.room.broadcast(
+            this.broadcast(
               JSON.stringify({
                 type: "save_result",
                 status: "error",
@@ -125,7 +122,7 @@ export default class EstimationServer implements Party.Server {
     // Handle nudge separately (transient signal, not state machine event)
     if (parsed.type === "NUDGE") {
       const connState = sender.state as ConnectionState | undefined;
-      this.room.broadcast(
+      this.broadcast(
         JSON.stringify({
           type: "nudge",
           from: connState?.participantName ?? "Someone",
@@ -157,11 +154,11 @@ export default class EstimationServer implements Party.Server {
     if (nextState !== this.state) {
       this.state = nextState;
       await this.persist();
-      this.broadcast();
+      this.broadcastState();
     }
   }
 
-  async onClose(conn: Party.Connection) {
+  async onClose(conn: Connection) {
     const connState = conn.state as ConnectionState | undefined;
     if (connState) {
       // A reconnect can briefly overlap the old socket. Because participantId is
@@ -178,11 +175,11 @@ export default class EstimationServer implements Party.Server {
       // They can reclaim it on reconnect because participantId is stable; any
       // handoff should be a deliberate TRANSFER_FACILITATION action.
       await this.persist();
-      this.broadcast();
+      this.broadcastState();
     }
   }
 
-  async onRequest(req: Party.Request): Promise<Response> {
+  async onRequest(req: Request): Promise<Response> {
     if (req.method === "GET") {
       return new Response(JSON.stringify(this.state), {
         headers: { "Content-Type": "application/json" },
@@ -194,7 +191,7 @@ export default class EstimationServer implements Party.Server {
       if (body.action === "reset") {
         this.state = createInitialState("");
         await this.persist();
-        this.broadcast();
+        this.broadcastState();
         return new Response("OK");
       }
     }
@@ -203,8 +200,8 @@ export default class EstimationServer implements Party.Server {
 
   private async saveToDatabase(data: Record<string, unknown>) {
     const apiHost =
-      (this.room.env.NEXT_PUBLIC_APP_URL as string) ?? "http://localhost:3456";
-    const secret = (this.room.env.INTERNAL_API_SECRET as string) ?? "";
+      (this.env.NEXT_PUBLIC_APP_URL as string) ?? "http://localhost:3456";
+    const secret = (this.env.INTERNAL_API_SECRET as string) ?? "";
     const res = await fetch(`${apiHost}/api/estimation/save`, {
       method: "POST",
       headers: {
@@ -212,7 +209,7 @@ export default class EstimationServer implements Party.Server {
         "X-Internal-Secret": secret,
       },
       body: JSON.stringify({
-        roomCode: this.room.id,
+        roomCode: this.name,
         teamId: data.teamId ?? "",
         createdBy: data.createdBy ?? "",
         participantCount: this.state.participants.length,
@@ -223,28 +220,27 @@ export default class EstimationServer implements Party.Server {
       const text = await res.text();
       throw new Error(`Save failed (${res.status}): ${text}`);
     }
-    const result = await res.json();
+    const result = (await res.json()) as { sessionId?: string };
     console.log(
-      `[estimation] Saved session ${result.sessionId} for room ${this.room.id}`,
+      `[estimation] Saved session ${result.sessionId} for room ${this.name}`,
     );
   }
 
   private isParticipantConnected(participantId: string): boolean {
-    for (const conn of this.room.getConnections()) {
+    for (const conn of this.getConnections()) {
       const cs = conn.state as ConnectionState | undefined;
       if (cs?.participantId === participantId) return true;
     }
     return false;
   }
 
-  private broadcast() {
+  private broadcastState() {
     const message = JSON.stringify({ type: "update", state: this.state });
-    this.room.broadcast(message);
+    this.broadcast(message);
   }
 
   private async persist() {
-    await this.room.storage.put("state", this.state);
+    await this.ctx.storage.put("state", this.state);
   }
 }
 
-EstimationServer satisfies Party.Worker;
