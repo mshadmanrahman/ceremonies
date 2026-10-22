@@ -24,6 +24,7 @@ import { HalftoneBlob } from "@/components/shared/halftone-blob";
 import { ConnectionStatus } from "@/components/shared/connection-status";
 import { TransferFacilitationDialog } from "@/components/shared/transfer-facilitation-dialog";
 import { TicketInput } from "@/components/estimation/ticket-input";
+import { FieldNotesSignup } from "@/components/shared/field-notes-signup";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import {
@@ -879,6 +880,11 @@ function SessionSummaryScreen({
           <Button onClick={onDone} className="w-full">
             Done
           </Button>
+        </div>
+
+        {/* Only the facilitator can end a session, so this reaches them alone */}
+        <div className="text-left">
+          <FieldNotesSignup lead="Estimates done." />
         </div>
       </div>
     </div>

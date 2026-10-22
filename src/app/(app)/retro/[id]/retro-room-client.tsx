@@ -11,6 +11,7 @@ import { GhostIcon, OwlIcon } from "@/components/shared/icons";
 import { HalftoneBlob } from "@/components/shared/halftone-blob";
 import { ConnectionStatus } from "@/components/shared/connection-status";
 import { TransferFacilitationDialog } from "@/components/shared/transfer-facilitation-dialog";
+import { FieldNotesSignup } from "@/components/shared/field-notes-signup";
 import { PhaseIndicator } from "@/components/retro/phase-indicator";
 import {
   PauseButton,
@@ -420,6 +421,7 @@ function RetroRoom({
           <ClosedPhase
             roomId={roomId}
             state={state}
+            isFacilitator={isFacilitator}
             saveFailed={saveFailed}
             onDone={onLeave}
           />
@@ -601,11 +603,13 @@ function LobbyPhase({
 function ClosedPhase({
   roomId,
   state,
+  isFacilitator,
   saveFailed,
   onDone,
 }: {
   roomId: string;
   state: RetroState;
+  isFacilitator: boolean;
   saveFailed: boolean;
   onDone: () => void;
 }) {
@@ -854,6 +858,8 @@ function ClosedPhase({
           Done
         </Button>
       </div>
+
+      {isFacilitator && <FieldNotesSignup lead="Retro done." />}
     </div>
   );
 }

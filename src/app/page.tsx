@@ -264,7 +264,7 @@ export default function Home() {
               </span>{" "}
               by{" "}
               <Link
-                href="https://github.com/mshadmanrahman"
+                href="https://shadmanrahman.substack.com/about?ref=ceremonies"
                 className="font-bold underline underline-offset-4 transition-colors hover:text-foreground"
               >
                 Shadman Rahman
