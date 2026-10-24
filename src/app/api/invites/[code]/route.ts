@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { teamInvites, teamMembers, teams } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or, isNull, lt, sql } from "drizzle-orm";
 
 /**
  * GET /api/invites/[code]
@@ -100,18 +100,36 @@ export async function POST(
     });
   }
 
-  // Add to team
-  await db.insert(teamMembers).values({
-    teamId: invite.teamId,
-    userId,
-    role: invite.role,
-  });
-
-  // Increment use count
-  await db
+  // Claim a use atomically so concurrent accepts can't both pass the limit check
+  const [claimed] = await db
     .update(teamInvites)
-    .set({ useCount: invite.useCount + 1 })
-    .where(eq(teamInvites.id, invite.id));
+    .set({ useCount: sql`${teamInvites.useCount} + 1` })
+    .where(
+      and(
+        eq(teamInvites.id, invite.id),
+        or(isNull(teamInvites.maxUses), lt(teamInvites.useCount, teamInvites.maxUses))
+      )
+    )
+    .returning({ id: teamInvites.id });
+
+  if (!claimed) {
+    return NextResponse.json({ error: "Invite has reached its usage limit" }, { status: 410 });
+  }
+
+  // Add to team, handing the use back if the insert fails
+  try {
+    await db.insert(teamMembers).values({
+      teamId: invite.teamId,
+      userId,
+      role: invite.role,
+    });
+  } catch (err) {
+    await db
+      .update(teamInvites)
+      .set({ useCount: sql`${teamInvites.useCount} - 1` })
+      .where(eq(teamInvites.id, invite.id));
+    throw err;
+  }
 
   return NextResponse.json({
     joined: true,
