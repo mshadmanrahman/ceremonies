@@ -222,7 +222,7 @@ export const Scene3Estimation: React.FC = () => {
               opacity: interpolate(frame, [15, 25], [0, 1], { extrapolateRight: "clamp" }),
             }}
           >
-            INS-2608: Rework "Show Less" filter behavior
+            INS-2608: Rework &quot;Show Less&quot; filter behavior
           </div>
 
           <div style={{ marginTop: 40 }}>

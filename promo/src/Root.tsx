@@ -432,7 +432,7 @@ const ReelsCloser: React.FC = () => {
         transform: `scale(${spring({ frame: frame - 50, fps, config: { damping: 12, stiffness: 100 } })})`,
       }}>
         <div style={{ fontFamily: fonts.body, fontSize: 28, fontWeight: 700, color: colors.bg }}>
-          Try it now — it's free
+          Try it now — it&apos;s free
         </div>
       </div>
     </AbsoluteFill>

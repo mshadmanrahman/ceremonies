@@ -52,7 +52,7 @@ export function ConnectionStatus({
             Connection lost
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Can't reach the real-time server. This usually resolves in a few seconds.
+            Can&apos;t reach the real-time server. This usually resolves in a few seconds.
           </p>
         </div>
         <Button

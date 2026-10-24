@@ -119,7 +119,7 @@ export const Scene6Closer: React.FC = () => {
             color: colors.bg,
           }}
         >
-          Try it now — it's free
+          Try it now — it&apos;s free
         </div>
       </div>
 

@@ -72,7 +72,7 @@ const CardDeckPhase: React.FC = () => {
           }),
         }}
       >
-        INS-2608: Rework "Show Less" filter behavior
+        INS-2608: Rework &quot;Show Less&quot; filter behavior
       </div>
 
       <div

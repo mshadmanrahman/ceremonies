@@ -88,7 +88,7 @@ export function InviteMemberDialog({ teamId, onInvited }: InviteMemberDialogProp
           // ── Link Generated ──
           <div className="space-y-4 pt-2">
             <p className="text-sm text-muted-foreground">
-              Share this link with your teammate. They'll join as <span className="font-bold text-foreground">{role}</span>.
+              Share this link with your teammate. They&apos;ll join as <span className="font-bold text-foreground">{role}</span>.
             </p>
             <div className="flex items-center gap-2">
               <div className="flex flex-1 items-center gap-2 rounded-md border-2 border-border bg-muted px-3 py-2.5">
@@ -109,7 +109,7 @@ export function InviteMemberDialog({ teamId, onInvited }: InviteMemberDialogProp
               </Button>
             </div>
             <p className="text-[10px] text-muted-foreground">
-              This link doesn't expire. You can revoke it from team settings.
+              This link doesn&apos;t expire. You can revoke it from team settings.
             </p>
           </div>
         ) : (

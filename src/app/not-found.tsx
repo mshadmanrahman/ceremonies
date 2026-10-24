@@ -28,7 +28,7 @@ export default function NotFound() {
           <p className="mt-3 text-sm text-muted-foreground">
             This page has vanished into thin air.
             <br />
-            Even The Haunting can't find it.
+            Even The Haunting can&apos;t find it.
           </p>
         </div>
 

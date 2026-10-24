@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { teams, teamMembers } from "@/lib/db/schema";
@@ -92,7 +93,11 @@ export async function POST(req: Request) {
     const session = JSON.parse(responseText);
 
     if (!res.ok) {
-      return NextResponse.json({ error: session.error?.message ?? "Stripe error", debug: session.error }, { status: 500 });
+      Sentry.captureMessage("Stripe checkout session failed", {
+        level: "error",
+        extra: { status: res.status, type: session.error?.type, code: session.error?.code },
+      });
+      return NextResponse.json({ error: session.error?.message ?? "Stripe error" }, { status: 500 });
     }
 
     return NextResponse.json({ url: session.url });

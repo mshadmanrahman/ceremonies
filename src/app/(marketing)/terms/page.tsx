@@ -31,7 +31,7 @@ export default function TermsPage() {
           <p>
             Ceremonies is an open-source agile ceremony toolkit for running
             estimation and retrospective sessions. The hosted version at
-            ceremonies.dev is operated by Shadman Rahman ("we", "us").
+            ceremonies.dev is operated by Shadman Rahman (&quot;we&quot;, &quot;us&quot;).
           </p>
         </section>
 
@@ -101,7 +101,7 @@ export default function TermsPage() {
             7. Availability and liability
           </h2>
           <p>
-            We aim for high availability but provide the service "as is" without
+            We aim for high availability but provide the service &quot;as is&quot; without
             guarantees. We are not liable for data loss, downtime, or damages
             arising from use of the service. Our total liability is limited to
             the amount you paid us in the 12 months prior.

@@ -109,7 +109,7 @@ export default function JoinPage({
           <div className="stagger-in space-y-6">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
-                You've been invited to join
+                You&apos;ve been invited to join
               </p>
               <h1 className="mt-2 font-display text-3xl tracking-ceremony sm:text-4xl">
                 {state.teamName}
@@ -150,7 +150,7 @@ export default function JoinPage({
               <span className="text-3xl">✓</span>
             </div>
             <h2 className="font-display text-2xl tracking-ceremony">
-              You're in!
+              You&apos;re in!
             </h2>
             <p className="text-sm text-muted-foreground">
               Redirecting to dashboard...
@@ -164,7 +164,7 @@ export default function JoinPage({
               Already a member
             </h2>
             <p className="text-sm text-muted-foreground">
-              You're already on this team. Redirecting...
+              You&apos;re already on this team. Redirecting...
             </p>
           </div>
         )}

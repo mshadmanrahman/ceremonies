@@ -52,7 +52,7 @@ export const Scene5Haunting: React.FC = () => {
           opacity: interpolate(frame, [15, 25], [0, 1], { extrapolateRight: "clamp" }),
         }}
       >
-        Last retro's promises open the next one.
+        Last retro&apos;s promises open the next one.
       </div>
 
       {/* Action items from previous retro */}

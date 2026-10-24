@@ -725,7 +725,7 @@ function ClosedPhase({
           Retro complete
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Great session. Here's your snapshot.
+          Great session. Here&apos;s your snapshot.
         </p>
       </div>
 
