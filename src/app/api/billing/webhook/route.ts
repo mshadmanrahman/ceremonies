@@ -50,8 +50,6 @@ export async function POST(req: Request) {
           stripeSubscriptionId: session.subscription as string,
         })
         .where(eq(teams.id, teamId));
-
-      console.log(`[billing] Team ${teamId} upgraded to Pro`);
       break;
     }
 
@@ -65,8 +63,6 @@ export async function POST(req: Request) {
         .update(teams)
         .set({ plan: isActive ? "pro" : "free" })
         .where(eq(teams.id, teamId));
-
-      console.log(`[billing] Team ${teamId} subscription updated: ${subscription.status}`);
       break;
     }
 
@@ -82,8 +78,6 @@ export async function POST(req: Request) {
           stripeSubscriptionId: null,
         })
         .where(eq(teams.id, teamId));
-
-      console.log(`[billing] Team ${teamId} downgraded to Free (subscription cancelled)`);
       break;
     }
 

@@ -78,8 +78,6 @@ export async function POST(req: Request) {
       `subscription_data[metadata][teamId]=${teamId}`,
     ].join("&");
 
-    console.log(`[billing] Checkout request body: ${body}`);
-
     const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
       headers: {
@@ -90,7 +88,6 @@ export async function POST(req: Request) {
     });
 
     const responseText = await res.text();
-    console.log(`[billing] Stripe response (${res.status}): ${responseText.slice(0, 500)}`);
 
     const session = JSON.parse(responseText);
 

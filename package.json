@@ -27,6 +27,7 @@
     "@clerk/nextjs": "^7.0.5",
     "@neondatabase/serverless": "^1.0.2",
     "@next/third-parties": "^16.2.2",
+    "@sentry/nextjs": "^11.9.0",
     "@vercel/analytics": "^2.0.1",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
