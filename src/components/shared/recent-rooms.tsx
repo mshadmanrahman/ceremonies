@@ -35,7 +35,7 @@ function timeAgo(ts: number): string {
   return `${Math.round(hours / 24)} d ago`;
 }
 
-type LiveStatus = Pick<RecentRoom, "phase" | "paused">;
+type LiveStatus = Pick<RecentRoom, "phase" | "paused" | "title">;
 
 function statusUrl(roomId: string): string {
   const host = process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "127.0.0.1:1999";
@@ -67,7 +67,7 @@ export function RecentRooms() {
         .then((res) => (res.ok ? (res.json() as Promise<LiveStatus>) : null))
         .then((status) => {
           if (cancelled || !status?.phase) return;
-          updateRoomStatus(id, status.phase, status.paused);
+          updateRoomStatus(id, status.phase, status.paused, status.title ?? null);
           setLive((prev) => ({ ...prev, [id]: status }));
         })
         .catch(() => {});
@@ -103,8 +103,12 @@ export function RecentRooms() {
               href={`/retro/${r.id}`}
               className="flex items-center justify-between gap-3 rounded-md border-2 border-border bg-card px-4 py-3 text-left shadow-hard-sm transition-colors hover:border-foreground/40"
             >
-              <span>
-                <span className="font-mono text-sm font-bold">{r.id}</span>
+              <span className="min-w-0">
+                {r.title ? (
+                  <span className="text-sm font-bold break-words">{r.title}</span>
+                ) : (
+                  <span className="font-mono text-sm font-bold">{r.id}</span>
+                )}
                 <span className="ml-2 text-sm text-muted-foreground">
                   {r.paused ? "Paused" : PHASE_LABEL[r.phase]} ·{" "}
                   {timeAgo(r.visitedAt)}

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { retros, retroCards, retroGroups, actionItems } from "@/lib/db/schema";
-import type { RetroState } from "@/lib/state-machines/retro";
+import { normalizeTitle, type RetroState } from "@/lib/state-machines/retro";
 import { eq } from "drizzle-orm";
 
 /**
@@ -42,6 +42,7 @@ export async function POST(req: Request) {
     .values({
       teamId: state.teamId ?? null,
       roomCode,
+      title: normalizeTitle(state.title),
       status: "closed",
       createdBy: userId,
       closedAt: new Date(),

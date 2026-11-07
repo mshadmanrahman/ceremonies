@@ -8,6 +8,13 @@
       "when": 1775723303301,
       "tag": "0000_premium_squadron_supreme",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794060079178,
+      "tag": "0001_outstanding_slipstream",
+      "breakpoints": true
     }
   ]
 }

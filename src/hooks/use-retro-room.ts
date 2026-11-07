@@ -94,6 +94,9 @@ interface UseRetroRoomResult {
   // Facilitation transfer
   readonly transferFacilitation: (targetId: string) => void;
 
+  // Rename (facilitator only, enforced server-side)
+  readonly renameRetro: (title: string) => void;
+
   // Pause and resume
   readonly pauseRetro: () => void;
   readonly resumeRetro: () => void;
@@ -139,10 +142,11 @@ export function useRetroRoom({
   // Remember this room so the homepage can offer it again later.
   const phase = state?.phase;
   const paused = Boolean(state?.paused);
+  const title = state?.title ?? null;
   useEffect(() => {
     if (!phase) return;
-    rememberRoom({ id: roomId, phase, paused });
-  }, [roomId, phase, paused]);
+    rememberRoom({ id: roomId, phase, paused, title });
+  }, [roomId, phase, paused, title]);
 
   // Persist anonymousId across reconnects so the user keeps ownership of their cards
   const persistedAnonId = (() => {
@@ -424,6 +428,13 @@ export function useRetroRoom({
     [send, myId],
   );
 
+  const renameRetro = useCallback(
+    (title: string) => {
+      send({ type: "RENAME_RETRO", title, facilitatorId: myId });
+    },
+    [send, myId],
+  );
+
   const pauseRetro = useCallback(() => {
     send({ type: "PAUSE_RETRO", facilitatorId: myId });
   }, [send, myId]);
@@ -495,6 +506,7 @@ export function useRetroRoom({
     removeActionItem,
     updateActionItem,
     transferFacilitation,
+    renameRetro,
     pauseRetro,
     resumeRetro,
     facilitatorAway,

@@ -13,6 +13,7 @@ import { ConnectionStatus } from "@/components/shared/connection-status";
 import { TransferFacilitationDialog } from "@/components/shared/transfer-facilitation-dialog";
 import { FieldNotesSignup } from "@/components/shared/field-notes-signup";
 import { PhaseIndicator } from "@/components/retro/phase-indicator";
+import { RenameRetroDialog } from "@/components/retro/rename-retro-dialog";
 import {
   PauseButton,
   PausedBanner,
@@ -181,6 +182,7 @@ function RetroRoom({
     updateActionItem,
     closeRetro,
     transferFacilitation,
+    renameRetro,
     pauseRetro,
     resumeRetro,
     facilitatorAway,
@@ -253,8 +255,8 @@ function RetroRoom({
             >
               <NavArrowLeft width={16} height={16} />
             </Link>
-            <h1 className="font-display text-3xl tracking-ceremony sm:text-4xl">
-              Retro
+            <h1 className="min-w-0 break-words font-display text-3xl tracking-ceremony sm:text-4xl">
+              {state.title || "Retro"}
             </h1>
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -273,6 +275,13 @@ function RetroRoom({
                 <span className="rounded-md bg-coffee/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-coffee">
                   Facilitator
                 </span>
+                {state.phase !== "closed" && (
+                  <RenameRetroDialog
+                    title={state.title ?? null}
+                    roomCode={roomId}
+                    onRename={renameRetro}
+                  />
+                )}
                 <TransferFacilitationDialog
                   participants={state.participants}
                   myId={myId ?? ""}

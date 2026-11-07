@@ -41,6 +41,7 @@ export const retros = pgTable("retros", {
   teamId: uuid("team_id")
     .references(() => teams.id),
   roomCode: text("room_code").notNull().unique(),
+  title: text("title"), // facilitator-set name; null falls back to roomCode
   status: text("status", { enum: ["active", "closed"] })
     .notNull()
     .default("active"),

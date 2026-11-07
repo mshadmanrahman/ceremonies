@@ -105,6 +105,7 @@ export interface RetroState {
   readonly facilitatorLocked?: boolean; // true after an explicit TRANSFER_FACILITATION — suppresses creator-reclaim
   readonly paused?: boolean; // facilitator paused the retro; anyone can resume it later from the room link
   readonly facilitatorAwaySince?: number | null; // when the facilitator's last connection dropped; null while connected
+  readonly title?: string | null; // facilitator-set name; null/undefined falls back to the room code
 }
 
 // ── Events ──
@@ -151,6 +152,7 @@ export type RetroEvent =
     }
   | { type: "CLOSE_RETRO"; facilitatorId: string }
   | { type: "TRANSFER_FACILITATION"; targetId: string; facilitatorId: string }
+  | { type: "RENAME_RETRO"; facilitatorId: string; title: string }
   | { type: "PAUSE_RETRO"; facilitatorId: string }
   | { type: "RESUME_RETRO"; facilitatorId: string }
   | { type: "CLAIM_FACILITATION"; participantId: string; now: number };
@@ -166,9 +168,20 @@ const ALLOWED_WHILE_PAUSED: ReadonlySet<RetroEvent["type"]> = new Set([
   "CLAIM_FACILITATION",
   "TRANSFER_FACILITATION",
   "CLOSE_RETRO",
+  "RENAME_RETRO",
 ]);
 
 // ── Initial State ──
+
+/** Longest retro name accepted. Longer names are cut to this length. */
+export const MAX_TITLE_LENGTH = 80;
+
+/** Trim and cap a proposed retro name. Empty means "no name". */
+export function normalizeTitle(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.replace(/\s+/g, " ").trim().slice(0, MAX_TITLE_LENGTH);
+  return trimmed.length > 0 ? trimmed : null;
+}
 
 export function createInitialState(facilitatorId: string): RetroState {
   return {
@@ -192,6 +205,7 @@ export function createInitialState(facilitatorId: string): RetroState {
     actionItems: [],
     rankedGroupIds: [],
     renamedLabels: {},
+    title: null,
   };
 }
 
@@ -612,6 +626,15 @@ export function transition(state: RetroState, event: RetroEvent): RetroState {
         facilitatorId: event.targetId,
         facilitatorLocked: true,
       };
+    }
+
+    case "RENAME_RETRO": {
+      if (!isFacilitator(state, event.facilitatorId)) return state;
+      // A closed retro is already saved to the database, so a rename would not stick.
+      if (state.phase === "closed") return state;
+      const title = normalizeTitle(event.title);
+      if (title === (state.title ?? null)) return state;
+      return { ...state, title };
     }
 
     case "PAUSE_RETRO": {

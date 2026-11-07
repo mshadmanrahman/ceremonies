@@ -330,6 +330,7 @@ export class RetroServer extends Server<Env> {
           JSON.stringify({
             phase: this.state.phase,
             paused: Boolean(this.state.paused),
+            title: this.state.title ?? null,
           }),
           {
             headers: {

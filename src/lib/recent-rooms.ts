@@ -10,6 +10,7 @@ export interface RecentRoom {
   readonly id: string;
   readonly phase: RetroPhase;
   readonly paused: boolean;
+  readonly title?: string | null; // absent on rooms stored before renaming existed
   readonly visitedAt: number;
 }
 
@@ -44,10 +45,11 @@ export function updateRoomStatus(
   id: string,
   phase: RetroPhase,
   paused: boolean,
+  title: string | null,
 ): void {
   try {
     const next = readRecentRooms().map((r) =>
-      r.id === id ? { ...r, phase, paused } : r,
+      r.id === id ? { ...r, phase, paused, title } : r,
     );
     localStorage.setItem(KEY, JSON.stringify(next));
   } catch {

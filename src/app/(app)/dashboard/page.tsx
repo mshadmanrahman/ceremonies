@@ -262,7 +262,7 @@ export default async function DashboardPage({
               style={{ animationDelay: `${i * 60}ms` }}
             >
               <div className="flex items-center justify-between">
-                <div>
+                <div className="min-w-0">
                   <p className="font-display text-base font-bold">
                     {retro.closedAt
                       ? new Date(retro.closedAt).toLocaleDateString("en-US", {
@@ -272,9 +272,15 @@ export default async function DashboardPage({
                         })
                       : "In progress"}
                   </p>
-                  <p className="mt-0.5 font-mono text-xs text-muted-foreground">
-                    {retro.roomCode}
-                  </p>
+                  {retro.title ? (
+                    <p className="mt-0.5 text-sm font-bold break-words">
+                      {retro.title}
+                    </p>
+                  ) : (
+                    <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+                      {retro.roomCode}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 text-center">
                   <div>

@@ -6,7 +6,7 @@ import {
   retroGroups,
   actionItems,
 } from "@/lib/db/schema";
-import type { RetroState } from "@/lib/state-machines/retro";
+import { normalizeTitle, type RetroState } from "@/lib/state-machines/retro";
 import { canSaveSession } from "@/lib/plan-limits";
 
 /**
@@ -59,6 +59,7 @@ export async function POST(req: Request) {
     .values({
       teamId,
       roomCode,
+      title: normalizeTitle(state.title),
       status: "closed",
       createdBy,
       closedAt: new Date(),
