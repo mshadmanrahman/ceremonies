@@ -108,6 +108,8 @@ interface UseRetroRoomResult {
   readonly saveFailed: boolean;
 }
 
+const HEARTBEAT_MS = 20_000;
+
 function generateId(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
@@ -204,6 +206,14 @@ export function useRetroRoom({
     },
     [socket],
   );
+
+  // Office proxies close WebSockets that stay quiet for 30-60 seconds, which
+  // made people drop out and rejoin mid-retro. A small heartbeat keeps it open.
+  useEffect(() => {
+    if (!connected) return;
+    const id = setInterval(() => send({ type: "PING" }), HEARTBEAT_MS);
+    return () => clearInterval(id);
+  }, [connected, send]);
 
   // ── Lobby ──
 

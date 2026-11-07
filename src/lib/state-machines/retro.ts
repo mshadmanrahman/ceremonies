@@ -267,12 +267,13 @@ export function transition(state: RetroState, event: RetroEvent): RetroState {
     }
 
     case "PARTICIPANT_LEAVE": {
+      // Votes stay: participant IDs are stable, so someone who drops and
+      // rejoins keeps both their votes and their vote cap.
       return {
         ...state,
         participants: state.participants.filter(
           (p) => p.id !== event.participantId,
         ),
-        votes: state.votes.filter((v) => v.odiedId !== event.participantId),
       };
     }
 

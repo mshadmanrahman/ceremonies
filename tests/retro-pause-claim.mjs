@@ -31,6 +31,9 @@ send(p1, { type: "ADD_CARD", category: "happy", text: "while paused" }); await s
 check("Cards blocked while paused", p1.state.cards.length === 0);
 
 await close(fac);
+check("Facilitator still listed during the 15s reconnect grace", p1.state.participants.some((x) => x.id === "anon-viktor") && p1.state.facilitatorAwaySince === null);
+console.log("Waiting 16s for the leave grace period...");
+await sleep(16_000);
 check("Away clock starts when facilitator leaves", typeof p1.state.facilitatorAwaySince === "number");
 send(p1, { type: "CLAIM_FACILITATION", participantId: "anon-charbel", now: Date.now() + 10 * 60_000 }); await sleep(300);
 check("Claim refused inside grace period (client clock ignored)", p1.state.facilitatorId === "anon-viktor");

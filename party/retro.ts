@@ -31,19 +31,38 @@ function generateId(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
 
+/**
+ * How long a participant whose last socket dropped stays in the room. Office
+ * proxies and flaky wifi cut WebSockets for a second or two; without a grace
+ * period everyone else saw that person vanish and reappear.
+ */
+const LEAVE_GRACE_MS = 15_000;
+
 export class RetroServer extends Server<Env> {
   state: RetroState = createInitialState("");
   timerInterval: ReturnType<typeof setInterval> | null = null;
   /** Ephemeral set of participantIds currently typing. Never persisted. */
   private typingParticipants: Set<string> = new Set();
-
+  /** Leave timers for participants inside the grace period. Never persisted. */
+  private pendingLeaves = new Map<string, ReturnType<typeof setTimeout>>();
 
   async onStart() {
     const saved = await this.ctx.storage.get<RetroState>("state");
     if (saved) {
+      // Nobody is connected when the room wakes up. A leave timer can be lost
+      // if the room was evicted mid-grace, so clear the list here and start
+      // the claim clock if the facilitator was still listed.
+      const facilitatorWasListed = saved.participants.some(
+        (p) => p.id === saved.facilitatorId,
+      );
       // Migrate old state that may not have cardPositions or renamedLabels
       this.state = {
         ...saved,
+        participants: [],
+        facilitatorAwaySince:
+          facilitatorWasListed && saved.facilitatorAwaySince == null
+            ? Date.now()
+            : saved.facilitatorAwaySince,
         cardPositions: saved.cardPositions ?? {},
         renamedLabels: saved.renamedLabels ?? {},
       };
@@ -74,6 +93,9 @@ export class RetroServer extends Server<Env> {
       anonymousId,
       userId,
     } satisfies ConnectionState);
+
+    // Back within the grace period: they never left as far as others can see.
+    this.cancelPendingLeave(participantId);
 
     // Add participant
     this.state = transition(this.state, {
@@ -133,6 +155,12 @@ export class RetroServer extends Server<Env> {
 
     const connState = sender.state as ConnectionState | undefined;
     if (!connState) return;
+
+    // ── Heartbeat: keeps proxies from closing a quiet socket ──
+    if (parsed.type === "PING") {
+      sender.send(JSON.stringify({ type: "pong" }));
+      return;
+    }
 
     // ── Cursor position (transient, not persisted) ──
     if (parsed.type === "CURSOR_MOVE") {
@@ -255,30 +283,62 @@ export class RetroServer extends Server<Env> {
         this.broadcastTyping();
       }
 
-      // A reconnect can briefly overlap the old socket. Because participantId is
-      // now stable, only remove the participant when no other live socket for the
-      // same participant remains.
-      if (!this.isParticipantConnected(connState.participantId)) {
-        this.state = transition(this.state, {
-          type: "PARTICIPANT_LEAVE",
-          participantId: connState.participantId,
-        });
-        // Start the claim clock once the facilitator's last socket is gone.
-        if (connState.participantId === this.state.facilitatorId) {
-          this.state = { ...this.state, facilitatorAwaySince: Date.now() };
-        }
-      }
-
+      // A reconnect can briefly overlap the old socket, and a dropped socket
+      // usually comes back within seconds. Only remove the participant once no
+      // live socket for them remains after the grace period.
       // Do not auto-transfer facilitation when the facilitator disconnects.
       // They can reclaim it on reconnect because participantId is stable; any
       // handoff should be a deliberate TRANSFER_FACILITATION action.
+      if (!this.isParticipantConnected(connState.participantId)) {
+        this.scheduleLeave(connState.participantId, Date.now());
+      }
+    }
+  }
+
+  private scheduleLeave(participantId: string, droppedAt: number) {
+    this.cancelPendingLeave(participantId);
+    const timer = setTimeout(async () => {
+      this.pendingLeaves.delete(participantId);
+      if (this.isParticipantConnected(participantId)) return;
+      this.state = transition(this.state, {
+        type: "PARTICIPANT_LEAVE",
+        participantId,
+      });
+      // The claim clock starts from when the facilitator's last socket dropped.
+      if (participantId === this.state.facilitatorId) {
+        this.state = { ...this.state, facilitatorAwaySince: droppedAt };
+      }
       await this.persist();
       this.broadcastState();
+    }, LEAVE_GRACE_MS);
+    this.pendingLeaves.set(participantId, timer);
+  }
+
+  private cancelPendingLeave(participantId: string) {
+    const timer = this.pendingLeaves.get(participantId);
+    if (timer) {
+      clearTimeout(timer);
+      this.pendingLeaves.delete(participantId);
     }
   }
 
   async onRequest(req: Request): Promise<Response> {
     if (req.method === "GET") {
+      // Phase only, readable from the app's homepage to drop closed rooms.
+      if (new URL(req.url).searchParams.has("status")) {
+        return new Response(
+          JSON.stringify({
+            phase: this.state.phase,
+            paused: Boolean(this.state.paused),
+          }),
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+          },
+        );
+      }
       return new Response(JSON.stringify(this.state), {
         headers: { "Content-Type": "application/json" },
       });

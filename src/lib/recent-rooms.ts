@@ -39,6 +39,21 @@ export function readRecentRooms(): ReadonlyArray<RecentRoom> {
   return parseRecentRooms(readRecentRoomsRaw());
 }
 
+/** Record a room's live phase without counting it as a visit. */
+export function updateRoomStatus(
+  id: string,
+  phase: RetroPhase,
+  paused: boolean,
+): void {
+  try {
+    const next = readRecentRooms().map((r) =>
+      r.id === id ? { ...r, phase, paused } : r,
+    );
+    localStorage.setItem(KEY, JSON.stringify(next));
+  } catch {
+  }
+}
+
 export function rememberRoom(room: Omit<RecentRoom, "visitedAt">): void {
   try {
     const others = readRecentRooms().filter((r) => r.id !== room.id);

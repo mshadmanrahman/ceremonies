@@ -184,29 +184,29 @@ export function VotingPhase({
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <h3 className="text-sm font-bold">{group.label}</h3>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {groupCards.slice(0, 3).map((card) => {
+                  {/* Every card in full: people vote on what they can read. */}
+                  <ul className="mt-2 space-y-1.5">
+                    {groupCards.map((card) => {
                       const Icon = CATEGORY_ICON[card.category];
                       return (
-                        <span
+                        <li
                           key={card.id}
-                          className="flex items-center gap-1 text-xs text-muted-foreground"
+                          className="flex items-start gap-1.5 text-sm leading-snug text-muted-foreground"
                         >
                           <Icon
                             size={16}
-                            className={CATEGORY_COLOR[card.category]}
+                            className={cn(
+                              "mt-0.5 shrink-0",
+                              CATEGORY_COLOR[card.category],
+                            )}
                           />
-                          {card.text.slice(0, 30)}
-                          {card.text.length > 30 ? "..." : ""}
-                        </span>
+                          <span className="min-w-0 break-words">
+                            {card.text}
+                          </span>
+                        </li>
                       );
                     })}
-                    {groupCards.length > 3 && (
-                      <span className="text-xs text-muted-foreground">
-                        +{groupCards.length - 3} more
-                      </span>
-                    )}
-                  </div>
+                  </ul>
                 </div>
 
                 {/* Vote controls */}

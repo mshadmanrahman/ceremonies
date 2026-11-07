@@ -1,6 +1,12 @@
 "use client";
 
-import { useRef, useCallback, useEffect, useState } from "react";
+import {
+  useRef,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import type {
   RetroCard,
   CardGroup,
@@ -33,6 +39,15 @@ const CANVAS_WIDTH = 1200;
 const BASE_CANVAS_HEIGHT = 900;
 const CARD_WIDTH = 180;
 const CARD_HEIGHT = 72;
+/** Stored gap between stacked cards. Stays under the grouping radius (120). */
+const STACK_STEP = 24;
+/** Frame padding around a group column, in canvas units. */
+const BLOCK_PAD = 10;
+const DRAG_KEY = "__dragging";
+/** Space kept between a stack and a block pushed below it, in canvas units. */
+const BLOCK_GAP = 16;
+/** Narrowest the canvas renders, in px, so cards stay about 126px wide. */
+const CANVAS_MIN_PX = 840;
 
 /** Scale canvas height based on card count to prevent overcrowding */
 function getCanvasHeight(cardCount: number): number {
@@ -91,14 +106,22 @@ export function GroupingPhase({
   onAdvance,
 }: GroupingPhaseProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
+  // Drawn blocks (one per group, plus the card being dragged), for drop
+  // targeting and for sizing the canvas to fit its tallest stack.
+  const blockRefs = useRef(new Map<string, HTMLDivElement>());
   const [dragging, setDragging] = useState<{
     cardId: string;
     offsetX: number;
     offsetY: number;
+    moved: boolean;
   } | null>(null);
   const [hasScattered, setHasScattered] = useState(false);
+  const [contentHeight, setContentHeight] = useState(0);
+  // Last measured height of each drawn block, in canvas units.
+  const [blockHeights, setBlockHeights] = useState<Record<string, number>>({});
 
-  const canvasHeight = getCanvasHeight(cards.length);
+  const baseHeight = getCanvasHeight(cards.length);
+  const canvasHeight = Math.max(baseHeight, contentHeight);
   const isLabeling = phase === "labeling";
 
   // Safe access: old state may not have cardPositions at all
@@ -112,7 +135,7 @@ export function GroupingPhase({
       const positions = scatterCardPositions(
         cards,
         CANVAS_WIDTH,
-        canvasHeight,
+        baseHeight,
         CARD_WIDTH,
         CARD_HEIGHT,
       );
@@ -121,17 +144,53 @@ export function GroupingPhase({
     } else if (hasPositions) {
       setHasScattered(true);
     }
-  }, [cards, safePositions, hasScattered, onScatterCards, canvasHeight]);
+  }, [cards, safePositions, hasScattered, onScatterCards, baseHeight]);
+
+  // Stacks grow downward with their text, so grow the canvas to fit them
+  // instead of clipping the bottom card. Runs after every render because any
+  // move or new card can change a stack's height; the 8-unit dead band and
+  // the functional update stop it from looping.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.height === 0) return;
+    const unitsPerPx = canvasHeight / rect.height;
+    let bottom = 0;
+    const measured: Record<string, number> = {};
+    for (const [key, el] of blockRefs.current) {
+      const r = el.getBoundingClientRect();
+      bottom = Math.max(bottom, r.bottom - rect.top);
+      measured[key] = Math.ceil(r.height * unitsPerPx);
+    }
+    const needed = Math.ceil(bottom * unitsPerPx + 40);
+    setContentHeight((prev) => (Math.abs(prev - needed) > 8 ? needed : prev));
+    setBlockHeights((prev) =>
+      Object.keys(measured).some(
+        (k) => Math.abs((prev[k] ?? 0) - measured[k]) > 2,
+      )
+        ? measured
+        : prev,
+    );
+  });
+
+  const toCanvas = useCallback(
+    (clientX: number, clientY: number) => {
+      const rect = canvasRef.current!.getBoundingClientRect();
+      return {
+        x: (clientX - rect.left) * (CANVAS_WIDTH / rect.width),
+        y: (clientY - rect.top) * (canvasHeight / rect.height),
+      };
+    },
+    [canvasHeight],
+  );
 
   // Track cursor on canvas
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
       if (!canvasRef.current) return;
-      const rect = canvasRef.current.getBoundingClientRect();
-      const scaleX = CANVAS_WIDTH / rect.width;
-      const scaleY = canvasHeight / rect.height;
-      const x = (e.clientX - rect.left) * scaleX;
-      const y = (e.clientY - rect.top) * scaleY;
+      const { x, y } = toCanvas(e.clientX, e.clientY);
       onSendCursor(x, y);
 
       // If dragging, move the card. Cards lock in place during labeling so the
@@ -146,61 +205,162 @@ export function GroupingPhase({
           Math.min(canvasHeight - CARD_HEIGHT, y - dragging.offsetY),
         );
         onMoveCard(dragging.cardId, newX, newY);
+        if (!dragging.moved) setDragging({ ...dragging, moved: true });
       }
     },
-    [onSendCursor, onMoveCard, dragging, canvasHeight, isLabeling],
+    [onSendCursor, onMoveCard, dragging, canvasHeight, isLabeling, toCanvas],
   );
 
   const handlePointerDown = useCallback(
-    (cardId: string, e: React.PointerEvent) => {
+    (cardId: string, e: React.PointerEvent<HTMLDivElement>) => {
       if (!canvasRef.current || isLabeling) return;
-      const rect = canvasRef.current.getBoundingClientRect();
-      const scaleX = CANVAS_WIDTH / rect.width;
-      const scaleY = canvasHeight / rect.height;
-      const canvasX = (e.clientX - rect.left) * scaleX;
-      const canvasY = (e.clientY - rect.top) * scaleY;
-      const pos = safePositions[cardId];
-      if (!pos) return;
+      if (!safePositions[cardId]) return;
+      // Measure from where the card is drawn. Inside a stack that is below
+      // its stored spot, and the card should not jump when picked up.
+      const pointer = toCanvas(e.clientX, e.clientY);
+      const drawn = e.currentTarget.getBoundingClientRect();
+      const topLeft = toCanvas(drawn.left, drawn.top);
       setDragging({
         cardId,
-        offsetX: canvasX - pos.x,
-        offsetY: canvasY - pos.y,
+        offsetX: pointer.x - topLeft.x,
+        offsetY: pointer.y - topLeft.y,
+        moved: false,
       });
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+      e.currentTarget.setPointerCapture(e.pointerId);
     },
-    [cardPositions, canvasHeight, isLabeling],
+    [safePositions, isLabeling, toCanvas],
   );
 
-  const handlePointerUp = useCallback(() => {
-    setDragging(null);
-  }, []);
+  // Every group draws as one column, so its cards never cover each other.
+  // Cards no group covers yet (right after the scatter) draw on their own.
+  const draggingId = dragging?.moved ? dragging.cardId : null;
+  const cardById = new Map(cards.map((c) => [c.id, c]));
+  const byPosition = (a: string, b: string) =>
+    safePositions[a].y - safePositions[b].y ||
+    safePositions[a].x - safePositions[b].x;
+  const grouped = new Set(groups.flatMap((g) => g.cardIds));
+  const blocks: Array<{
+    key: string;
+    group: CardGroup | null;
+    members: string[];
+    framed: boolean;
+  }> = [
+    ...groups.map((group) => ({
+      key: group.id,
+      group,
+      members: group.cardIds.filter(
+        (id) => id !== draggingId && safePositions[id] && cardById.has(id),
+      ),
+    })),
+    ...cards
+      .filter(
+        (c) => !grouped.has(c.id) && c.id !== draggingId && safePositions[c.id],
+      )
+      .map((c) => ({ key: `solo-${c.id}`, group: null, members: [c.id] })),
+  ]
+    .filter((b) => b.members.length > 0)
+    .map((b) => ({
+      ...b,
+      members: [...b.members].sort(byPosition),
+      framed: b.group !== null && (b.members.length > 1 || isLabeling),
+    }));
 
-  // Group cluster boundaries for visual feedback
-  const groupBounds = groups
-    .map((group) => {
-      const positions = group.cardIds
-        .map((id) => safePositions[id])
-        .filter(Boolean);
-      if (positions.length === 0) return null;
-      const minX = Math.min(...positions.map((p) => p.x)) - 12;
-      const minY = Math.min(...positions.map((p) => p.y)) - 12;
-      const maxX = Math.max(...positions.map((p) => p.x)) + CARD_WIDTH + 12;
-      const maxY = Math.max(...positions.map((p) => p.y)) + CARD_HEIGHT + 12;
-      return {
-        group,
-        x: minX,
-        y: minY,
-        width: maxX - minX,
-        height: maxY - minY,
-      };
-    })
-    .filter(Boolean) as Array<{
-    group: CardGroup;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  }>;
+  // A stack grows down with its text and can reach a card below it. Draw
+  // blocks top to bottom and push any block that would collide down past
+  // the one above. This only moves where a block is drawn: stored positions
+  // and therefore groups stay as they are.
+  const drawnTop = new Map<string, number>();
+  {
+    const placed: Array<{
+      left: number;
+      right: number;
+      top: number;
+      bottom: number;
+    }> = [];
+    const ordered = [...blocks].sort((a, b) =>
+      byPosition(a.members[0], b.members[0]),
+    );
+    for (const block of ordered) {
+      const anchor = safePositions[block.members[0]];
+      const pad = block.framed ? BLOCK_PAD : 0;
+      const left = anchor.x - pad;
+      const right = anchor.x + CARD_WIDTH + pad;
+      const height = blockHeights[block.key] ?? CARD_HEIGHT;
+      let top = anchor.y - pad;
+      let moved = true;
+      while (moved) {
+        moved = false;
+        for (const p of placed) {
+          const overlapsX = left < p.right && right > p.left;
+          const overlapsY = top < p.bottom + BLOCK_GAP && top + height > p.top;
+          if (overlapsX && overlapsY) {
+            top = p.bottom + BLOCK_GAP;
+            moved = true;
+          }
+        }
+      }
+      placed.push({ left, right, top, bottom: top + height });
+      drawnTop.set(block.key, top);
+    }
+  }
+
+  // Dropping a card anywhere over a stack adds it to the bottom of that
+  // stack. Its stored spot goes one small step below the last card, which
+  // keeps it inside the proximity radius that defines the group.
+  const handlePointerUp = useCallback(() => {
+    const drag = dragging;
+    setDragging(null);
+    if (!drag?.moved) return;
+    const dragged = blockRefs.current.get(DRAG_KEY);
+    if (!dragged) return;
+    const r = dragged.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    for (const block of blocks) {
+      const el = blockRefs.current.get(block.key);
+      if (!el) continue;
+      const b = el.getBoundingClientRect();
+      if (cx < b.left || cx > b.right || cy < b.top || cy > b.bottom) continue;
+      const last = safePositions[block.members[block.members.length - 1]];
+      onMoveCard(
+        drag.cardId,
+        last.x,
+        Math.min(canvasHeight - CARD_HEIGHT, last.y + STACK_STEP),
+      );
+      return;
+    }
+  }, [dragging, blocks, safePositions, onMoveCard, canvasHeight]);
+
+  const setBlockRef = (key: string) => (el: HTMLDivElement | null) => {
+    if (el) blockRefs.current.set(key, el);
+    else blockRefs.current.delete(key);
+  };
+
+  const renderCard = (cardId: string, isDragging: boolean) => {
+    const card = cardById.get(cardId);
+    if (!card) return null;
+    const style = CATEGORY_STYLE[card.category];
+    const Icon = CATEGORY_ICON[card.category];
+    return (
+      <div
+        key={card.id}
+        className={cn(
+          "flex items-start gap-2 rounded-md border-2 p-2.5 text-xs font-medium select-none transition-shadow",
+          style.border,
+          style.bg,
+          isDragging
+            ? "shadow-hard-lg scale-105 cursor-grabbing"
+            : isLabeling
+              ? "shadow-hard-sm cursor-default"
+              : "shadow-hard-sm cursor-grab hover:shadow-hard",
+        )}
+        onPointerDown={(e) => handlePointerDown(card.id, e)}
+      >
+        <Icon size={24} className={cn("shrink-0 mt-0.5", style.color)} />
+        <span className="min-w-0 break-words leading-snug">{card.text}</span>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -213,7 +373,7 @@ export function GroupingPhase({
           <p className="mt-1 text-sm text-muted-foreground">
             {isLabeling
               ? "Facilitator: review each group name before the team votes."
-              : "Drag cards close together to form groups. Everyone moves cards in real-time."}
+              : "Drop a card on another card to group them. Everyone moves cards in real-time."}
           </p>
         </div>
         {isFacilitator && (
@@ -223,116 +383,114 @@ export function GroupingPhase({
         )}
       </div>
 
-      {/* Canvas */}
-      <div
-        ref={canvasRef}
-        className="relative overflow-hidden rounded-md border-2 border-border bg-card shadow-hard dark:bg-background"
-        style={{
-          width: "100%",
-          aspectRatio: `${CANVAS_WIDTH} / ${canvasHeight}`,
-          minHeight: "400px",
-        }}
-        onMouseMove={handleMouseMove}
-        onPointerUp={handlePointerUp}
-      >
-        {/* Dot grid background */}
+      {/* Canvas. On phones it keeps a readable width and scrolls sideways
+          instead of shrinking cards to an unreadable sliver. */}
+      <div className="overflow-x-auto pb-1">
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.06]"
+          ref={canvasRef}
+          className="relative overflow-hidden rounded-md border-2 border-border bg-card shadow-hard dark:bg-background"
           style={{
-            backgroundImage:
-              "radial-gradient(circle, currentColor 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
+            width: "100%",
+            minWidth: `${CANVAS_MIN_PX}px`,
+            aspectRatio: `${CANVAS_WIDTH} / ${canvasHeight}`,
+            minHeight: "400px",
           }}
-        />
-
-        {/* Group boundaries (auto-generated from proximity) */}
-        {groupBounds.map((bounds) => (
-          <GroupBoundary
-            key={bounds.group.id}
-            group={bounds.group}
-            x={bounds.x}
-            y={bounds.y}
-            width={bounds.width}
-            height={bounds.height}
-            canvasWidth={CANVAS_WIDTH}
-            canvasHeight={canvasHeight}
-            canRename={isLabeling && isFacilitator}
-            onRename={onRenameGroup}
+          onMouseMove={handleMouseMove}
+          onPointerUp={handlePointerUp}
+        >
+          {/* Dot grid background */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.06]"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, currentColor 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+            }}
           />
-        ))}
 
-        {/* Cards */}
-        {cards.map((card) => {
-          const pos = safePositions[card.id];
-          if (!pos) return null;
-          const style = CATEGORY_STYLE[card.category];
-          const Icon = CATEGORY_ICON[card.category];
-          const isDragging = dragging?.cardId === card.id;
+          {/* Groups, each a column of cards */}
+          {blocks.map((block) => {
+            const anchor = safePositions[block.members[0]];
+            const framed = block.framed;
+            const pad = framed ? BLOCK_PAD : 0;
+            const top = drawnTop.get(block.key) ?? anchor.y - pad;
+            return (
+              <div
+                key={block.key}
+                ref={setBlockRef(block.key)}
+                className={cn(
+                  "absolute z-10 flex flex-col gap-2",
+                  framed &&
+                    "rounded-lg border-2 border-dashed border-primary/30 bg-primary/[0.04] p-2",
+                )}
+                style={{
+                  left: `${((anchor.x - pad) / CANVAS_WIDTH) * 100}%`,
+                  top: `${(top / canvasHeight) * 100}%`,
+                  width: `${((CARD_WIDTH + pad * 2) / CANVAS_WIDTH) * 100}%`,
+                }}
+              >
+                {framed && block.group && (
+                  <GroupLabel
+                    group={block.group}
+                    canRename={isLabeling && isFacilitator}
+                    onRename={onRenameGroup}
+                  />
+                )}
+                {block.members.map((id) => renderCard(id, false))}
+              </div>
+            );
+          })}
 
-          return (
+          {/* The card being dragged follows the pointer on its own */}
+          {draggingId && safePositions[draggingId] && (
             <div
-              key={card.id}
-              className={cn(
-                "absolute flex items-start gap-2 rounded-md border-2 p-2.5 text-xs font-medium select-none transition-shadow",
-                style.border,
-                style.bg,
-                isDragging
-                  ? "shadow-hard-lg z-30 scale-105 cursor-grabbing"
-                  : isLabeling
-                    ? "shadow-hard-sm z-10 cursor-default"
-                    : "shadow-hard-sm z-10 cursor-grab hover:shadow-hard",
-              )}
+              ref={setBlockRef(DRAG_KEY)}
+              className="absolute z-30"
               style={{
-                left: `${(pos.x / CANVAS_WIDTH) * 100}%`,
-                top: `${(pos.y / canvasHeight) * 100}%`,
+                left: `${(safePositions[draggingId].x / CANVAS_WIDTH) * 100}%`,
+                top: `${(safePositions[draggingId].y / canvasHeight) * 100}%`,
                 width: `${(CARD_WIDTH / CANVAS_WIDTH) * 100}%`,
-                minHeight: `${(CARD_HEIGHT / canvasHeight) * 100}%`,
-                transition: isDragging
-                  ? "none"
-                  : "box-shadow 0.15s, transform 0.15s",
               }}
-              onPointerDown={(e) => handlePointerDown(card.id, e)}
             >
-              <Icon size={24} className={cn("shrink-0 mt-0.5", style.color)} />
-              <span className="leading-snug">{card.text}</span>
+              {renderCard(draggingId, true)}
             </div>
-          );
-        })}
+          )}
 
-        {/* Other participants' cursors */}
-        {Array.from(cursors.entries()).map(([id, cursor], i) => {
-          if (id === myId) return null;
-          const color = CURSOR_COLORS[i % CURSOR_COLORS.length];
-          return (
-            <div
-              key={id}
-              className="pointer-events-none absolute z-40 transition-all duration-75"
-              style={{
-                left: `${(cursor.x / CANVAS_WIDTH) * 100}%`,
-                top: `${(cursor.y / canvasHeight) * 100}%`,
-                transform: "translate(-2px, -2px)",
-              }}
-            >
-              {/* Cursor arrow */}
-              <svg
-                width="16"
-                height="20"
-                viewBox="0 0 16 20"
-                fill={color}
-                className="drop-shadow-sm"
+          {/* Other participants' cursors */}
+          {Array.from(cursors.entries()).map(([id, cursor], i) => {
+            if (id === myId) return null;
+            const color = CURSOR_COLORS[i % CURSOR_COLORS.length];
+            return (
+              <div
+                key={id}
+                className="pointer-events-none absolute z-40 transition-all duration-75"
+                style={{
+                  left: `${(cursor.x / CANVAS_WIDTH) * 100}%`,
+                  top: `${(cursor.y / canvasHeight) * 100}%`,
+                  transform: "translate(-2px, -2px)",
+                }}
               >
-                <path d="M0 0 L16 12 L8 12 L12 20 L8 18 L4 12 L0 16 Z" />
-              </svg>
-              {/* Name label */}
-              <span
-                className="absolute left-4 top-4 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[9px] font-bold text-white"
-                style={{ backgroundColor: color }}
-              >
-                {cursor.name}
-              </span>
-            </div>
-          );
-        })}
+                {/* Cursor arrow */}
+                <svg
+                  width="16"
+                  height="20"
+                  viewBox="0 0 16 20"
+                  fill={color}
+                  className="drop-shadow-sm"
+                >
+                  <path d="M0 0 L16 12 L8 12 L12 20 L8 18 L4 12 L0 16 Z" />
+                </svg>
+                {/* Name label */}
+                <span
+                  className="absolute left-4 top-4 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[9px] font-bold text-white"
+                  style={{ backgroundColor: color }}
+                >
+                  {cursor.name}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Group summary below canvas */}
@@ -421,25 +579,13 @@ function RenameableChip({
   );
 }
 
-/** Visual boundary around a proximity-detected group */
-function GroupBoundary({
+/** Name of a group, shown at the top of its column. Wraps instead of cutting off. */
+function GroupLabel({
   group,
-  x,
-  y,
-  width,
-  height,
-  canvasWidth,
-  canvasHeight,
   canRename,
   onRename,
 }: {
   group: CardGroup;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  canvasWidth: number;
-  canvasHeight: number;
   canRename: boolean;
   onRename: (groupId: string, label: string) => void;
 }) {
@@ -461,45 +607,39 @@ function GroupBoundary({
     if (!editing) setLabel(group.label);
   }, [group.label, editing]);
 
+  if (canRename && editing) {
+    return (
+      <input
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        onBlur={handleRename}
+        onKeyDown={(e) => e.key === "Enter" && handleRename()}
+        autoFocus
+        className="h-7 w-full rounded border-2 border-primary bg-card px-2 text-xs font-bold focus:outline-none"
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+      />
+    );
+  }
+
+  if (canRename) {
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setEditing(true);
+        }}
+        className="flex w-full items-start gap-1 rounded-md bg-primary/15 px-2 py-1 text-left text-xs font-bold text-primary transition-colors hover:bg-primary/25"
+      >
+        <span className="min-w-0 break-words">{group.label}</span>
+        <EditPencil width={10} height={10} className="mt-0.5 shrink-0" />
+      </button>
+    );
+  }
+
   return (
-    <div
-      className="absolute z-0 rounded-lg border-2 border-dashed border-primary/30 bg-primary/[0.04] transition-all duration-200"
-      style={{
-        left: `${(x / canvasWidth) * 100}%`,
-        top: `${(y / canvasHeight) * 100}%`,
-        width: `${(width / canvasWidth) * 100}%`,
-        height: `${(height / canvasHeight) * 100}%`,
-      }}
-    >
-      {/* Group label */}
-      <div className="absolute top-1.5 left-2 z-20">
-        {canRename && editing ? (
-          <input
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            onBlur={handleRename}
-            onKeyDown={(e) => e.key === "Enter" && handleRename()}
-            autoFocus
-            className="h-6 max-w-44 rounded border-2 border-primary bg-card px-2 text-[10px] font-bold focus:outline-none"
-            onClick={(e) => e.stopPropagation()}
-          />
-        ) : canRename ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setEditing(true);
-            }}
-            className="flex max-w-44 items-center gap-1 rounded-md bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary transition-colors hover:bg-primary/25"
-          >
-            <span className="truncate">{group.label}</span>
-            <EditPencil width={10} height={10} className="shrink-0" />
-          </button>
-        ) : (
-          <span className="flex max-w-44 items-center rounded-md bg-muted/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-            <span className="truncate">{group.label}</span>
-          </span>
-        )}
-      </div>
-    </div>
+    <span className="rounded-md bg-muted/80 px-2 py-1 text-xs font-bold break-words text-muted-foreground">
+      {group.label}
+    </span>
   );
 }
