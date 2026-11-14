@@ -158,6 +158,8 @@ export function WritingPhase({
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
+              // Enter that confirms an IME (CJK) composition; 229 covers Safari.
+              if (e.nativeEvent.isComposing || e.keyCode === 229) return;
               handleSubmit();
             }
           }}
@@ -225,6 +227,8 @@ export function WritingPhase({
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
+                            // Enter that confirms an IME (CJK) composition; 229 covers Safari.
+                            if (e.nativeEvent.isComposing || e.keyCode === 229) return;
                             const trimmed = editText.trim();
                             if (trimmed) {
                               onEditCard(card.id, trimmed);

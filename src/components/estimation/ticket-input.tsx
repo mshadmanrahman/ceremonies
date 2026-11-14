@@ -113,6 +113,8 @@ export function TicketInput({
                 : "Paste a URL or type INS-1234"
             }
             onKeyDown={(e) => {
+              // Skip Enter that confirms an IME (CJK) composition; 229 covers Safari.
+              if (e.nativeEvent.isComposing || e.keyCode === 229) return;
               if (e.key === "Enter" && !showDropdown) handleSubmit();
               if (e.key === "Escape") setShowDropdown(false);
             }}
