@@ -3,14 +3,13 @@ import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { teamMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { requireJiraPlan, JiraGatedError } from "@/lib/jira/plan-guard";
 import { searchIssues } from "@/lib/jira/client";
 
 /**
  * GET /api/jira/[teamId]/search?q={query}
  *
  * Searches Jira issues for autocomplete in estimation rooms.
- * Requires team membership and Pro plan.
+ * Requires team membership.
  */
 export async function GET(
   req: Request,
@@ -40,15 +39,6 @@ export async function GET(
 
   if (!membership) {
     return NextResponse.json({ error: "Not a team member" }, { status: 403 });
-  }
-
-  try {
-    await requireJiraPlan(teamId);
-  } catch (err) {
-    if (err instanceof JiraGatedError) {
-      return NextResponse.json({ issues: [], gated: true });
-    }
-    throw err;
   }
 
   try {
