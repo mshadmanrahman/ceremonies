@@ -2,8 +2,9 @@ import Link from "next/link";
 import { OwlIcon } from "@/components/shared/icons";
 
 export const metadata = {
-  title: "Privacy Policy | Ceremonies",
+  title: "Privacy Policy",
   description: "Privacy Policy for Ceremonies, the open-source agile ceremony toolkit.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {

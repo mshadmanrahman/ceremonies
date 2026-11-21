@@ -2,8 +2,9 @@ import Link from "next/link";
 import { OwlIcon } from "@/components/shared/icons";
 
 export const metadata = {
-  title: "Terms of Service | Ceremonies",
+  title: "Terms of Service",
   description: "Terms of Service for Ceremonies, the open-source agile ceremony toolkit.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

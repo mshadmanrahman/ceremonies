@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Show, UserButton } from "@clerk/nextjs";
 import { LinkButton } from "@/components/shared/link-button";
@@ -16,11 +17,37 @@ function roomCode() {
   return Math.random().toString(36).slice(2, 8);
 }
 
+const HOME_DESCRIPTION =
+  "Run a free online retrospective or planning poker session in seconds. No signup, true anonymity, and action items that follow your team into the next sprint. Open source.";
+
+export const metadata: Metadata = {
+  title: { absolute: "Free Retrospective & Planning Poker, No Signup | Ceremonies" },
+  description: HOME_DESCRIPTION,
+  alternates: { canonical: "/" },
+};
+
+// No aggregateRating or review: Google shows no rich result without them,
+// and the site has no real ratings to cite.
+const SOFTWARE_APPLICATION_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Ceremonies",
+  url: "https://ceremonies.dev",
+  description: HOME_DESCRIPTION,
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+};
+
 export default function Home() {
   const estRoom = roomCode();
   const retroRoom = roomCode();
   return (
     <div className="relative flex min-h-svh flex-col overflow-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(SOFTWARE_APPLICATION_JSON_LD) }}
+      />
       {/* Dot grid background */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.05]"
