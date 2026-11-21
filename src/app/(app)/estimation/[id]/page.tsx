@@ -25,6 +25,7 @@ import { ConnectionStatus } from "@/components/shared/connection-status";
 import { TransferFacilitationDialog } from "@/components/shared/transfer-facilitation-dialog";
 import { TicketInput } from "@/components/estimation/ticket-input";
 import { FieldNotesSignup } from "@/components/shared/field-notes-signup";
+import { RunYourOwn } from "@/components/shared/run-your-own";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import {
@@ -401,13 +402,16 @@ function EstimationRoom({
               End
             </button>
           ) : (
-            <button
-              onClick={onLeave}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
-            >
-              <LogOut width={14} height={14} />
-              Leave
-            </button>
+            <>
+              <RunYourOwn ceremony="estimation" variant="header" />
+              <button
+                onClick={onLeave}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+              >
+                <LogOut width={14} height={14} />
+                Leave
+              </button>
+            </>
           )}
           <ThemeToggle />
         </div>

@@ -12,6 +12,7 @@ import { HalftoneBlob } from "@/components/shared/halftone-blob";
 import { ConnectionStatus } from "@/components/shared/connection-status";
 import { TransferFacilitationDialog } from "@/components/shared/transfer-facilitation-dialog";
 import { FieldNotesSignup } from "@/components/shared/field-notes-signup";
+import { RunYourOwn } from "@/components/shared/run-your-own";
 import { PhaseIndicator } from "@/components/retro/phase-indicator";
 import { RenameRetroDialog } from "@/components/retro/rename-retro-dialog";
 import {
@@ -303,6 +304,9 @@ function RetroRoom({
             <div className="hidden max-w-full overflow-x-auto sm:block">
               <PhaseIndicator phase={state.phase} />
             </div>
+          )}
+          {!isFacilitator && state.phase !== "closed" && (
+            <RunYourOwn ceremony="retro" variant="header" />
           )}
           <button
             onClick={onLeave}
@@ -868,7 +872,11 @@ function ClosedPhase({
         </Button>
       </div>
 
-      {isFacilitator && <FieldNotesSignup lead="Retro done." />}
+      {isFacilitator ? (
+        <FieldNotesSignup lead="Retro done." />
+      ) : (
+        <RunYourOwn ceremony="retro" variant="summary" />
+      )}
     </div>
   );
 }
