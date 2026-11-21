@@ -4,7 +4,6 @@ import { randomBytes } from "crypto";
 import { getDb } from "@/lib/db";
 import { teamMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { requireJiraPlan } from "@/lib/jira/plan-guard";
 import { signState } from "@/lib/jira/state";
 
 const SCOPES = "read:jira-user read:jira-work write:jira-work offline_access";
@@ -44,15 +43,6 @@ export async function GET(req: Request) {
   }
 
   // Check plan
-  try {
-    await requireJiraPlan(teamId);
-  } catch {
-    return NextResponse.json(
-      { error: "Jira integration requires Pro plan", upgrade: true },
-      { status: 403 }
-    );
-  }
-
   const clientId = process.env.ATLASSIAN_CLIENT_ID;
   const redirectUri = process.env.ATLASSIAN_REDIRECT_URI;
   if (!clientId || !redirectUri) {
