@@ -5,6 +5,7 @@ import {
   type EstimationState,
   type EstimationEvent,
 } from "../src/lib/state-machines/estimation";
+import { claimSyncAnalytics, markExistingRoom } from "./analytics";
 
 /**
  * PartyServer (Cloudflare Durable Object) server for estimation rooms.
@@ -30,6 +31,7 @@ export class EstimationServer extends Server<Env> {
     const saved = await this.ctx.storage.get<EstimationState>("state");
     if (saved) {
       this.state = saved;
+      await markExistingRoom(this.ctx.storage);
     }
   }
 
@@ -62,6 +64,7 @@ export class EstimationServer extends Server<Env> {
     }
 
     await this.persist();
+    const analytics = await claimSyncAnalytics(this.ctx.storage, participantId);
 
     // Send full state to the new connection
     conn.send(
@@ -69,6 +72,7 @@ export class EstimationServer extends Server<Env> {
         type: "sync",
         state: this.state,
         you: participantId,
+        analytics,
       }),
     );
 

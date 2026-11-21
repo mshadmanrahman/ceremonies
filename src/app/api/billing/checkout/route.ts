@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { gaClientIdFromCookie, trackServerEvent } from "@/lib/analytics-server";
 import * as Sentry from "@sentry/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
@@ -68,6 +69,7 @@ export async function POST(req: Request) {
       .where(eq(teamMembers.teamId, teamId));
 
     // Build form body as a plain string (not URLSearchParams to avoid encoding issues)
+    const gaClientId = gaClientIdFromCookie(req.headers.get("cookie"));
     const body = [
       "mode=subscription",
       `line_items[0][price]=${priceId}`,
@@ -77,6 +79,7 @@ export async function POST(req: Request) {
       `metadata[teamId]=${teamId}`,
       `metadata[userId]=${userId}`,
       `subscription_data[metadata][teamId]=${teamId}`,
+      ...(gaClientId ? [`metadata[gaClientId]=${encodeURIComponent(gaClientId)}`] : []),
     ].join("&");
 
     const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
@@ -99,6 +102,14 @@ export async function POST(req: Request) {
       });
       return NextResponse.json({ error: session.error?.message ?? "Stripe error" }, { status: 500 });
     }
+
+    after(() =>
+      trackServerEvent(
+        "checkout_started",
+        { seats: memberCount.length },
+        gaClientId,
+      ),
+    );
 
     return NextResponse.json({ url: session.url });
   } catch (err) {

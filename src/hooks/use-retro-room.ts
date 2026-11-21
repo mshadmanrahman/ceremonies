@@ -11,6 +11,7 @@ import type {
 } from "@/lib/state-machines/retro";
 import { canClaimFacilitation } from "@/lib/state-machines/retro";
 import { rememberRoom } from "@/lib/recent-rooms";
+import { trackRoomSync } from "@/lib/analytics";
 
 interface UseRetroRoomOptions {
   readonly roomId: string;
@@ -180,6 +181,7 @@ export function useRetroRoom({
     onMessage(event) {
       const data = JSON.parse(event.data);
       if (data.type === "sync") {
+        trackRoomSync("retro", data.analytics);
         setState(data.state);
         setMyId(data.you);
         setMyAnonymousId(data.anonymousId);

@@ -7,6 +7,7 @@ import type {
   EstimationEvent,
   CardValue,
 } from "@/lib/state-machines/estimation";
+import { trackRoomSync } from "@/lib/analytics";
 
 interface UseEstimationRoomOptions {
   readonly roomId: string;
@@ -82,6 +83,7 @@ export function useEstimationRoom({
     onMessage(event) {
       const data = JSON.parse(event.data);
       if (data.type === "sync") {
+        trackRoomSync("estimation", data.analytics);
         setState(data.state);
         setMyId(data.you);
         setNudgeReceived(false);

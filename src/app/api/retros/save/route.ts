@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { trackServerEvent } from "@/lib/analytics-server";
 import { getDb } from "@/lib/db";
 import {
   retros,
@@ -120,6 +121,15 @@ export async function POST(req: Request) {
       }))
     );
   }
+
+  after(() =>
+    trackServerEvent("ceremony_saved", {
+      ceremony: "retro",
+      signed_in: createdBy !== "anonymous",
+      card_count: state.cards.length,
+      action_count: state.actionItems.length,
+    }),
+  );
 
   return NextResponse.json({ retroId: retro.id });
 }

@@ -6,6 +6,7 @@ import {
   type RetroEvent,
   type RetroCard,
 } from "../src/lib/state-machines/retro";
+import { claimSyncAnalytics, markExistingRoom } from "./analytics";
 
 /**
  * PartyServer (Cloudflare Durable Object) server for retro rooms.
@@ -49,6 +50,7 @@ export class RetroServer extends Server<Env> {
   async onStart() {
     const saved = await this.ctx.storage.get<RetroState>("state");
     if (saved) {
+      await markExistingRoom(this.ctx.storage);
       // Nobody is connected when the room wakes up. A leave timer can be lost
       // if the room was evicted mid-grace, so clear the list here and start
       // the claim clock if the facilitator was still listed.
@@ -128,6 +130,7 @@ export class RetroServer extends Server<Env> {
     }
 
     await this.persist();
+    const analytics = await claimSyncAnalytics(this.ctx.storage, participantId);
 
     // Send full state + identity to new connection
     conn.send(
@@ -136,6 +139,7 @@ export class RetroServer extends Server<Env> {
         state: this.state,
         you: participantId,
         anonymousId, // so client knows which cards are "theirs"
+        analytics,
       }),
     );
 
@@ -380,6 +384,7 @@ export class RetroServer extends Server<Env> {
           this.startTimerInterval();
         }
         await this.persist();
+        await markExistingRoom(this.ctx.storage);
         this.broadcastState();
         return new Response("OK");
       }

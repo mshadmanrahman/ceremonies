@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { trackServerEvent } from "@/lib/analytics-server";
 import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { estimationSessions, estimationResults } from "@/lib/db/schema";
@@ -94,6 +95,15 @@ export async function POST(req: Request) {
       }))
     );
   }
+
+  after(() =>
+    trackServerEvent("ceremony_saved", {
+      ceremony: "estimation",
+      signed_in: !userId.startsWith("partykit:"),
+      ticket_count: body.history.length,
+      participant_count: body.participantCount,
+    }),
+  );
 
   return NextResponse.json({ sessionId: session.id });
 }

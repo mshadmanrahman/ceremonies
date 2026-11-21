@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { trackServerEvent } from "@/lib/analytics-server";
 import { getDb } from "@/lib/db";
 import { teams } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -50,6 +51,17 @@ export async function POST(req: Request) {
           stripeSubscriptionId: session.subscription as string,
         })
         .where(eq(teams.id, teamId));
+
+      after(() =>
+        trackServerEvent(
+          "subscription_started",
+          {
+            currency: session.currency ?? "usd",
+            value: (session.amount_total ?? 0) / 100,
+          },
+          session.metadata?.gaClientId,
+        ),
+      );
       break;
     }
 
