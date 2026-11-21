@@ -2,14 +2,11 @@
  * Server-side GA4 events via the Measurement Protocol.
  *
  * Used for events that happen where no browser is present (the PartyServer
- * Worker calling the save routes, the Stripe webhook). A no-op until both
+ * Worker calling the save routes). A no-op until both
  * NEXT_PUBLIC_GA_MEASUREMENT_ID and GA_API_SECRET are set.
  */
 
-export type ServerEventName =
-  | "ceremony_saved"
-  | "checkout_started"
-  | "subscription_started";
+export type ServerEventName = "ceremony_saved";
 
 type EventParams = Record<string, string | number | boolean>;
 

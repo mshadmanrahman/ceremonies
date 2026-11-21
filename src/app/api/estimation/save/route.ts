@@ -3,7 +3,6 @@ import { trackServerEvent } from "@/lib/analytics-server";
 import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { estimationSessions, estimationResults } from "@/lib/db/schema";
-import { canSaveSession } from "@/lib/plan-limits";
 
 /**
  * POST /api/estimation/save
@@ -60,15 +59,6 @@ export async function POST(req: Request) {
 
   // Normalize empty string teamId to null (PartyKit sends "" when no team)
   const teamId = body.teamId || null;
-
-  // Check plan limits
-  const sessionLimit = await canSaveSession(teamId, userId);
-  if (!sessionLimit.allowed) {
-    return NextResponse.json(
-      { error: "Session limit reached", limit: sessionLimit.max, current: sessionLimit.current, plan: sessionLimit.plan, upgrade: true },
-      { status: 403 }
-    );
-  }
 
   const db = getDb();
 

@@ -21,7 +21,7 @@ export default function TermsPage() {
         Terms of Service
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Last updated: March 23, 2026
+        Last updated: November 21, 2026
       </p>
 
       <div className="mt-10 space-y-8 text-sm leading-relaxed text-muted-foreground">
@@ -49,13 +49,12 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-3 font-display text-lg font-bold text-foreground tracking-ceremony">
-            3. Free and Pro plans
+            3. Price
           </h2>
           <p>
-            The Free plan includes 1 team, 5 members, and 10 sessions per month.
-            The Pro plan removes these limits and is billed monthly via Stripe.
-            You can cancel at any time through the billing portal. Refunds are
-            handled on a case-by-case basis.
+            Ceremonies is free. There are no paid plans and no usage limits on
+            teams, members, or saved sessions. If we ever add a paid plan, we
+            will update these terms first and never charge you without asking.
           </p>
         </section>
 

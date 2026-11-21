@@ -8,7 +8,6 @@ import {
   actionItems,
 } from "@/lib/db/schema";
 import { normalizeTitle, type RetroState } from "@/lib/state-machines/retro";
-import { canSaveSession } from "@/lib/plan-limits";
 
 /**
  * POST /api/retros/save
@@ -42,15 +41,6 @@ export async function POST(req: Request) {
   // Retros started before Clerk fully loaded will land as "anonymous" rather
   // than silently dropping the row.
   const createdBy = body.createdBy || "anonymous";
-
-  // Check plan limits
-  const sessionLimit = await canSaveSession(teamId, createdBy);
-  if (!sessionLimit.allowed) {
-    return NextResponse.json(
-      { error: "Session limit reached", limit: sessionLimit.max, current: sessionLimit.current, upgrade: true },
-      { status: 403 }
-    );
-  }
 
   // Create the retro record
   const db = getDb();

@@ -21,7 +21,7 @@ export default function PrivacyPage() {
         Privacy Policy
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Last updated: March 23, 2026
+        Last updated: November 21, 2026
       </p>
 
       <div className="mt-10 space-y-8 text-sm leading-relaxed text-muted-foreground">
@@ -43,11 +43,6 @@ export default function PrivacyPage() {
               Team names, members, retro cards, estimation votes, and action
               items you create.
             </li>
-            <li>
-              <span className="font-bold text-foreground">Payment info:</span>{" "}
-              Processed by Stripe. We never see or store your card number.
-              Stripe handles PCI compliance.
-            </li>
           </ul>
         </section>
 
@@ -57,7 +52,6 @@ export default function PrivacyPage() {
           </h2>
           <ul className="list-inside list-disc space-y-1.5 pl-2">
             <li>To provide and improve the Ceremonies service</li>
-            <li>To process payments and manage subscriptions</li>
             <li>To send transactional emails (e.g. team invites)</li>
           </ul>
           <p className="mt-3">
@@ -76,13 +70,6 @@ export default function PrivacyPage() {
               (authentication):{" "}
               <a href="https://clerk.com/privacy" className="underline underline-offset-4 hover:text-foreground">
                 clerk.com/privacy
-              </a>
-            </li>
-            <li>
-              <span className="font-bold text-foreground">Stripe</span>{" "}
-              (payments):{" "}
-              <a href="https://stripe.com/privacy" className="underline underline-offset-4 hover:text-foreground">
-                stripe.com/privacy
               </a>
             </li>
             <li>
